@@ -1,13 +1,14 @@
 # A local filtering DNS resolver (Blocky)
 
-Status: **draft v0.4** (2026-11-10), revised against review rounds 1 to 3 and
-two owner rulings (§8: Q13 decided, runtime blocklists). This is a design, not
-implemented. It is written against `main` at `03b84230`. The owner's rulings are
-fixed: Blocky through the NixOS `services.blocky` module, a `dns-filter`
-wrapper, the uplink → Kubernetes → uplink-as-secondary phases, encrypted
-upstreams only, four client paths, and the observability path. This document
-designs within them. Where a measurement contradicts a ruling's premise, the
-section says so (§1, internal names).
+Status: **draft v0.5** (2026-11-10), revised against review rounds 1 to 4 and
+two owner rulings (§8: Q13 decided, runtime blocklists). The review loop stopped
+after round 4 by owner decision (objections per round: 14, 4, 7, 7), and the
+phase-1 build follows. This is a design, not implemented. It is written against
+`main` at `03b84230`. The owner's rulings are fixed: Blocky through the NixOS
+`services.blocky` module, a `dns-filter` wrapper, the uplink → Kubernetes →
+uplink-as-secondary phases, encrypted upstreams only, four client paths, and the
+observability path. This document designs within them. Where a measurement
+contradicts a ruling's premise, the section says so (§1, internal names).
 
 ## 1. Problem
 
@@ -39,7 +40,7 @@ actually uses is MagicDNS (`100.100.100.100`), which forwards to headscale's
 
 Audit item D10 names the first three hard-coded lists. The cortex-cuda copy and
 the CoreDNS fallback are the same defect. On uplink-dev, `resolvectl dns` shows
-`enp0s8: 1.1.1.1 8.8.8.8 2001:5a8:608c:b600::1` with `-DNSOverTLS`, so the guest
+`enp0s9: 1.1.1.1 8.8.8.8 2001:5a8:608c:b600::1` with `-DNSOverTLS`, so the guest
 sends plaintext queries to Google. cortex-cuda shows the same list. Google is in
 no environment's list.
 
@@ -85,15 +86,25 @@ preserve. §2.3 designs it, and §4 prices it.
   keeps serving MagicDNS when the OS isn't pointed at it.
 - The NixOS `blocky` unit `wants` `network-online.target` but has no `after` on
   it (nixpkgs `services/networking/blocky.nix:37-45`), and uplink has
-  `net.ipv4.ip_nonlocal_bind = 0`. `network-online.target` doesn't wait for the
-  LAN either: wait-online is off fleet-wide (`networking.nix:376`), and on
-  uplink `systemd-networkd-wait-online.service` is masked, the target is active
-  at 9.70 s, and `br0` gains carrier at 12.06 s, with `10.10.10.1/16` applied
-  after carrier (review round 3, measured). The per-link template
-  `systemd-networkd-wait-online@.service` is still installed and enabled on
-  uplink (`nix eval`, capped: `ExecStart` is
-  `systemd-networkd-wait-online -i %i --timeout=120`; nixpkgs
-  `networkd.nix:4197-4202`).
+  `net.ipv4.ip_nonlocal_bind = 0`. On uplink the LAN address comes from the
+  initrd, not stage 2. Measured on 2026-11-10 from the current boot
+  (`journalctl -b -o short-monotonic`, `systemctl show`):
+  - the initrd's own networkd configures `10.10.10.1/16` on `br0`
+    (`boot.initrd.systemd.network.networks.br0`), and `br0` gains carrier at
+    12.06 s;
+  - `boot.initrd.network.flushBeforeStage2` is `false` (both by capped
+    `nix eval`), so the initrd's `KeepConfiguration` stays `dhcp-on-stop`
+    (nixpkgs `networkd.nix:4275`) and the root switch at 23.60 s keeps the
+    address;
+  - stage 2 reaches `basic.target`, where `blocky` would start, at 25.73 s, and
+    stage-2 networkd starts at 25.97 s;
+  - at 26.48 s, tailscaled reports `br0` holding `10.10.10.1/16` together with
+    the initrd's DHCPv6 lease `…::1e4` (acquired at 18.83 s). Stage-2 networkd
+    drops that lease 3 ms later and takes its own, `…::271`, at 27.30 s.
+
+  So the address stage 2 sees is the one the initrd set. Neither stage applies a
+  static address before the link has carrier (review round 3, measured).
+
 - tailscaled races every global nameserver (`net/dns/resolver/forwarder.go`,
   `forwardWithDestChan`), and the first success wins. A private address starts
   at once. A well-known public IP is upgraded to DoH, which also starts at once,
@@ -115,21 +126,21 @@ that one setting through one helper.
 
 ### 2.1 Den shape
 
-| Piece                                       | Kind                | Holds                                                                                                       |
-| ------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `environment.dns.resolvers`                 | env option          | Ordered instance names (host or cluster). `[ ]` = today's behaviour                                         |
-| `environment.dns.filter`                    | env option          | `denylists`, `allowlist` (list URLs and inline domains): the same for every instance                        |
-| `environment.dns.internal`                  | env option          | Cluster whose `dns-internal` record is the conditional upstream (`"axon"`), or `null`                       |
-| `dns-internal` quirk                        | quirk               | `{ cluster; address; }`, emitted by the CoreDNS cluster aspect (§2.3)                                       |
-| `environment.networks.default.unifiNetwork` | env option          | The controller network name this environment's LAN is (`"Default"`, `"dev"`)                                |
-| `environment.networks.default.dnsServers`   | existing env option | Unchanged, and now **Blocky's upstreams** (§2.2)                                                            |
-| `dns-resolvers` quirk                       | quirk               | `{ name; environment; dns; api; }` per running instance; `environment` is the env name                      |
-| `services.networking.blocky`                | host aspect         | The NixOS service; emits `dns-resolvers` and `prometheus-targets`                                           |
-| `kubernetes.services.network.blocky`        | cluster aspect      | Phase 2 Deployment; emits `dns-resolvers`                                                                   |
-| `services/networking/blocky/_settings.nix`  | helper              | The shared definition: a function from instance inputs to Blocky's settings attrset                         |
-| `core/network/_resolvers.nix`               | helper              | `resolversFor environment dns-resolvers` → addresses, then `networks.default.gatewayIp`; `lanLinkOf` (§2.2) |
-| `services.networking.blocky.cli`            | host aspect         | `dns-filter`, built in the aspect because it needs den data (§2.5)                                          |
-| `core.network.tailscale`                    | existing aspect     | `--accept-dns=false` on non-roaming NixOS hosts (§2.4b)                                                     |
+| Piece                                       | Kind                | Holds                                                                                   |
+| ------------------------------------------- | ------------------- | --------------------------------------------------------------------------------------- |
+| `environment.dns.resolvers`                 | env option          | Ordered instance names (host or cluster). `[ ]` = today's behaviour                     |
+| `environment.dns.filter`                    | env option          | `denylists`, `allowlist` (list URLs and inline domains): the same for every instance    |
+| `environment.dns.internal`                  | env option          | Cluster whose `dns-internal` record is the conditional upstream (`"axon"`), or `null`   |
+| `dns-internal` quirk                        | quirk               | `{ cluster; address; }`, emitted by the CoreDNS cluster aspect (§2.3)                   |
+| `environment.networks.default.unifiNetwork` | env option          | The controller network name this environment's LAN is (`"Default"`, `"dev"`)            |
+| `environment.networks.default.dnsServers`   | existing env option | Unchanged, and now **Blocky's upstreams** (§2.2)                                        |
+| `dns-resolvers` quirk                       | quirk               | `{ name; environment; dns; api; }` per running instance; `environment` is the env name  |
+| `services.networking.blocky`                | host aspect         | The NixOS service; emits `dns-resolvers` and `prometheus-targets`                       |
+| `kubernetes.services.network.blocky`        | cluster aspect      | Phase 2 Deployment; emits `dns-resolvers`                                               |
+| `services/networking/blocky/_settings.nix`  | helper              | The shared definition: a function from instance inputs to Blocky's settings attrset     |
+| `core/network/_resolvers.nix`               | helper              | `resolversFor environment dns-resolvers` → addresses, then `networks.default.gatewayIp` |
+| `services.networking.blocky.cli`            | host aspect         | `dns-filter`, built in the aspect because it needs den data (§2.5)                      |
+| `core.network.tailscale`                    | existing aspect     | `--accept-dns=false` on non-roaming NixOS hosts (§2.4b)                                 |
 
 This mirrors `monitoring.ingest`. The environment names an instance, and the
 instance announces its own address through a quirk. No host file names another
@@ -156,19 +167,27 @@ The three options join it, and its description widens to "The environment's DNS:
 its public edge records, and the resolver instances, filter and internal
 upstream its clients use (docs/dns-resolver.md)".
 
-Phase 1 in the environment files:
+Phase 1 in the environment files, by rollout step (§2.9):
 
 ```nix
-# prod.nix and dev.nix (dev's hosts use prod's uplink; the quirk collects fleet-wide)
-dns.resolvers = [ "uplink" ];
+# step 1, prod.nix only: read by the resolver instance, which runs in prod
 dns.internal = "axon";
 dns.filter = {
   # hagezi's documented URL for its "Wildcard Asterisk" format, the one it names for Blocky
   denylists = [ "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/pro.txt" ];
   allowlist = [ ];                 # inline domains, reviewed in the diff
 };
+
+# step 2, prod.nix and dev.nix (dev's hosts use prod's uplink; the quirk collects fleet-wide)
+dns.resolvers = [ "uplink" ];
+
+# step 3, prod.nix and dev.nix
 networks.default.unifiNetwork = "Default";   # dev.nix: "dev"
 ```
+
+`dns.internal` and `dns.filter` are set in prod only. Only a resolver instance
+reads them, from its own environment, and both instances (uplink, then the axon
+cluster) are in prod. In dev.nix they would be keys nothing reads.
 
 And in `hosts/uplink.nix`: `includes = [ … services.networking.blocky ];` and
 `settings.services.networking.blocky.isResolver = true;`, the way the same file
@@ -200,19 +219,20 @@ file sets it").
 - `dns-internal` copies `monitoring-ingest`: the cluster emits it, a host policy
   `collect-dns-internal` collects it with `collectAll ({ cluster, ... }: true)`
   (as `pipes.nix:194-199` does), and the resolver host selects it with
-  `lib.findFirst (i: i.cluster == environment.dns.internal) null dns-internal`
-  (as `alloy.nix:20-21` does). The policy carries the resolver-host guard below,
-  so only a resolver host collects it.
+  `lib.findFirst (i: i.cluster == environment.dns.internal) (throw "environment.dns.internal = ${toString environment.dns.internal}: no cluster emits a dns-internal record for it") dns-internal`
+  (the `alloy.nix:20-21` selection, with `resolversFor`'s throw in place of
+  `null`). An unset `dns.internal` (`null`) throws there too, so a resolver
+  host's environment must name the cluster. The policy carries the resolver-host
+  guard below, so only a resolver host collects it.
 - The resolver host also needs the environment's `served-domains` (§2.3). Host
   scope collects none today, so a new host policy takes them.
 - **The resolver-host guard** is keyed on the host running the instance, as
   `broadcast-hub-peer` is (`pipes.nix:299-305`):
   `{ host, ... }: lib.optionals (host.settings.services.networking.blocky.isResolver or false) [ … ]`.
   It is not keyed on `environment.dns.resolvers`: at rollout step 1 that list is
-  `[ ]`, so uplink would collect nothing, and
-  `lib.findFirst … null dns-internal` would yield `null.address`. Every policy
-  in `pipes.nix` keys on a setting (`:282`, `:292`, `:301`); none reads
-  `host.hasAspect` (the only use in `policies/` is commented out,
+  `[ ]`, so uplink would collect nothing, and the `dns-internal` selection would
+  throw. Every policy in `pipes.nix` keys on a setting (`:282`, `:292`, `:301`);
+  none reads `host.hasAspect` (the only use in `policies/` is commented out,
   `clusters.nix:59`). The aspect's `nixos` content and its emits gate on the
   same setting, as `syncthing/hub.nix:62` gates on `isHub`, so the include and
   the setting can't disagree silently: including the aspect without the setting
@@ -280,45 +300,19 @@ inputs:
   its root on boot, so the aspect declares
   `cache.directories = [ { directory = "/var/lib/private/blocky"; user = "nobody"; group = "nogroup"; mode = "0700"; } ]`,
   as `attic.nix:183-191` does for `/var/lib/private/atticd`.
-- Boot ordering: `systemd.services.blocky` gets `after` and `wants` on
-  `systemd-networkd-wait-online@${lanLinkOf environment host}.service`.
-  `network-online.target` doesn't help: wait-online is off fleet-wide, the
-  target is reached before `br0` has carrier, and the address comes after
-  carrier (§1). So without this, on boot Blocky binds `10.10.10.1` before `br0`
-  holds it and fails with `EADDRNOTAVAIL`. With `Restart = "on-failure"` at the
-  default 100 ms and the default start limit of 5 starts in 10 s, it would then
-  stay dead, with every client on the unfiltered gateway. The template unit is
-  installed and enabled while `wait-online.enable = false` (§1). It runs
-  `systemd-networkd-wait-online -i <link> --timeout=120`, and with no operstate
-  given it waits for the link's `RequiredForOnline`, `routable` by default
-  (`networking.nix`, `effectiveRequiredForOnline`). It is `wants`, not
-  `requires`, so a timeout still starts Blocky, which then restarts as today.
-  `ip_nonlocal_bind` would also work, but it is a host-wide sysctl and lets
-  Blocky run on an address the host doesn't hold. Blocky's `ports.freeBind` is
-  no substitute: it covers only the DNS and DoT listeners, not HTTP `:4000`
-  (`server/server.go:232-259`). Test 5 checks a reboot.
-
-`lanLinkOf` lives in `core/network/_resolvers.nix`, beside `resolversFor`. Den
-holds no LAN-link name, so it derives one from the host entity: the interface
-that carries `environment.addressOn "default" host`, or the bridge that
-interface is a port of.
-
-```nix
-lanLinkOf = environment: host:
-  let
-    addr = environment.addressOn "default" host;
-    nic = lib.findFirst
-      (n: lib.any (a: lib.head (lib.splitString "/" a) == addr) host.networking.interfaces.${n}.ipv4)
-      null (lib.attrNames host.networking.interfaces);   # never null: addressOn already found it
-    inherit (host.networking) bridges;
-  in
-  assert !host.networking.autobridging;   # an autobridged bridge has no declared name; no host sets it
-  lib.findFirst (br: lib.elem nic bridges.${br}) nic (lib.attrNames bridges);
-```
-
-It gives uplink and cortex `br0` and axon-01 `enp2s0`. A microvm guest's LAN
-link is the `20-lan` network its host file matches by MAC address (uplink-dev's
-`enp0s8`, measured in §1), and den holds the MAC, not the name.
+- Boot: no ordering unit. On a normal boot, uplink's address is the initrd's and
+  is already in place when stage 2 starts Blocky (§1). The case left is a boot
+  where `br0` has no carrier (the switch is down). Then neither stage applies
+  the address, and Blocky fails to bind `10.10.10.1` with `EADDRNOTAVAIL`. The
+  module's `Restart = "on-failure"` retries at the default 100 ms, and the
+  default start limit (5 starts in 10 s) would then leave it dead, with every
+  client on the unfiltered gateway. So the aspect sets
+  `serviceConfig.RestartSec = "2s"` and `startLimitIntervalSec = 0`, and Blocky
+  retries every 2 s until the address appears. `ip_nonlocal_bind` would also
+  work, but it is a host-wide sysctl and lets Blocky run on an address the host
+  doesn't hold. Blocky's `ports.freeBind` is no substitute: it covers only the
+  DNS and DoT listeners, not HTTP `:4000` (`server/server.go:232-259`). Test 5
+  checks the guard in a VM.
 
 The firewall opens TCP and UDP 53 and TCP 4000. Blocky binds only the IPv4 LAN
 address, and the router forwards neither port, so nothing past the LAN reaches
@@ -420,10 +414,19 @@ journal: a `mkLogsDashboard` entry over `{unit="blocky.service"}` with a
 threat is low on the LAN, and the wrapper's default duration re-enables
 filtering. §4 notes that the guarantee belongs to the wrapper, not to the API.
 
-**Alerts.** Three rules in `kubernetes/services/monitoring/prometheus.nix`,
+**Alerts.** Four rules in `kubernetes/services/monitoring/prometheus.nix`,
 beside `HostSilent` in `additionalPrometheusRulesMap.hosts`, all
 `severity = "warning"`. Their series arrive by the same path as test 6's
-metrics.
+metrics. Alloy labels each scrape `job = "blocky"` (the announced job) and
+`instance = host.name` (`alloy.nix:11-14`, `:46-61`).
+
+- `BlockyDown`: one rule per host whose `prometheus-targets` record announces
+  the `blocky` job, built as `HostSilent` builds its own from `expectedHosts`
+  (`prometheus.nix:67-76`, `:216-225`).
+  `expr = "absent_over_time(up{job=\"blocky\", instance=\"<host>\"}[5m]) or max_over_time(up{job=\"blocky\", instance=\"<host>\"}[5m]) < 1"`,
+  `for = "5m"`. When Blocky is dead, its own series go stale and the three rules
+  below can't fire. Alloy keeps pushing `up = 0` while the host runs, and the
+  `absent_over_time` arm covers the host going silent.
 
 - `BlockyFilteringOff`: `expr = "blocky_blocking_enabled == 0"`, `for = "15m"`.
   A disable longer than the wrapper's default, or an indefinite one through the
@@ -607,18 +610,25 @@ current server after each case.
 
 The rule: if any of test 5's records shows the link's current server on the
 gateway, the failback timer joins phase 1, in rollout step 2, before step 3.
-Otherwise it is not built. Its minimal shape, in `core.network.networking` on
-every host whose `resolversFor` is non-null:
+Otherwise it is not built. Its minimal shape is in `core.network.networking`, on
+the hosts that take `--accept-dns=false` (§2.4b): `resolversFor` non-null and no
+`core.network.manager`. A NetworkManager host (`blade`) keeps MagicDNS and gets
+no timer. The script finds the link at runtime from the default route. Den holds
+no LAN-link name: a DHCP-only host has no static address to find it by, and a
+guest's link is named by its PCI slot inside the guest (`enp0s9` on uplink-dev,
+`enp0s12` on cortex-cuda, measured 2026-11-10).
 
 ```nix
-# link = lanLinkOf environment host; servers = resolversFor { } environment dns-resolvers; first = head servers
+# servers = resolversFor { } environment dns-resolvers; first = head servers
 systemd.services.dns-failback = {
   serviceConfig.Type = "oneshot";
-  path = [ config.systemd.package pkgs.dnsutils pkgs.gnugrep ];
+  path = [ config.systemd.package pkgs.dnsutils pkgs.gnugrep pkgs.iproute2 pkgs.gawk ];
   script = ''
-    resolvectl status ${link} | grep -q "Current DNS Server: ${first}$" && exit 0
+    link=$(ip -o route show default | awk '{print $5; exit}')
+    [ -n "$link" ] || exit 0                                                       # no default route yet
+    resolvectl status "$link" | grep -q "Current DNS Server: ${first}$" && exit 0
     dig +time=2 +tries=1 @${first} example.com | grep -q "status: NOERROR" || exit 0   # still down
-    resolvectl dns ${link} ${lib.escapeShellArgs servers}                          # re-set the same list
+    resolvectl dns "$link" ${lib.escapeShellArgs servers}                          # re-set the same list
   '';
 };
 systemd.timers.dns-failback = {
@@ -744,11 +754,12 @@ can change. The gateway stays the last resort.
 ### 2.9 Rollout
 
 1. `_settings.nix`, the `services.networking.blocky` aspect with uplink
-   including it and setting `isResolver = true`, the three alerts, and the
-   `coredns-internal` LB, `dns-internal` record and policy. No client changes
-   yet, since `dns.resolvers = [ ]`; the resolver-host guard is the setting, not
-   that list (§2.1), so uplink already collects `served-domains` and
-   `dns-internal`. Tests 1–3, 6, 8 and 9 run against `@10.10.10.1` directly.
+   including it and setting `isResolver = true`, `dns.internal = "axon"` and
+   `dns.filter` in prod.nix (§2.1), the four alerts, and the `coredns-internal`
+   LB, `dns-internal` record and policy. No client changes yet, since
+   `dns.resolvers = [ ]`; the resolver-host guard is the setting, not that list
+   (§2.1), so uplink already collects `served-domains` and `dns-internal`. Tests
+   1–3, 6, 8 and 9 run against `@10.10.10.1` directly.
 2. `dns.resolvers = [ "uplink" ]` in both environments, plus the (b) and (c)
    consumers (including `accept-dns=false`, owner Q13 decided) and the D10
    cleanup. Tests 5, 7 and 11. If test 5 shows a link on the gateway, the
@@ -822,9 +833,10 @@ passes means the test proves nothing.
    - Control: `dns-filter off 0` exits non-zero and leaves blocking enabled.
      During the window, `<d>` is not `0.0.0.0` (so `off` worked).
 5. **One path, and the fallback while the resolver is down.** Each host's LAN
-   link is `lanLinkOf environment host` (§2.2): `br0` on cortex and uplink,
-   `enp2s0` on axon-01. On a guest it is the link its `20-lan` network matches
-   by MAC, found with `ip -br link | grep -i <mac>` (`enp0s8` on uplink-dev).
+   link is the one carrying its default route,
+   `ip -o route show default | awk '{print $5; exit}'`, the lookup the failback
+   timer uses (§2.4): `br0` on cortex and uplink, `enp2s0` on axon-01, `enp0s9`
+   on uplink-dev and `enp0s12` on cortex-cuda (measured 2026-11-10).
    - With Blocky up, `resolvectl query example.com` on cortex, uplink-dev,
      cortex-cuda and axon-01 answers `-- link: <lan>`. Control: at `03b84230`,
      cortex answers from `link: tailscale0` (40 of 40, §1).
@@ -835,13 +847,18 @@ passes means the test proves nothing.
      `dig @10.10.10.1 uplink.ts.json64.dev` answers the same. Control: rendered
      without the `ts.<domain>` mapping, `dig @10.10.10.1 uplink.ts.json64.dev`
      answers no `100.64.0.0/10` address.
-   - SERVFAIL on uplink's side (a record, deciding the failback timer, §2.4):
-     run `systemctl restart tailscaled` on uplink. From cortex, query
-     `uplink.ts.json64.dev` once a second through the restart and once 60 s
-     after it, and record each answer and `resolvectl status br0`'s
-     `Current DNS Server` at both points. Then
-     `resolvectl query dnssec-failed.org` on cortex, and record the current
-     server again.
+   - SERVFAIL on uplink's side (a record, deciding the failback timer, §2.4).
+     Before each query below, flush Blocky's response cache with
+     `curl -X POST http://10.10.10.1:4000/api/cache/flush` (0.35.0
+     `docs/interfaces.md`), and query with `resolvectl query --cache=no`. Then
+     neither resolved's cache nor Blocky's (which prefetches) answers in the
+     upstream's place. On cortex, record each answer and
+     `resolvectl status br0`'s `Current DNS Server`:
+     - `gone.ts.json64.dev`, a tailnet name that doesn't exist, which quad-100
+       answers SERVFAIL in steady state (§4);
+     - `uplink.ts.json64.dev`, once a second through a
+       `systemctl restart tailscaled` on uplink and once 60 s after it;
+     - `dnssec-failed.org`.
    - Stop `blocky.service` on uplink. Then `resolvectl query example.com`
      succeeds on the same hosts, still from the LAN link, and on a LAN DHCP
      client after step 3 if test 13 kept the gateway. Repeat with uplink powered
@@ -855,18 +872,15 @@ passes means the test proves nothing.
      the current server on the gateway and Blocky up, `Current DNS Server` is
      `10.10.10.1` within 10 min. Control: with the timer stopped, it stays on
      the gateway.
-   - Boot: reboot uplink. `dig @10.10.10.1 example.com` from cortex answers
-     within 2 min of uplink's `multi-user.target`,
-     `systemctl show blocky -p NRestarts` is `0`, and
-     `systemd-analyze critical-chain blocky.service` lists
-     `systemd-networkd-wait-online@br0.service`. Control: the same
-     `critical-chain` on the current module (no ordering on that unit) does not
-     list it.
-   - Boot, optional VM control: a NixOS VM test whose LAN link gains carrier 10
-     s after boot (its only bridge port is added by a delayed oneshot). With the
-     ordering, `blocky.service` is active with `NRestarts` 0 and answers on the
-     bridge address. Without it, Blocky fails with `EADDRNOTAVAIL` and stays
-     failed once it hits the start limit.
+   - Boot without the address (§2.2), a NixOS VM test: the VM's LAN bridge has
+     no port at boot, and a oneshot adds its only port 10 s later, so the
+     address arrives after Blocky's first start. With the aspect's `RestartSec`
+     and `startLimitIntervalSec`, `blocky.service` is active, answers on the
+     bridge address within 15 s of the port being added, and `NRestarts` is at
+     least 1, which shows the test hit the race. Control: with both keys
+     removed, Blocky fails with `EADDRNOTAVAIL` and ends `failed` with result
+     `start-limit-hit`. A reboot of uplink is not a test: there the address is
+     the initrd's (§1), so it passes with or without the guard.
 6. **Metrics and logs arrive.**
    - In Prometheus, `up{job="blocky", instance="uplink"} == 1`, and
      `blocky_blocking_enabled` is present.
@@ -874,7 +888,9 @@ passes means the test proves nothing.
      query within 2 min of resolving it.
    - The dashboard's panels are non-empty.
    - Controls: a second, never-queried uuid returns 0 lines. With
-     `blocky.service` stopped, `up` goes to 0 within two scrape intervals.
+     `blocky.service` stopped, `up` goes to 0 within two scrape intervals, and
+     `BlockyDown` fires in Alertmanager between 10 and 12 min after the stop (5
+     min of `max_over_time` plus `for = 5m`).
    - Alert: `dns-filter off 20m` makes `BlockyFilteringOff` fire in Alertmanager
      between 15 and 17 min. Control: `dns-filter off 5m` never fires it.
 7. **D10 is gone.** `rg -n '"(8\.8\.8\.8|1\.1\.1\.1|1\.0\.0\.1)"' modules/den`
@@ -902,13 +918,25 @@ passes means the test proves nothing.
      names, `metrics/metrics_event_publisher.go:89,153`), and
      `journalctl -u blocky --since <the start>` holds a `group import finished`
      line (`lists/list_cache.go:174`, logged only by a refresh, not by the disk
-     seed). A gauge above 0 alone would pass on a dead URL once the disk cache
-     exists, because `seedFromDisk` fills the group first
-     (`list_cache.go:99-100`). Control: with a warm cache, a denylist URL that
-     answers 404 still reads a gauge above 0 (seeded), but
-     `blocky_failed_downloads_total` is above 0 and no `group import finished`
-     line appears: a 404 is not served from the cache
-     (`download_cache.go:87-99`), and the group keeps its seeded entries.
+     seed) and an `import succeeded` line (`list_cache.go:376`). A body cut off
+     mid-read skips `import succeeded`: its parse error returns early
+     (`:359-373`), yet the group still imports and the counter stays 0. The
+     cache file named by the URL's sha256,
+     `/var/lib/private/blocky/$(printf %s '<url>' | sha256sum | cut -d' ' -f1)`
+     (`cacheFilePath`, `download_cache.go:16-21`), exists. It is renamed into
+     place only once the body has been read to EOF (`:146-170`, `:225-243`). A
+     gauge above 0 alone would pass on a dead URL once the disk cache exists,
+     because `seedFromDisk` fills the group first (`list_cache.go:99-100`).
+   - A 404 is not served from the cache. This is the control for the
+     fresh-download assertions above, and it runs in a NixOS VM, because the
+     cache is keyed by URL, so only the same URL can be seeded. A local HTTP
+     server serves the denylist at one URL, first with 200: Blocky loads it, and
+     the cache file exists. Then the server answers 404 for that URL, and Blocky
+     restarts. The gauge still reads above 0 (seeded from disk), but
+     `blocky_failed_downloads_total` is above 0, and no `group import finished`
+     or `import succeeded` line follows the restart. A 404 is not served from
+     the cache (`download_cache.go:87-99`), and the group keeps its seeded
+     entries.
    - A dead list does not stop startup: a NixOS VM test whose denylist is a
      bogus URL (`https://127.0.0.1:9/none.txt`) reads 0 for the gauge, while
      `blocky.service` is active with `NRestarts` 0 and port 53 answers.
@@ -950,7 +978,7 @@ passes means the test proves nothing.
       `enabled=false`.
     - On axon-01, after `dns.resolvers = [ "axon" "uplink" ]`:
       `resolvectl query <uuid>.example.com` succeeds, `resolvectl status enp2s0`
-      (axon-01's LAN link, `lanLinkOf`, §2.2) shows the `blocky` LB address as
+      (axon-01's LAN link, test 5) shows the `blocky` LB address as
       `Current DNS Server`, and the uuid appears in a blocky pod's log, not in
       uplink's journal. Control: with the `host`/`remote-node` ingress rule
       removed, the query is slow, the current server moves to uplink, and the
@@ -1168,3 +1196,16 @@ accepted. Den-fit 1 and ops 1 are the same defect.
 | ops 3: a truncated download replaces the whole denylist                                          | two §2.2 sentences corrected; `downloads.timeout = "60s"`; `BlockyDenylistShrunk` and `BlockyDenylistEmpty` alerts (§2.2, §4); truncating-server VM control (test 9)                                                                                                                                                                                      |
 | ops 4: tests 5 and 14 name `br0` on axon-01                                                      | each host's LAN link from `lanLinkOf` (`enp2s0` on axon-01), guests by MAC (tests 5, 14)                                                                                                                                                                                                                                                                  |
 | ops 5: two tailnet controls don't depend on the mechanism                                        | test 5's control drops the `ts.<domain>` mapping; test 14's removes the `100.100.100.100/32` egress rule                                                                                                                                                                                                                                                  |
+
+**Round 4 (v0.4): 7 objections** (2 den-fit, 5 ops), all accepted. The owner
+then stopped the review loop.
+
+| v0.4 objection                                                                                               | Resolution                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| den-fit 1: the failback timer's `lanLinkOf` throws on DHCP-only hosts and names the host-side tap for guests | the timer reads its link from the default route at runtime, gated on the `accept-dns=false` predicate (§2.4); `lanLinkOf` deleted, since nothing else uses it once the boot gate is gone; tests 5 and 14 name the default-route link (guests `enp0s9`, `enp0s12`, measured)                                                                                                                                                                                                                                                                     |
+| den-fit 2: step 1 never sets `dns.internal` or `dns.filter`                                                  | step 1 sets both in prod.nix with `dns.resolvers = [ ]`; the §2.1 env block is split by step; the `dns-internal` selection throws with a message naming `environment.dns.internal`; dev.nix sets neither, since only a prod instance reads them (§2.1, §2.9)                                                                                                                                                                                                                                                                                    |
+| ops 1: the boot gate rests on initrd timestamps                                                              | stage 2 re-measured: the address is the initrd's, kept across the switch (`flushBeforeStage2 = false`) (§1); the wait-online gate and its claims deleted, so the IPv6 stall it added is gone; `RestartSec = "2s"` plus `startLimitIntervalSec = 0` guard a boot without carrier (§2.2); the reboot check is replaced by a mandatory delayed-address VM test that must see `NRestarts ≥ 1`, with `start-limit-hit` as the control (test 5); the template unit was `disabled`, pulled in by `wants`, and the round-3 "enabled" claim is withdrawn |
+| ops 2: test 9 passes on a truncated download                                                                 | test 9 also asserts the `sha256(url)` cache file and an `import succeeded` line (`download_cache.go:16-21`, `list_cache.go:376`)                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ops 3: test 9's 404 control can't seed                                                                       | moved to a VM test: one local URL serves 200, then 404 after a restart (test 9)                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ops 4: no alert when Blocky is dead                                                                          | `BlockyDown`, built per announced host as `HostSilent` is, on `up{job="blocky", instance=<host>}` (Alloy's labels) (§2.2); test 6's stopped-Blocky control asserts it fires                                                                                                                                                                                                                                                                                                                                                                     |
+| ops 5: caches hide test 5's SERVFAIL records                                                                 | each query is preceded by `POST /api/cache/flush` and run with `resolvectl query --cache=no`; `gone.ts.json64.dev` added as the steady-state SERVFAIL record (test 5)                                                                                                                                                                                                                                                                                                                                                                           |
