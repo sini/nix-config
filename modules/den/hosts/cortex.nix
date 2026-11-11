@@ -11,7 +11,6 @@ in
 
     networking.interfaces.enp8s0 = {
       ipv4 = [ "10.9.2.1/16" ];
-      ipv6 = [ "fd64:0:1::5/64" ];
       # br0 adopts this, so the address the router has always known for cortex
       # is unchanged by bridging -- and identical at netboot, where the NIC
       # answers for itself.

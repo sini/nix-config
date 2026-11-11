@@ -5,6 +5,7 @@
 }:
 let
   resolvers = import ./_resolvers.nix { inherit lib; };
+  plan = import ../../../schema/_address-plan.nix { inherit lib; };
 in
 {
   den.aspects.core.network.networking = {
@@ -21,11 +22,13 @@ in
         inherit (lib)
           attrNames
           concatMap
+          findFirst
           imap0
           length
           listToAttrs
           map
           mapAttrsToList
+          optional
           optionalAttrs
           optionals
           subtractLists
@@ -103,14 +106,39 @@ in
             ipv4Addrs = ifCfg.ipv4 or [ ];
             ipv6Addrs = ifCfg.ipv6 or [ ];
             dhcp = effectiveDhcp ifCfg;
-            # Addresses in the LAN's ULA (networks.default.ipv6_cidr), which no
-            # router advertises: this link advertises the prefix on-link, so LAN
-            # clients reach them directly (docs/dns-resolver.md §2.4(a)).
-            ula = if environment.networks ? default then environment.ipv6On "default" ipv6Addrs else [ ];
+            defaultNet = environment.networks.default or null;
+            # Declared addresses in the LAN's ULA (networks.default.ipv6_cidr), held
+            # without DAD (Blocky's ::53, docs/dns-resolver.md §2.4(a)).
+            ula = if defaultNet != null then environment.ipv6On "default" ipv6Addrs else [ ];
+            # Only an interface declaring advertiseUla sends RAs: the ULA's prefix
+            # on-link, which no router advertises, so LAN clients reach it directly.
+            advertise =
+              if !(ifCfg.advertiseUla or false) then
+                false
+              else if (defaultNet.ipv6_cidr or null) == null then
+                throw "den: host '${host.name}' declares advertiseUla, but its environment's default network has no ipv6_cidr"
+              else
+                true;
+            # The link's IPv4 on the LAN, as its IPv6 interface identifier
+            # (docs/address-plan.md §2.2): SLAAC forms the GUA from whatever prefix
+            # the router announces, and the ULA is static.
+            lanIp =
+              if defaultNet == null then
+                null
+              else
+                findFirst (plan.ipv4InCidr defaultNet.cidr) null (
+                  map (a: builtins.head (lib.splitString "/" a)) ipv4Addrs
+                );
+            token = if lanIp == null then null else plan.tokenOf lanIp;
+            tokenUla =
+              if token == null || (defaultNet.ipv6_cidr or null) == null then
+                null
+              else
+                plan.addressIn defaultNet.ipv6_cidr token;
           in
           {
             networkConfig = {
-              Address = ipv4Addrs ++ subtractLists ula ipv6Addrs;
+              Address = ipv4Addrs ++ subtractLists ula ipv6Addrs ++ optional (tokenUla != null) tokenUla;
               DHCP = dhcp;
               # Explicit, so networkd keeps accepting the router's RAs while it sends its own.
               IPv6AcceptRA = true;
@@ -128,7 +156,7 @@ in
               # chains into unsigned zones ("failed-auxiliary", e.g. the
               # registry.k8s.io -> us-west2-docker.pkg.dev image redirect).
             }
-            // optionalAttrs (ula != [ ]) { IPv6SendRA = true; };
+            // optionalAttrs advertise { IPv6SendRA = true; };
             # No DAD: a service binds the address at boot, and a tentative address refuses bind().
             addresses = map (a: {
               Address = a;
@@ -136,7 +164,7 @@ in
             }) ula;
             # Prefix-only RAs: lifetime 0 (never a default router, RFC 4861 §4.2),
             # on-link and not autonomous (clients add the route, not an address).
-            ipv6SendRAConfig = optionalAttrs (ula != [ ]) {
+            ipv6SendRAConfig = optionalAttrs advertise {
               RouterLifetimeSec = 0;
               # shortcut: mirrors prod Default's RA flags (DHCPv6 assignment: M and O set),
               # so a client never sees the two routers disagree; a SLAAC network wants Managed = false.
@@ -145,20 +173,25 @@ in
               EmitDNS = false;
               EmitDomains = false;
             };
-            ipv6Prefixes = optionals (ula != [ ]) [
+            ipv6Prefixes = optionals advertise [
               {
                 Prefix = environment.networks.default.ipv6_cidr;
                 AddressAutoconfiguration = false;
               }
             ];
-            # Drop SLAAC address autoconf when an interface opts out (DHCPv6/
-            # static-only addressing → one deterministic GUA); RA is still used
-            # for the on-link prefix + default route.
+            # Drop SLAAC address autoconf when an interface opts out (static-only
+            # addressing); RA is still used for the on-link prefix + default route.
             # With resolvers, the list is exactly the environment's: no RDNSS or
             # DHCPv6 servers from the router.
+            # A LAN link's one stable GUA is its token: no DHCPv6 lease beside it,
+            # which the router's managed flag would otherwise start.
             ipv6AcceptRAConfig =
               optionalAttrs (ifCfg.acceptRAAutonomousPrefix or null != null) {
                 UseAutonomousPrefix = ifCfg.acceptRAAutonomousPrefix;
+              }
+              // optionalAttrs (token != null) {
+                Token = "static:${token}";
+                DHCPv6Client = false;
               }
               // optionalAttrs (lanResolvers != null) { UseDNS = false; };
             dhcpV6Config = {
@@ -166,17 +199,13 @@ in
               PrefixDelegationHint = "::/64";
             }
             // optionalAttrs (lanResolvers != null) { UseDNS = false; };
-            routes =
-              let
-                defaultNet = environment.networks.default or { };
-              in
-              optionals (length ipv4Addrs > 0) [
-                (mkRoute (defaultNet.gatewayIp or null) { })
-                (mkRoute (defaultNet.gatewayIpV6 or null) {
-                  Destination = "::/0";
-                  GatewayOnLink = true;
-                })
-              ];
+            routes = optionals (length ipv4Addrs > 0) [
+              (mkRoute (defaultNet.gatewayIp or null) { })
+              (mkRoute (defaultNet.gatewayIpV6 or null) {
+                Destination = "::/0";
+                GatewayOnLink = true;
+              })
+            ];
             linkConfig = {
               RequiredForOnline = effectiveRequiredForOnline ifCfg;
             }

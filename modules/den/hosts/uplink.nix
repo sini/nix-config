@@ -16,6 +16,8 @@
       # br0 adopts the NIC's own MAC, so the router, ARP caches and the SLAAC
       # addresses see no change from bridging.
       mac = "24:8a:07:e0:a8:b0";
+      # The LAN reaches Blocky's ::53 on-link: br0 advertises the ULA's prefix.
+      advertiseUla = true;
     };
 
     # enp4s0 moves into br0 with the addressing above; the networking aspect

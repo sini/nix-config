@@ -30,7 +30,9 @@ let
   hostKeyShare = "/var/lib/microvms/uplink-dev/host-key";
   hostKeyDir = "/etc/ssh/host-key";
   mac = "02:00:00:01:02:01";
+  lanIp = "10.10.11.1";
   resolvers = import ../aspects/core/network/_resolvers.nix { inherit lib; };
+  plan = import ../schema/_address-plan.nix { inherit lib; };
 in
 {
   den.hosts.x86_64-linux.uplink-dev = {
@@ -52,7 +54,7 @@ in
     users.sini = { };
 
     # On the prod LAN beside the other static servers, through uplink's br0.
-    networking.interfaces.vm-dev.ipv4 = [ "10.10.11.1/16" ];
+    networking.interfaces.vm-dev.ipv4 = [ "${lanIp}/16" ];
 
     microvm.scratchVolumes = {
       "/nix/.rw-store" = 262144; # 256 GiB ceiling, sparse
@@ -141,7 +143,10 @@ in
           networks."20-lan" = {
             matchConfig.MACAddress = mac;
             networkConfig = {
-              Address = [ "10.10.11.1/16" ];
+              Address = [
+                "${lanIp}/16"
+                (plan.addressIn environment.networks.default.ipv6_cidr (plan.tokenOf lanIp))
+              ];
               Gateway = "10.10.0.1";
               DNS = resolvers.plainResolversFor environment dns-resolvers;
               IPv6AcceptRA = true;
@@ -150,7 +155,14 @@ in
             # The list is exactly the environment's: no RDNSS from the router, and
             # none from the DHCPv6 client an RA's managed flag starts (DHCP = "no"
             # does not stop it; uplink-dev listed the router's address from it).
-            ipv6AcceptRAConfig.UseDNS = false;
+            # The address plan's keys, as the networking aspect writes them for a LAN
+            # link (docs/address-plan.md §2.2): the token as the GUA's interface
+            # identifier, no DHCPv6 lease beside it, and (above) the token's static ULA.
+            ipv6AcceptRAConfig = {
+              UseDNS = false;
+              Token = "static:${plan.tokenOf lanIp}";
+              DHCPv6Client = false;
+            };
             dhcpV6Config.UseDNS = false;
             # The cluster's LoadBalancer pool via uplink, the prod BGP hub, which holds a
             # per-address route to the announcing node. Through the gateway this breaks:

@@ -96,14 +96,24 @@ let
           address (e.g. so Cilium's masquerade source stays warm).
         '';
       };
+      advertiseUla = mkOption {
+        type = types.bool;
+        default = false;
+        description = ''
+          Send prefix-only RAs for the environment's ULA (networks.default.ipv6_cidr)
+          on this link: on-link, not autonomous, never a default router, so LAN clients
+          reach the ULA addresses here directly (uplink, for Blocky's ::53;
+          docs/dns-resolver.md §2.4(a)). A ULA address alone sends none.
+        '';
+      };
       acceptRAAutonomousPrefix = mkOption {
         type = types.nullOr types.bool;
         default = null;
         description = ''
           Generate a SLAAC address from RA autonomous prefixes
           ([IPv6AcceptRA] UseAutonomousPrefix). null = default (true). Set
-          false for DHCPv6/static-only addressing so the interface holds a
-          single deterministic GUA (RA is still used for the route).
+          false for static-only addressing (RA is still used for the route). A LAN
+          link's one stable GUA is its token (docs/address-plan.md §2.2).
         '';
       };
     };

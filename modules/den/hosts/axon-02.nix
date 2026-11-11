@@ -10,12 +10,10 @@
       enp2s0 = {
         ipv4 = [ "10.10.10.3/16" ];
         ipv6 = [ "fe80::24d8:31ff:fe26:e771" ];
-        # Deterministic IPv6 egress: a single GUA from DHCPv6 only — no SLAAC
-        # autoconf, no rotating privacy temps — so the node sources from, and
-        # Cilium masquerades pods to, the same warm address (return traffic to
-        # the SNAT source no longer goes stale).
+        # Deterministic IPv6 egress: one GUA, the token's (SLAAC on the router's
+        # prefix, no DHCPv6 lease, no rotating privacy temps), so the node sources
+        # from, and Cilium masquerades pods to, the same warm address.
         privacyExtensions = "no";
-        acceptRAAutonomousPrefix = false;
       };
       enp199s0f5 = { };
       enp199s0f6 = { };

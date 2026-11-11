@@ -8,6 +8,8 @@ let
   # Shared with cortex.nix, which decrypts the guest's key into hostKeyShare.
   inherit (import ./_cortex-cuda-host-key.nix) hostKeyShare hostKeyDir;
   resolvers = import ../aspects/core/network/_resolvers.nix { inherit lib; };
+  plan = import ../schema/_address-plan.nix { inherit lib; };
+  lanIp = "10.9.2.2";
 in
 {
   den.hosts.x86_64-linux.cortex-cuda = {
@@ -32,7 +34,7 @@ in
     # passthrough device IDs derive from it).
     facts = ./. + "/../../../hosts/cortex/facter.json";
 
-    networking.interfaces.vm-cuda.ipv4 = [ "10.9.2.2/16" ];
+    networking.interfaces.vm-cuda.ipv4 = [ "${lanIp}/16" ];
 
     # B2: passthrough intent on the ENTITY (the host-side GPU overlay reads
     # vm.microvm.passthrough).
@@ -248,8 +250,9 @@ in
             matchConfig.MACAddress = "02:00:00:01:01:01";
             networkConfig = {
               Address = [
-                "10.9.2.2/16"
+                "${lanIp}/16"
                 "fe80::ff:fe01:101/64"
+                (plan.addressIn environment.networks.default.ipv6_cidr (plan.tokenOf lanIp))
               ];
               Gateway = "10.9.0.1";
               DNS = resolvers.plainResolversFor environment dns-resolvers;
@@ -259,7 +262,14 @@ in
             # The list is exactly the environment's: no RDNSS from the router, and
             # none from the DHCPv6 client an RA's managed flag starts (DHCP = "no"
             # does not stop it; uplink-dev listed the router's address from it).
-            ipv6AcceptRAConfig.UseDNS = false;
+            # The address plan's keys, as the networking aspect writes them for a LAN
+            # link (docs/address-plan.md §2.2): the token as the GUA's interface
+            # identifier, no DHCPv6 lease beside it, and (above) the token's static ULA.
+            ipv6AcceptRAConfig = {
+              UseDNS = false;
+              Token = "static:${plan.tokenOf lanIp}";
+              DHCPv6Client = false;
+            };
             dhcpV6Config.UseDNS = false;
           };
         };

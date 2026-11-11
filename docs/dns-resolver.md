@@ -548,19 +548,20 @@ provider), which has no RA-specific DNS field. The declared fields are:
   subnet 0, a /64. uplink declares `<ula>::53/64` (host networking data). The
   networking aspect gives an interface address inside `ipv6_cidr` an `[Address]`
   section with `DuplicateAddressDetection=none` (a tentative address refuses
-  `bind()`, and Blocky binds at boot), and sends prefix-only RAs on that link:
-  `RouterLifetimeSec=0` (never a default router, RFC 4861 §4.2), `[IPv6Prefix]`
-  on-link with `AddressAutoconfiguration=false`, no RDNSS or domains, and M and
-  O set as the gateway's are. `IPv6AcceptRA=true` is explicit, so networkd keeps
-  reading the gateway's RAs (networkd disables them by default on a link that
-  sends its own). Clients add an on-link route and keep their own source
-  address: no client setting is needed, unlike a Route Information Option (Linux
-  ignores RIOs at `accept_ra_rt_info_max_plen = 0`, the default). go-unifi's
-  `Network` has no field to advertise an extra prefix (`ipv6_aliases` is an
-  address on the gateway, which would route the query through it). Blocky
-  listens on `[<ula>::53]:53`; port 53 is already open for both families. Dev's
-  LAN has no host in its ULA, so it gets no IPv6 DNS; it would need an instance
-  there.
+  `bind()`, and Blocky binds at boot). An interface declaring `advertiseUla`
+  (uplink's) sends prefix-only RAs on its link (the site ULA and host tokens:
+  docs/address-plan.md): `RouterLifetimeSec=0` (never a default router, RFC 4861
+  §4.2), `[IPv6Prefix]` on-link with `AddressAutoconfiguration=false`, no RDNSS
+  or domains, and M and O set as the gateway's are. `IPv6AcceptRA=true` is
+  explicit, so networkd keeps reading the gateway's RAs (networkd disables them
+  by default on a link that sends its own). Clients add an on-link route and
+  keep their own source address: no client setting is needed, unlike a Route
+  Information Option (Linux ignores RIOs at `accept_ra_rt_info_max_plen = 0`,
+  the default). go-unifi's `Network` has no field to advertise an extra prefix
+  (`ipv6_aliases` is an address on the gateway, which would route the query
+  through it). Blocky listens on `[<ula>::53]:53`; port 53 is already open for
+  both families. Dev's LAN has no host in its ULA, so it gets no IPv6 DNS; it
+  would need an instance there.
 - `dhcpd_start` and `dhcpd_stop` = `networks.default.dhcpRange`. Each LAN
   reserves its first /24 for static services (`staticCidr`: prod `10.10.0.0/24`,
   dev `10.9.0.0/24`), which holds the gateway and the L2 LoadBalancer pool
