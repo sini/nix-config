@@ -78,6 +78,13 @@ in
           type = "CNAME";
           content = "sini.github.io";
         }
+        # GitHub Pages domain verification for the sini account: covers json64.dev
+        # and its subdomains against Pages takeover.
+        {
+          name = "_github-pages-challenge-sini";
+          type = "TXT";
+          content = "ad1acc4a0ecad384fba4cd9071945b";
+        }
       ])
     ];
 
@@ -115,7 +122,10 @@ in
     # xmsg docs on GitHub Pages (sini/xmsg); the other xmsg names 301 to it.
     "xmsg.dev".includes = [
       cloudflare
-      (pages.github { user = "sini"; })
+      (pages.github {
+        user = "sini";
+        verification = "fc916e13ade21bd89adf58b4f095d5";
+      })
     ];
     "xmsg.net".includes = [
       cloudflare
