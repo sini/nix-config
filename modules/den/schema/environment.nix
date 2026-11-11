@@ -335,10 +335,46 @@ in
                       null = this environment publishes no DNS records.
                     '';
                   };
+                  resolvers = mkOption {
+                    type = types.listOf types.str;
+                    default = [ ];
+                    description = ''
+                      Ordered names of the filtering resolver instances (a host or a cluster
+                      emitting a dns-resolvers record) this environment's clients use.
+                      [ ] = clients keep their own resolver lists.
+                    '';
+                  };
+                  filter = mkOption {
+                    type = types.submodule {
+                      options = {
+                        denylists = mkOption {
+                          type = types.listOf types.str;
+                          default = [ ];
+                          description = "Denylist URLs, downloaded by every resolver instance at runtime";
+                        };
+                        allowlist = mkOption {
+                          type = types.listOf types.str;
+                          default = [ ];
+                          description = "Inline domains every resolver instance never blocks";
+                        };
+                      };
+                    };
+                    default = { };
+                    description = "The filter every resolver instance in this environment applies";
+                  };
+                  internal = mkOption {
+                    type = types.nullOr types.str;
+                    default = null;
+                    description = ''
+                      The cluster whose dns-internal record (its CoreDNS) a resolver instance
+                      sends this environment's served names to. A resolver host's environment
+                      must set it.
+                    '';
+                  };
                 };
               };
               default = { };
-              description = "The environment's public edge, for DNS records (modules/flake-parts/terranix)";
+              description = "The environment's DNS: its public edge records, and the resolver instances, filter and internal upstream its clients use (docs/dns-resolver.md)";
             };
 
             timezone = mkOption {

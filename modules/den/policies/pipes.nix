@@ -304,6 +304,29 @@ in
       ])
     ];
 
+  # The resolver host's inputs (services/networking/blocky): every cluster's
+  # dns-internal record, which the host selects by environment.dns.internal, and
+  # the served names of hosts and clusters, which it forwards there. Guarded on
+  # the host running the instance, as broadcast-hub-peer is, so no other host
+  # collects either.
+  den.policies.collect-resolver-inputs =
+    { host, ... }:
+    lib.optionals (host.settings.services.networking.blocky.isResolver or false) [
+      (pipe.from "dns-internal" [ (pipe.collectAll ({ cluster, ... }: true)) ])
+      (pipe.from "served-domains" [ (pipe.collectAll ({ host, ... }: true)) ])
+      (pipe.from "served-domains" [ (pipe.collectAll ({ cluster, ... }: true)) ])
+    ];
+
+  # Resolver instances to clusters, for CoreDNS's off-cluster ingress rule.
+  # Consumers filter by environment.
+  den.policies.cluster-collect-dns-resolvers =
+    { cluster, ... }:
+    [
+      (pipe.from "dns-resolvers" [
+        (pipe.collectAll ({ host, ... }: true))
+      ])
+    ];
+
   den.schema.host.includes = [
     den.policies.collect-host-addrs
     den.policies.collect-bgp-peers
@@ -321,6 +344,7 @@ in
     den.policies.collect-monitoring-ingest
     den.policies.collect-idm-users
     den.policies.collect-exit-nodes
+    den.policies.collect-resolver-inputs
   ];
 
   den.schema.user.includes = [
@@ -341,5 +365,6 @@ in
     den.policies.cluster-collect-idm-users
     den.policies.cluster-collect-prometheus-targets
     den.policies.cluster-collect-domain-quirks
+    den.policies.cluster-collect-dns-resolvers
   ];
 }
