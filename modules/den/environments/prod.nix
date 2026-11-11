@@ -44,11 +44,13 @@ in
       "axon"
       "uplink"
     ];
-    # Default's DHCP clients stay on uplink: their path to 10.11.0.0/16 leaves via
-    # the gateway and returns on-link from an axon, so the gateway drops their TCP
-    # (uplink-dev.nix's 10.11/16 route; docs/dns-resolver.md §7 Q2). They move when
-    # DHCP option 121 (unifi.nix's classless-routes) or Cilium L2 announcements land.
-    dns.dhcpResolvers = [ "uplink" ];
+    # Default's DHCP clients use the cluster first: its record's address is on the
+    # LAN itself, announced by Cilium L2, so their UDP and TCP stay on-link
+    # (docs/dns-resolver.md §2.7, §7 Q2).
+    dns.dhcpResolvers = [
+      "axon"
+      "uplink"
+    ];
     # Roaming devices stay on uplink until the LB is proven reachable over the tailnet.
     dns.roamingResolvers = [ "uplink" ];
 
