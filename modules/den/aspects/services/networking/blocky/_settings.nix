@@ -60,6 +60,8 @@ in
   caching.prefetching = true;
   queryLog.type = "console";
   prometheus.enable = true;
+  # In-memory rolling 24h counters behind GET /api/stats, which the admin panel reads (§2.6).
+  statistics.enable = true;
   ports = {
     dns = dnsListen;
     http = httpListen;

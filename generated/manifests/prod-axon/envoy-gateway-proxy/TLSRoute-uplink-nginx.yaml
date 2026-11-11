@@ -15,6 +15,7 @@ spec:
     - den.json64.dev
     - gen-status.json64.dev
     - registry.json64.dev
+    - dns.json64.dev
   parentRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
