@@ -35,7 +35,7 @@ spec:
           env:
             - name: XDG_RUNTIME_DIR
               value: /run/user
-          image: ghcr.io/sini/xmsg@sha256:9059226e82340e2fb31326cd1d58acc8e1c2752d277cc5d9056e086b8ae934b9
+          image: ghcr.io/sini/xmsg@sha256:7feee82df493e416f8c3fd4452a2d300265f492e1abb1adb7371997220a03671
           name: xmsg
           securityContext:
             allowPrivilegeEscalation: false
@@ -69,7 +69,7 @@ spec:
                   name: genie-guard
             - name: GENIE_GUARD_API_KEY_FILE
               value: /etc/genie-guard/api-key
-          image: ghcr.io/sini/genie-guard@sha256:b59a20f0f5df2da54715aad80ad632c73433199b6d2fa5959f4603f68ebb17e2
+          image: ghcr.io/sini/genie-guard@sha256:ead3fbd648b3b67c58853d567d976bbe68af6df5309732d518b2ebae5972c9ce
           name: genie-guard
           securityContext:
             allowPrivilegeEscalation: false

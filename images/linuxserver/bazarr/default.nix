@@ -1,8 +1,8 @@
 {
   imageName = "linuxserver/bazarr";
   imageTag = "latest";
-  imageDigest = "sha256:9a625883f054e722795affe5e3ca71057e6ed817ecdf99f4a99624346fcc509c";
-  imageHash = "sha256-se9WWvA1SQouZHgXGInqV8F7od7Ov/IMNyVVFHrld/E=";
+  imageDigest = "sha256:832820dec70bce9e912c6eee7a95baf6551e03dbc63325a7208daaa455423752";
+  imageHash = "sha256-nCmSwrnxk5f/r2nAa0E3ayN3nB9WMwjJEDOtn/9Xtn8=";
   arch = "amd64";
   os = "linux";
   pinned = false;

@@ -46,7 +46,7 @@ spec:
               value: "8080"
             - name: LLAMA_CACHE
               value: /models
-          image: ghcr.io/ggml-org/llama.cpp@sha256:1359b4e1b3896bc922563a1bb4391afaaf41f4607dfd556627187fd689778853
+          image: ghcr.io/ggml-org/llama.cpp@sha256:3be21531a885f5955c6ac02c41a734fa4e40b70697123a9bd5e8d0649e9f6675
           livenessProbe:
             failureThreshold: 3
             httpGet:

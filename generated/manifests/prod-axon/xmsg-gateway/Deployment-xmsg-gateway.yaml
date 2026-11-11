@@ -49,7 +49,7 @@ spec:
           env:
             - name: XDG_RUNTIME_DIR
               value: /run/user
-          image: ghcr.io/sini/xmsg@sha256:9059226e82340e2fb31326cd1d58acc8e1c2752d277cc5d9056e086b8ae934b9
+          image: ghcr.io/sini/xmsg@sha256:7feee82df493e416f8c3fd4452a2d300265f492e1abb1adb7371997220a03671
           name: xmsg
           securityContext:
             allowPrivilegeEscalation: false
@@ -279,7 +279,7 @@ spec:
               if target is None:
                   target = "/var/lib/xmsg-mcp-gateway/staging/grants.db"
               os.symlink(target, "/var/lib/xmsg-mcp-gateway/staging/retirement.db")
-          image: library/python@sha256:20a82dbc2783112ddb91d1534603f802d222a3e63e593cd002eb2ac534e70211
+          image: library/python@sha256:a0f2e268f2ce8f3709611a90054ec6a8ae31f6251f5896b8648b9bb99835e30a
           name: store-retirement-inspect
           securityContext:
             allowPrivilegeEscalation: false
@@ -359,7 +359,7 @@ spec:
                   dst.close()
                   target = "/var/lib/xmsg-mcp-gateway/staging/custody-summaries-scratch.db"
               os.symlink(target, "/var/lib/xmsg-mcp-gateway/staging/custody-summaries.db")
-          image: library/python@sha256:20a82dbc2783112ddb91d1534603f802d222a3e63e593cd002eb2ac534e70211
+          image: library/python@sha256:a0f2e268f2ce8f3709611a90054ec6a8ae31f6251f5896b8648b9bb99835e30a
           name: store-custody-summaries-inspect
           securityContext:
             allowPrivilegeEscalation: false
