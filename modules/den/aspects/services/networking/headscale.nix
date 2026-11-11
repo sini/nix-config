@@ -68,8 +68,11 @@ in
                 # upstreams, which tailscaled upgrades to DoH, so off-LAN clients
                 # and an uplink outage keep DNS.
                 nameservers.global =
-                  lib.optionals (environment.dns.resolvers != [ ]) (
-                    resolvers.resolversFor { gateway = false; } environment dns-resolvers
+                  lib.optionals (environment.dns.roamingResolvers != [ ]) (
+                    resolvers.resolversFor {
+                      gateway = false;
+                      list = "roamingResolvers";
+                    } environment dns-resolvers
                   )
                   ++ resolvers.plainUpstreams environment;
               };

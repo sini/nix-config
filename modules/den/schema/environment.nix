@@ -354,6 +354,27 @@ in
                       [ ] = clients keep their own resolver lists.
                     '';
                   };
+                  dhcpResolvers = mkOption {
+                    type = types.listOf types.str;
+                    default = config.dns.resolvers;
+                    defaultText = lib.literalExpression "dns.resolvers";
+                    description = ''
+                      The instances the controller network (networks.default.unifiNetwork)
+                      hands its DHCP clients, which den does not route. Defaults to
+                      dns.resolvers; an environment sets it when its DHCP clients cannot
+                      reach an instance the hosts can.
+                    '';
+                  };
+                  roamingResolvers = mkOption {
+                    type = types.listOf types.str;
+                    default = config.dns.resolvers;
+                    defaultText = lib.literalExpression "dns.resolvers";
+                    description = ''
+                      The instances headscale hands roaming devices (its global nameservers,
+                      ahead of the upstreams). Defaults to dns.resolvers; an environment sets
+                      it when an instance is not proven reachable over the tailnet.
+                    '';
+                  };
                   filter = mkOption {
                     type = types.submodule {
                       options = {

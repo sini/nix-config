@@ -463,8 +463,9 @@ let
       } ([ (zonesData [ "Internal" ]) ] ++ map policy policies);
 
   # Each environment's controller network (networks.default.unifiNetwork) hands
-  # out resolversFor as its DHCP DNS and advertises no IPv6 DNS of its own
-  # (docs/dns-resolver.md §2.4(a)); an environment with no dns.resolvers renders none.
+  # out resolversFor dns.dhcpResolvers as its DHCP DNS and advertises no IPv6 DNS
+  # of its own (docs/dns-resolver.md §2.4(a)); an environment whose
+  # dns.dhcpResolvers is empty renders none.
   # The PUT body is the whole live network (the data source, read at plan time)
   # with these fields laid over it, so it is safe whether or not the controller
   # merges a partial PUT (§7 Q4). With that full body, ignore_server_additions
@@ -508,7 +509,7 @@ let
       fieldsOf =
         e:
         let
-          servers = resolvers.resolversFor { } e dns-resolvers;
+          servers = resolvers.resolversFor { list = "dhcpResolvers"; } e dns-resolvers;
         in
         if servers == null then
           null
@@ -1462,14 +1463,17 @@ in
       # Fixture (docs/dns-resolver.md §2.4(a)): an environment's network renders the
       # full-body PUT of its live object with these exact DNS fields (Blocky, then
       # the gateway, padded to four; no IPv6 DNS of its own), its lookup, import
-      # meta and review output; one with no unifiNetwork or no resolvers renders
-      # none. Refused: an unknown instance and more than four servers. Control: the
-      # payload predicate fails on the render without resolvers.
+      # meta and review output; one with no unifiNetwork or no dhcpResolvers renders
+      # none. The render reads dns.dhcpResolvers, never dns.resolvers. Refused: an
+      # unknown instance and more than four servers. Control: the payload predicate
+      # fails on the render without dhcpResolvers, and on one that reads dns.resolvers.
       checks.unifi-dhcp-dns-render =
         let
+          # dns.resolvers names an instance the render must not pick.
           env = name: unifiNetwork: resolverNames: {
             inherit name;
-            dns.resolvers = resolverNames;
+            dns.resolvers = [ "r0" ];
+            dns.dhcpResolvers = resolverNames;
             networks.default = {
               inherit unifiNetwork;
               gatewayIp = "10.0.0.1";
@@ -1478,6 +1482,10 @@ in
           args = {
             site = "s";
             dns-resolvers = [
+              {
+                name = "r0";
+                dns = "10.0.10.0";
+              }
               {
                 name = "r1";
                 dns = "10.0.10.1";
@@ -1566,9 +1574,13 @@ in
                 ])
               ];
             }
-            # Control: the same payload predicate over an environment with no resolvers.
+            # Controls: the same payload predicate over an environment with no
+            # dhcpResolvers, and over one whose dhcpResolvers is its dns.resolvers.
             && !(payloadOk (render {
               environments = [ (env "t" "Default" [ ]) ];
+            }))
+            && !(payloadOk (render {
+              environments = [ (env "t" "Default" [ "r0" ]) ];
             }));
         in
         assert lib.assertMsg ok "unifi-dhcp-dns-render:\n${builtins.toJSON rendered}";

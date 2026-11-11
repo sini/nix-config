@@ -130,6 +130,8 @@ that one setting through one helper.
 | Piece                                       | Kind                | Holds                                                                                   |
 | ------------------------------------------- | ------------------- | --------------------------------------------------------------------------------------- |
 | `environment.dns.resolvers`                 | env option          | Ordered instance names (host or cluster). `[ ]` = today's behaviour                     |
+| `environment.dns.dhcpResolvers`             | env option          | The controller network's DHCP list; defaults to `dns.resolvers` (§7 Q2)                 |
+| `environment.dns.roamingResolvers`          | env option          | headscale's roaming list; defaults to `dns.resolvers` (§7 Q2)                           |
 | `environment.dns.filter`                    | env option          | `denylists`, `allowlist` (list URLs and inline domains): the same for every instance    |
 | `environment.dns.internal`                  | env option          | Cluster whose `dns-internal` record is the conditional upstream (`"axon"`), or `null`   |
 | `dns-internal` quirk                        | quirk               | `{ cluster; address; }`, emitted by the CoreDNS cluster aspect (§2.3)                   |
@@ -1294,7 +1296,11 @@ passes means the test proves nothing.
    option 121, `10.11.0.0/16 via 10.10.10.1`, the route uplink-dev already
    carries), Cilium L2 announcements on `10.10.0.0/16`, or limiting the prod-LAN
    mapping. Static prod hosts are unaffected: uplink is the hub, and uplink-dev
-   routes through it.
+   routes through it. So the cutover lands for hosts and guests alone: prod sets
+   `dns.dhcpResolvers` and `dns.roamingResolvers` to `[ "uplink" ]`, keeping the
+   `Default` DHCP list and headscale's list as they were. Each moves when its
+   path is proven: DHCP after option 121 or L2 announcements, roaming after the
+   LB is measured reachable over the tailnet.
 
 3. **Phase-2 state sharing.** **Decided: Valkey** (2026-11-11). Blocky's `redis`
    sync against a one-replica Valkey (`blocky-redis`) in namespace `blocky`, the

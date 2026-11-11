@@ -1,10 +1,14 @@
 # The client side of the filtering resolver (docs/dns-resolver.md §3), each
 # property with a control that must fail the same predicate:
 #   dns-clients  test 5 (eval part): every static host's and guest's LAN link
-#                lists exactly Blocky then its gateway, in plain DNS, with no
+#                lists exactly its environment's instances (prod: the cluster's
+#                LB, then uplink; dev: uplink) then its gateway, in plain DNS, with no
 #                RDNSS, and tailscale takes --accept-dns=false; blade (roaming)
 #                keeps the DoT upstreams and MagicDNS. Controls: the same
-#                predicates over dns.resolvers = [ ] and over blade fail.
+#                predicates over dns.resolvers = [ ] and over blade fail, and
+#                axon-01 on the pre-cutover list (uplink alone) fails.
+#                headscale lists prod's dns.roamingResolvers (uplink alone), not
+#                the hosts' list (control).
 #                The failback timer (§2.4) is on exactly those hosts, not on
 #                blade, and probes a peer's pinned tailnet name (control: a
 #                name no host has).
@@ -23,12 +27,16 @@ let
   uplink = nixosConfigurations.uplink.config;
   guest = parent: name: nixosConfigurations.${parent}.config.microvm.vms.${name}.config.config;
 
-  # Blocky's own listen address, as uplink renders it.
+  # Blocky's own listen address, as uplink renders it, and the cluster's LB.
   blocky = lib.head (lib.splitString ":" (lib.head uplink.services.blocky.settings.ports.dns));
-  expected = env: [
+  axonLb = config.den.clusters.axon.networks.kubernetes-loadbalancers.assignments.blocky;
+  # prod names the cluster instance first (docs/dns-resolver.md §2.7); dev keeps uplink.
+  instances.prod = [
+    axonLb
     blocky
-    environments.${env}.networks.default.gatewayIp
   ];
+  instances.dev = [ blocky ];
+  expected = env: instances.${env} ++ [ environments.${env}.networks.default.gatewayIp ];
 
   # Each family's LAN link (test 5): host, environment, its config, link name.
   families = {
@@ -78,6 +86,8 @@ let
   tsNames = cfg: lib.concatMap (k: k.hostNames) (lib.attrValues cfg.services.openssh.knownHosts);
   probesTsName = name: cfg: lib.elem name (tsNames cfg);
 
+  headscaleGlobal = uplink.services.headscale.settings.dns.nameservers.global;
+
   blade = nixosConfigurations.blade.config;
   bladeLink = blade.systemd.network.networks.wlp0s20f3.networkConfig;
   noResolvers =
@@ -116,10 +126,24 @@ let
         !(resolvers.leavesMagicDns manager (noResolvers environments.dev) hosts.cortex);
       roamingKeepsMagicDns = !(resolvers.leavesMagicDns manager environments.dev hosts.blade);
       staticLeavesMagicDns = resolvers.leavesMagicDns manager environments.dev hosts.cortex;
-      # headscale (c): Blocky first, no gateway, then the plain upstreams.
-      headscaleRoaming =
-        uplink.services.headscale.settings.dns.nameservers.global
-        == [ blocky ] ++ resolvers.plainUpstreams environments.prod;
+      # headscale (c): prod's roaming instance (uplink alone, dns.roamingResolvers),
+      # no gateway, then the plain upstreams. Control: the hosts' list is not it.
+      headscaleRoaming = headscaleGlobal == [ blocky ] ++ resolvers.plainUpstreams environments.prod;
+      headscaleNotHostsList =
+        headscaleGlobal != instances.prod ++ resolvers.plainUpstreams environments.prod;
+      # Control: the pre-cutover list (uplink alone) is not what prod's hosts carry.
+      cutoverUplinkOnlyFails =
+        !(onResolver (
+          families.axon-01
+          // {
+            cfg = lib.recursiveUpdate families.axon-01.cfg {
+              systemd.network.networks.enp2s0.networkConfig.DNS = [
+                blocky
+                environments.prod.networks.default.gatewayIp
+              ];
+            };
+          }
+        ));
       axonCollectsResolvers = collectsResolvers hosts.axon-01;
     };
   failed = lib.attrNames (lib.filterAttrs (_: ok: !ok) clientChecks);
