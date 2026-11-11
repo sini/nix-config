@@ -327,6 +327,16 @@ in
       ])
     ];
 
+  # Resolver instances to every host, whose clients (core/network/_resolvers.nix)
+  # pick theirs by environment.dns.resolvers. Hosts emit them today, clusters in
+  # phase 2; a collectAll predicate matches only the kind it names.
+  den.policies.collect-dns-resolvers =
+    { host, ... }:
+    [
+      (pipe.from "dns-resolvers" [ (pipe.collectAll ({ host, ... }: true)) ])
+      (pipe.from "dns-resolvers" [ (pipe.collectAll ({ cluster, ... }: true)) ])
+    ];
+
   den.schema.host.includes = [
     den.policies.collect-host-addrs
     den.policies.collect-bgp-peers
@@ -345,6 +355,7 @@ in
     den.policies.collect-idm-users
     den.policies.collect-exit-nodes
     den.policies.collect-resolver-inputs
+    den.policies.collect-dns-resolvers
   ];
 
   den.schema.user.includes = [
