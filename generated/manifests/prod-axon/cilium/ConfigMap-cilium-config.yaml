@@ -87,7 +87,7 @@ data:
   enable-policy: default
   enable-policy-secrets-sync: "true"
   enable-sctp: "false"
-  enable-service-topology: "false"
+  enable-service-topology: "true"
   enable-source-ip-verification: "true"
   enable-tcx: "true"
   enable-vtep: "false"

@@ -160,12 +160,15 @@ in
               };
               # DNS on the LAN pool, ARP-announced by one node (cilium.nix). Cluster:
               # L2 announcements ignore endpoints, so Local could blackhole on a node
-              # with no replica; a query balanced to another node's replica is SNATed,
-              # and that query logs the announcing node's address.
+              # with no replica. PreferSameNode (cilium serviceTopology) sends the
+              # announcing node's queries to its own replica, keeping the client
+              # address; while that replica is not ready they go to another node's,
+              # SNATed, and log the announcing node's address.
               service.lan = {
                 controller = "main";
                 type = "LoadBalancer";
                 externalTrafficPolicy = "Cluster";
+                trafficDistribution = "PreferSameNode";
                 labels = import ./cilium/_l2.nix;
                 annotations."lbipam.cilium.io/ips" = lanOf cluster;
                 ports = {

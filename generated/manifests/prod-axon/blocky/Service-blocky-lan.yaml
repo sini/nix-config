@@ -25,4 +25,5 @@ spec:
     app.kubernetes.io/controller: main
     app.kubernetes.io/instance: blocky
     app.kubernetes.io/name: blocky
+  trafficDistribution: PreferSameNode
   type: LoadBalancer

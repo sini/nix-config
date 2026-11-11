@@ -824,14 +824,22 @@ The rest:
   is never routed. It is `externalTrafficPolicy: Cluster`: the announcer picks
   the lease holder without looking at endpoints (`pkg/l2announcer`; upstream's
   docs call L2 "incompatible with `externalTrafficPolicy: Local`"), so `Local`
-  would drop queries while the holder has no replica, as during a rollout. The
-  cost is the source address. A query the holder balances to its own replica
-  keeps the client's address, and one it balances to another node's replica is
-  SNATed to the holder (Cilium's default `snat` mode), so the query log shows
-  that axon for roughly two queries in three. Failover is a lease (5 s duration,
-  3 s renew, 1 s retry: 2-8 s), then a gratuitous ARP; a client that ignores
-  gratuitous ARP waits out its ARP cache. `kubernetes-lan-check.nix` holds the
-  selectors, the DHCP range and the host statics.
+  would drop queries while the holder has no replica, as during a rollout.
+  `blocky-lan` sets `trafficDistribution: PreferSameNode`, which Cilium honours
+  with `loadBalancer.serviceTopology = true` (`enable-service-topology` in
+  `cilium-config`; `pkg/loadbalancer/writer/writer.go:463-511`). With one
+  replica per axon, the holder forwards to its own replica, so the query keeps
+  the client's address. When that replica is not ready (a restart, a rollout
+  step), the writer falls back to every ready backend, and a query balanced to
+  another node's replica is SNATed to the holder (Cilium's default `snat` mode),
+  logged as that axon, not dropped. No node carries a zone label and no other
+  Service sets `trafficDistribution` or topology hints, so the flag moves
+  nothing else; the BGP `blocky` Service keeps `Local` and no
+  `trafficDistribution`. Failover is a lease (5 s duration, 3 s renew, 1 s
+  retry: 2-8 s), then a gratuitous ARP; a client that ignores gratuitous ARP
+  waits out its ARP cache. `kubernetes-lan-check.nix` holds the selectors, the
+  DHCP range, the host statics and the topology flag; `blocky-k8s` holds
+  `PreferSameNode` on `blocky-lan` and its absence on `blocky`.
 - **CiliumNetworkPolicies** (namespace `blocky`):
   - `allow-blocky-ingress`: `world` on UDP/TCP 53;
     `fromEntities = [ "host" "remote-node" ]` on 53 and TCP 4000, because the
@@ -1227,6 +1235,14 @@ passes means the test proves nothing.
   DNS over TCP (truncated answers) from prod-LAN DHCP clients breaks. This is §7
   Q2's gate, and it is measured (§7 Q2): the dev LAN is fine, the prod LAN
   through the gateway is not.
+- **The LAN address's source window (phase 2).** `blocky-lan` keeps the client
+  address only while the L2 lease holder's own replica is ready
+  (`PreferSameNode`, §2.7). While that replica restarts or rolls, the holder's
+  queries go to another node's replica, SNATed to the holder: answered, but
+  logged as that axon. If the window matters, the follow-up is per-Service DSR
+  (`bpf.lbModeAnnotation = true` with `loadBalancer.dsrDispatch = geneve`, and
+  the `service.cilium.io/forwarding-mode: dsr` annotation set when `blocky-lan`
+  is created, since the mode is fixed at Service creation).
 - **Image drift (phase 2).** The cluster instance follows upstream `latest`, so
   it can run a newer Blocky than uplink. `blocky-k8s` validates the one config
   under both binaries, but a behaviour change within a valid schema passes it

@@ -7,12 +7,13 @@
 #   egress    world on TCP 853 and 443, quad-100 on 53, the Valkey on 6379.
 #             Controls: the Valkey rule dropped, world widened to 53
 #   redis     the Valkey admits only the blocky pods on 6379. Control: from world
-#   lb        a LoadBalancer on the cluster's `blocky` assignment, Local, on UDP/TCP
-#             53 and TCP 4000. Controls: Cluster policy, the UDP port dropped
+#   lb        a LoadBalancer on the cluster's `blocky` assignment, Local, no
+#             trafficDistribution, on UDP/TCP 53 and TCP 4000. Controls: Cluster
+#             policy, the UDP port dropped, PreferSameNode added
 #   lan       a LoadBalancer `blocky-lan` on the `blocky-lan` assignment, Cluster
-#             (L2 ignores endpoints), the L2 label, UDP/TCP 53 only; the resolver
-#             record's dns is it and its api the `blocky` LB. Controls: Local
-#             policy, port 4000 added
+#             (L2 ignores endpoints), PreferSameNode, the L2 label, UDP/TCP 53
+#             only; the resolver record's dns is it and its api the `blocky` LB.
+#             Controls: Local policy, port 4000 added, trafficDistribution dropped
 #   pods      3 replicas, one per node, no surge, the config's checksum on the pod.
 #             Control: the checksum of another config
 #   monitor   a ServiceMonitor on the Service's http port with job="blocky".
@@ -152,6 +153,7 @@ let
     s:
     s.spec.type == "LoadBalancer"
     && s.spec.externalTrafficPolicy == "Local"
+    && !(s.spec ? trafficDistribution)
     && s.metadata.annotations."lbipam.cilium.io/ips" == lb
     && sameSet (map (p: { inherit (p) port protocol; }) s.spec.ports) [
       {
@@ -172,6 +174,7 @@ let
     s:
     s.spec.type == "LoadBalancer"
     && s.spec.externalTrafficPolicy == "Cluster"
+    && s.spec.trafficDistribution or null == "PreferSameNode"
     && s.metadata.annotations."lbipam.cilium.io/ips" == lanLb
     && lib.all (k: s.metadata.labels.${k} or null == (import ./cilium/_l2.nix).${k}) (
       lib.attrNames (import ./cilium/_l2.nix)
@@ -256,7 +259,11 @@ let
       !(lbOk (
         lib.recursiveUpdate service { spec.ports = lib.filter (p: p.protocol != "UDP") service.spec.ports; }
       ));
+    lbPreferSameNodeFails =
+      !(lbOk (lib.recursiveUpdate service { spec.trafficDistribution = "PreferSameNode"; }));
     lan = lanOk lanService;
+    lanNoDistributionFails =
+      !(lanOk (lanService // { spec = removeAttrs lanService.spec [ "trafficDistribution" ]; }));
     lanLocalFails = !(lanOk (lib.recursiveUpdate lanService { spec.externalTrafficPolicy = "Local"; }));
     lanApiFails =
       !(lanOk (

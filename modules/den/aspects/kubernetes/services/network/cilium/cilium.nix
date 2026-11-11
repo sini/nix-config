@@ -214,6 +214,10 @@
                 };
               };
 
+              # Honour Service trafficDistribution (blocky-lan's PreferSameNode). No node
+              # carries a zone label and no other Service sets it, so nothing else moves.
+              loadBalancer.serviceTopology = true;
+
               # BGP control-plane (for FRR peering)
               bgpControlPlane.enabled = true;
 

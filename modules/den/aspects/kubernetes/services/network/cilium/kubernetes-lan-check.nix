@@ -8,6 +8,8 @@
 #            address. Control: the L2 label's expression dropped
 #   dhcp     every pool address lies in prod's LAN and below Default's DHCP range.
 #            Control: 10.10.0.32/28, which reaches .46
+#   topology cilium-config enables service topology, which blocky-lan's
+#            PreferSameNode needs. Control: the key set "false"
 #   statics  no host interface address, gateway or other cluster assignment lies
 #            in the pool, and every LAN assignment does. Control: uplink's /29
 #   nix build .#checks.x86_64-linux.kubernetes-lan
@@ -79,6 +81,8 @@ let
   lanServices = cidr: lib.sort lib.lessThan (map id (lib.filter (onLan cidr) lbServices));
 
   l2 = (one "CiliumL2AnnouncementPolicy" "lan").spec;
+  ciliumConfig = (one "ConfigMap" "cilium-config").data;
+  topologyOk = data: (data.enable-service-topology or null) == "true";
   pool = (one "CiliumLoadBalancerIPPool" "lan-pool").spec;
   bgp = lib.head (one "CiliumBGPAdvertisement" "loadbalancer-ips").spec.advertisements;
 
@@ -129,6 +133,8 @@ let
           matchExpressions = lib.filter (e: !(l2Label ? ${e.key})) bgp.selector.matchExpressions;
         }
       ));
+    topology = topologyOk ciliumConfig;
+    topologyOffFails = !(topologyOk (ciliumConfig // { enable-service-topology = "false"; }));
     blockyLanOnPool = lanServices lan.cidr == [ "blocky/blocky-lan" ];
     dhcp = dhcpOk lan.cidr;
     dhcpWideFails = !(dhcpOk "10.10.0.32/28");
