@@ -31,9 +31,17 @@
 # enroll), and the last busybox
 # step moves it into
 # place only if state/grants.db is absent. Otherwise it discards it. A crash between
-# steps therefore never leaves a half-built real store. The grant stays disabled at
+# steps therefore never leaves a half-built real store. A new grant is disabled at
 # revision 1: `enable` is never run here. It is a deliberate one-time cutover step
 # (`xmsg-mcp-gateway --state /var/lib/xmsg-mcp-gateway/state/grants.db enable chatgpt 1`).
+#
+# Outbound policy (outbound.md, `apply`): `store-apply` then applies policy.json, the
+# grant's send and reply targets (every hub's sessions), to the real store. apply
+# compares policies as typed values and an unchanged one prints `unchanged at revision
+# N`, writes nothing and exits 0, so a restart is a no-op. A change advances the
+# revision by one (and, like set-outbound-policy, pauses the Events subscription). No
+# --enabled or --disabled: apply keeps the grant's enablement. The grant always exists
+# here (store-install leaves an enrolled store), and a missing one fails the pod.
 #
 # Retirement migration (outbound.md): `migrate-retirement` changes the store's SQLite
 # application_id from 0x584d4757 to 0x584d4752. Older gateways then refuse the store,
@@ -274,8 +282,8 @@ in
           # to the leaf and what the leaf may reach on the hub. The hub's agent sessions
           # are instance ids, which no fixed list can name, so a list would refuse every
           # send to them. Inbound, the leaf hosts the one principal and refuses any
-          # other name. The gateway's per-grant outbound policy (`set-outbound-policy`)
-          # is what narrows its sends.
+          # other name. The gateway's per-grant outbound policy (policy.json, applied at
+          # start) is what narrows its sends.
           targets = null;
         }
       ];
@@ -373,6 +381,13 @@ in
             };
           }) hubs
         );
+
+        # The grant's outbound policy: each hub's sessions, for send and for reply. Written
+        # by hand in the gateway's own field order (send, reply; targets, required_scope),
+        # which builtins.toJSON would sort; apply compares typed values either way.
+        outboundTargets = builtins.toJSON (map (h: "*@${h.name}") hubs);
+        permission = scope: ''{"targets":${outboundTargets},"required_scope":${builtins.toJSON scope}}'';
+        policy = ''{"send":${permission "xmsg:send"},"reply":${permission "xmsg:reply"}}'';
 
         # The exact enrollment document; the verifier's values below are the same.
         binding = {
@@ -694,6 +709,7 @@ in
             configMaps."${name}-config".data = {
               "serving.json" = builtins.toJSON serving;
               "binding.json" = builtins.toJSON binding;
+              "policy.json" = policy;
             };
 
             secrets.${name}.stringData = {
@@ -734,6 +750,7 @@ in
                           serving
                           binding
                           peers
+                          policy
                         ]
                       );
                       spec = {
@@ -792,6 +809,20 @@ in
                             securityContext = hardened;
                             volumeMounts = [ dataMount ];
                           }
+                          (
+                            storeStep "apply" [ ]
+                            // {
+                              args = [
+                                "--state"
+                                grantStore
+                                "apply"
+                                "--id"
+                                grantId
+                                "--policy"
+                                "${configDir}/policy.json"
+                              ];
+                            }
+                          )
                         ];
                         containers = [
                           {

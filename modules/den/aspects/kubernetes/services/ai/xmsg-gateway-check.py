@@ -305,14 +305,17 @@ check("socket volume is an emptyDir", "emptyDir" in volumes.get(shared, {}), sha
 names = [c["name"] for c in inits]
 check(
     "initContainer order",
-    names == ["prepare"] + [f"store-{s}" for s in STORE_STEPS] + ["store-install"],
+    names
+    == ["prepare"]
+    + [f"store-{s}" for s in STORE_STEPS]
+    + ["store-install", "store-apply"],
     names,
 )
 store = serving.get("grant_store")
 staged = None
 for c in inits:
     if (
-        c["name"] == "store-install"
+        c["name"] in ("store-install", "store-apply")
         or c["name"].endswith("-inspect")
         or not c["name"].startswith("store-")
     ):
@@ -553,6 +556,47 @@ check(
     "install moves the staged store only if the real one is absent",
     f"if [ -e {store} ]" in script and f"mv {staged} {store}" in script,
     script,
+)
+
+# 5b. The outbound policy, applied to the real store after install: every hub's sessions
+# for send and reply, in the gateway's field order. No enablement flag, so apply keeps
+# the grant's enablement.
+apply = next((c for c in inits if c["name"] == "store-apply"), None)
+check("apply step present", apply is not None, names)
+aargs = (apply or {}).get("args", [])
+check(
+    "apply runs after the migrations and install",
+    apply is not None and names[-1] == "store-apply",
+    names,
+)
+check(
+    "apply has no --enabled",
+    apply is not None and "--enabled" not in aargs and "--disabled" not in aargs,
+    aargs,
+)
+check(
+    "apply on the real store with policy.json",
+    aargs
+    == [
+        "--state",
+        store,
+        "apply",
+        "--id",
+        ev.get("grant_id"),
+        "--policy",
+        f"{posixpath.dirname(config_path)}/policy.json",
+    ]
+    and (apply or {}).get("image") == gw.get("image")
+    and "command" not in (apply or {}),
+    aargs,
+)
+targets = json.dumps([f"*@{h}" for h in HUBS], separators=(",", ":"))
+check(
+    "policy.json is every hub's sessions, send and reply",
+    cfg_files.get("policy.json")
+    == f'{{"send":{{"targets":{targets},"required_scope":"xmsg:send"}},'
+    f'"reply":{{"targets":{targets},"required_scope":"xmsg:reply"}}}}',
+    cfg_files.get("policy.json"),
 )
 
 # 6. Secrets: copied owner-private by prepare; the raw Secret volume only in prepare.

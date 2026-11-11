@@ -95,6 +95,16 @@ let
     "leaf record names every hub" = manifests // {
       leaves = map (l: l // { hubs = lib.take 1 l.hubs; }) manifests.leaves;
     };
+    # The policy drops a hub, so sends to its sessions are refused.
+    "policy.json is every hub's sessions, send and reply" = atOff (
+      resPath
+      ++ [
+        "configMaps"
+        "xmsg-gateway-config"
+        "data"
+        "policy.json"
+      ]
+    ) (lib.replaceStrings [ ''"*@sini.bitstream"'' ] [ ''"*@sini.cortex"'' ]);
     # The hubs grant the leaf no `list`, so xmsg_list comes back empty.
     "leaf record rights" = manifests // {
       leaves = map (l: l // { allow = lib.remove "list" l.allow; }) manifests.leaves;
@@ -158,6 +168,23 @@ let
     "summaries inspect, backup impossible: refuses, no link to the real store" =
       rewrite "store-custody-summaries-inspect" "os.makedirs("
         "os.symlink(\"/var/lib/xmsg-mcp-gateway/state/grants.db\", \"/var/lib/xmsg-mcp-gateway/staging/custody-summaries.db\"); os.makedirs(";
+    # The policy applied before the store it targets is installed.
+    "apply runs after the migrations and install" =
+      inits:
+      let
+        n = lib.length inits;
+      in
+      lib.take (n - 2) inits
+      ++ [
+        (lib.last inits)
+        (lib.elemAt inits (n - 2))
+      ];
+    # The chain gone, so the policy is never applied.
+    "apply step present" = lib.filter (c: c.name != "store-apply");
+    # apply also enabling the grant at every start.
+    "apply has no --enabled" = map (
+      c: if c.name == "store-apply" then c // { args = c.args ++ [ "--enabled" ]; } else c
+    );
     # The gateway's `enable` verb in the chain.
     "never runs enable" =
       inits:

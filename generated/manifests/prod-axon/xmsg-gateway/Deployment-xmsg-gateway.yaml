@@ -13,7 +13,7 @@ spec:
   template:
     metadata:
       annotations:
-        json64.dev/config-hash: 8eddc2ae4ff8aa47e75b517baa3b919c45a8c0416330d18ebc10f5848032fcc7
+        json64.dev/config-hash: 2e75e58c386e7f6df1c61272fcb7d643fa618fb132fe84aefa8f3e220127ed9e
       labels:
         app.kubernetes.io/name: xmsg-gateway
     spec:
@@ -77,7 +77,7 @@ spec:
             - serve
             - --config
             - /etc/xmsg-mcp-gateway/serving.json
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:b927d085468eb51e5f094263b0e9269e1b87b55e6734c3388dc8d8dd2baa2ca2
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:ecda43fee2d6319aa41aeda93137cd1442667148e41e794bed08f2509be3e4b5
           name: gateway
           securityContext:
             allowPrivilegeEscalation: false
@@ -175,7 +175,7 @@ spec:
             - --state
             - /var/lib/xmsg-mcp-gateway/staging/grants.db
             - init
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:b927d085468eb51e5f094263b0e9269e1b87b55e6734c3388dc8d8dd2baa2ca2
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:ecda43fee2d6319aa41aeda93137cd1442667148e41e794bed08f2509be3e4b5
           name: store-init
           securityContext:
             allowPrivilegeEscalation: false
@@ -199,7 +199,7 @@ spec:
             - --state
             - /var/lib/xmsg-mcp-gateway/staging/grants.db
             - migrate-custody
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:b927d085468eb51e5f094263b0e9269e1b87b55e6734c3388dc8d8dd2baa2ca2
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:ecda43fee2d6319aa41aeda93137cd1442667148e41e794bed08f2509be3e4b5
           name: store-migrate-custody
           securityContext:
             allowPrivilegeEscalation: false
@@ -223,7 +223,7 @@ spec:
             - --state
             - /var/lib/xmsg-mcp-gateway/staging/grants.db
             - migrate-outbound
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:b927d085468eb51e5f094263b0e9269e1b87b55e6734c3388dc8d8dd2baa2ca2
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:ecda43fee2d6319aa41aeda93137cd1442667148e41e794bed08f2509be3e4b5
           name: store-migrate-outbound
           securityContext:
             allowPrivilegeEscalation: false
@@ -297,7 +297,7 @@ spec:
             - --state
             - /var/lib/xmsg-mcp-gateway/staging/retirement.db
             - migrate-retirement
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:b927d085468eb51e5f094263b0e9269e1b87b55e6734c3388dc8d8dd2baa2ca2
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:ecda43fee2d6319aa41aeda93137cd1442667148e41e794bed08f2509be3e4b5
           name: store-migrate-retirement
           securityContext:
             allowPrivilegeEscalation: false
@@ -377,7 +377,7 @@ spec:
             - --state
             - /var/lib/xmsg-mcp-gateway/staging/custody-summaries.db
             - migrate-custody-summaries
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:b927d085468eb51e5f094263b0e9269e1b87b55e6734c3388dc8d8dd2baa2ca2
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:ecda43fee2d6319aa41aeda93137cd1442667148e41e794bed08f2509be3e4b5
           name: store-migrate-custody-summaries
           securityContext:
             allowPrivilegeEscalation: false
@@ -403,7 +403,7 @@ spec:
             - migrate-events
             - --key-file
             - /run/xmsg-mcp-gateway/keys/events.key
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:b927d085468eb51e5f094263b0e9269e1b87b55e6734c3388dc8d8dd2baa2ca2
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:ecda43fee2d6319aa41aeda93137cd1442667148e41e794bed08f2509be3e4b5
           name: store-migrate-events
           securityContext:
             allowPrivilegeEscalation: false
@@ -429,7 +429,7 @@ spec:
             - enroll
             - chatgpt
             - /etc/xmsg-mcp-gateway/binding.json
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:b927d085468eb51e5f094263b0e9269e1b87b55e6734c3388dc8d8dd2baa2ca2
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:ecda43fee2d6319aa41aeda93137cd1442667148e41e794bed08f2509be3e4b5
           name: store-enroll
           securityContext:
             allowPrivilegeEscalation: false
@@ -475,6 +475,34 @@ spec:
           volumeMounts:
             - mountPath: /var/lib/xmsg-mcp-gateway
               name: data
+        - args:
+            - --state
+            - /var/lib/xmsg-mcp-gateway/state/grants.db
+            - apply
+            - --id
+            - chatgpt
+            - --policy
+            - /etc/xmsg-mcp-gateway/policy.json
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:ecda43fee2d6319aa41aeda93137cd1442667148e41e794bed08f2509be3e4b5
+          name: store-apply
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 10001
+            runAsNonRoot: true
+            runAsUser: 10001
+          volumeMounts:
+            - mountPath: /var/lib/xmsg-mcp-gateway
+              name: data
+            - mountPath: /run/xmsg-mcp-gateway
+              name: keys
+              readOnly: true
+            - mountPath: /etc/xmsg-mcp-gateway
+              name: config
+              readOnly: true
       securityContext:
         fsGroup: 10001
         fsGroupChangePolicy: OnRootMismatch
