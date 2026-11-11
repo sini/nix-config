@@ -473,7 +473,9 @@ let
   # only LAN that address is on-link for; never its own (docs/dns-resolver.md
   # §2.4(a)). An environment whose dns.dhcpResolvers is empty renders none.
   # Beside the DNS fields, a network with a dhcpRange (the LAN after its static
-  # block, networks.default.staticCidr) renders it as dhcpd_start/dhcpd_stop.
+  # block, networks.default.staticCidr) renders it as dhcpd_start/dhcpd_stop, and
+  # an environment with an ipv6Nibble pins its LAN's /64 of the delegated prefix
+  # to its subnet id (docs/address-plan.md §2.1): ipv6_pd_prefixid, auto off.
   # The PUT body is the whole live network (the data source, read at plan time)
   # with these fields laid over it, so it is safe whether or not the controller
   # merges a partial PUT (§7 Q4). With that full body, ignore_server_additions
@@ -499,6 +501,8 @@ let
         "dhcpdv6_dns_auto"
         "dhcpd_start"
         "dhcpd_stop"
+        # A network on auto may carry no ipv6_pd_prefixid, so only its switch is required.
+        "ipv6_pd_auto_prefixid_enabled"
       ];
       slots =
         prefix: values:
@@ -544,6 +548,10 @@ let
           // lib.optionalAttrs (range != null) {
             dhcpd_start = range.start;
             dhcpd_stop = range.stop;
+          }
+          // lib.optionalAttrs (e.ipv6Nibble or null != null) {
+            ipv6_pd_auto_prefixid_enabled = false;
+            ipv6_pd_prefixid = plan.subnetHex (plan.subnetId e.ipv6Nibble plan.purposes.lan);
           };
       nets = lib.concatMap (
         e:
@@ -1780,8 +1788,11 @@ in
       # Control: the payload predicate fails on the render without dhcpResolvers,
       # on one that reads dns.resolvers, on an instance with no dns6 and on one
       # from another environment (both render no IPv6 DNS), and on a network with
-      # no dhcpRange (it renders no dhcpd_start/dhcpd_stop).
-      # The workspace's Default overlay is the same fields plus option 121's value.
+      # no dhcpRange (it renders no dhcpd_start/dhcpd_stop). An environment with an
+      # ipv6Nibble renders its prefix id with auto off (1 -> "10", 0 -> "0"); one
+      # without renders neither field (control).
+      # The workspace's Default overlay is the same fields plus its prefix id "0"
+      # and option 121's value; dev's prefix id is "10".
       checks.unifi-dhcp-dns-render =
         let
           # dns.resolvers names an instance the render must not pick.
@@ -1878,8 +1889,8 @@ in
                     prevent_destroy = true;
                     precondition = [
                       {
-                        condition = "\${alltrue([for k in [\"dhcpd_dns_enabled\",\"dhcpdv6_dns_auto\",\"dhcpd_start\",\"dhcpd_stop\"] : contains(keys(${live}), k)])}";
-                        error_message = "unifi: network Default lacks one of dhcpd_dns_enabled, dhcpdv6_dns_auto, dhcpd_start, dhcpd_stop; read unifi-adopt's field list (docs/dns-resolver.md §7 Q4)";
+                        condition = "\${alltrue([for k in [\"dhcpd_dns_enabled\",\"dhcpdv6_dns_auto\",\"dhcpd_start\",\"dhcpd_stop\",\"ipv6_pd_auto_prefixid_enabled\"] : contains(keys(${live}), k)])}";
+                        error_message = "unifi: network Default lacks one of dhcpd_dns_enabled, dhcpdv6_dns_auto, dhcpd_start, dhcpd_stop, ipv6_pd_auto_prefixid_enabled; read unifi-adopt's field list (docs/dns-resolver.md §7 Q4)";
                       }
                     ];
                   };
@@ -1926,13 +1937,32 @@ in
             && noDns6.locals.unifi_network_default_dns.dhcpdv6_dns_1 == ""
             && !(payloadOk otherEnv)
             && otherEnv.locals.unifi_network_default_dns.dhcpdv6_dns_1 == ""
-            # The workspace's Default overlay: these DNS fields and option 121's
-            # value, keyed by the definition's _id.
+            # An environment with a nibble pins its LAN's prefix id; control: none without.
+            && prefixOk (withNibble 1).locals.unifi_network_default_dns "10"
+            && prefixOk (withNibble 0).locals.unifi_network_default_dns "0"
+            && !(prefixOk rendered.locals.unifi_network_default_dns "10")
+            && !(rendered.locals.unifi_network_default_dns ? ipv6_pd_prefixid)
+            # The workspace's Default overlay: these DNS fields, its prefix id and
+            # option 121's value, keyed by the definition's _id; dev's prefix id is 10.
             &&
               builtins.attrNames workspace == lib.sort lib.lessThan (
-                builtins.attrNames rendered.locals.unifi_network_default_dns ++ [ userOption ]
+                builtins.attrNames rendered.locals.unifi_network_default_dns
+                ++ [
+                  userOption
+                  "ipv6_pd_auto_prefixid_enabled"
+                  "ipv6_pd_prefixid"
+                ]
               )
-            && workspace.${userOption} == "\${local.unifi_network_default_classless_routes}";
+            && workspace.${userOption} == "\${local.unifi_network_default_classless_routes}"
+            && prefixOk workspace "0"
+            && prefixOk terraformConfiguration.config.locals.unifi_network_dev_dns "10";
+          prefixOk =
+            f: id: f.ipv6_pd_auto_prefixid_enabled or null == false && f.ipv6_pd_prefixid or null == id;
+          withNibble =
+            n:
+            render {
+              environments = [ ((env "t" "Default" [ "r1" ]) // { ipv6Nibble = n; }) ];
+            };
           workspace = terraformConfiguration.config.locals.unifi_network_default_dns;
           userOption = "dhcpd_user_option_\${restapi_object.dhcp_option_classless_routes.id}";
         in
