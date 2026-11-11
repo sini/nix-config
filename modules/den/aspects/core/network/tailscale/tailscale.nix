@@ -30,7 +30,9 @@ in
           # Owner Q13: servers and guests leave MagicDNS for the LAN resolver, which
           # maps ts.<domain> to quad-100 (docs/dns-resolver.md §2.4b); roaming hosts
           # keep it. `set`, not `up`: up flags apply only at first login.
-          extraSetFlags = lib.optional leavesMagicDns "--accept-dns=false";
+          # k3s nodes already set it (services/k3s/node.nix), and `tailscale set`
+          # rejects a repeated flag.
+          extraSetFlags = lib.optional (leavesMagicDns && !config.services.k3s.enable) "--accept-dns=false";
         };
 
         networking = {
