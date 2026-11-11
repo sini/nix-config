@@ -137,6 +137,8 @@ that one setting through one helper.
 | `dns-internal` quirk                        | quirk               | `{ cluster; address; }`, emitted by the CoreDNS cluster aspect (§2.3)                   |
 | `environment.networks.default.unifiNetwork` | env option          | The controller network name this environment's LAN is (`"Default"`, `"dev"`)            |
 | `environment.networks.default.dnsServers`   | existing env option | Unchanged, and now **Blocky's upstreams** (§2.2)                                        |
+| `environment.networks.default.staticCidr`   | env option          | The static-services block, by default the LAN's first /24 (§2.4(a))                     |
+| `environment.networks.default.dhcpRange`    | env option, derived | `{ start; stop; }`: the LAN after `staticCidr`, without the broadcast address (§2.4(a)) |
 | `dns-resolvers` quirk                       | quirk               | `{ name; environment; dns; api; }` per running instance; `environment` is the env name  |
 | `services.networking.blocky`                | host aspect         | The NixOS service; emits `dns-resolvers` and `prometheus-targets`                       |
 | `kubernetes.services.network.blocky`        | cluster aspect      | Phase 2 Deployment; emits `dns-resolvers`                                               |
@@ -559,6 +561,14 @@ provider), which has no RA-specific DNS field. The declared fields are:
   listens on `[<ula>::53]:53`; port 53 is already open for both families. Dev's
   LAN has no host in its ULA, so it gets no IPv6 DNS; it would need an instance
   there.
+- `dhcpd_start` and `dhcpd_stop` = `networks.default.dhcpRange`. Each LAN
+  reserves its first /24 for static services (`staticCidr`: prod `10.10.0.0/24`,
+  dev `10.9.0.0/24`), which holds the gateway and the L2 LoadBalancer pool
+  (§2.7), and DHCP gets the rest: prod `10.10.1.1`-`10.10.255.254`, dev
+  `10.9.1.1`-`10.9.255.254`. Both are derived from `cidr`; the stop is the live
+  value, and the start moves from the live `.0.46`. Hosts with static addresses
+  at `10.10.10.x` (uplink, the axons) are an existing exception, outside the
+  block and inside the range, as they were in the old one.
 
 Today the networks are only read (`data.restapi_object.unifi_network_*`). Now
 they are written:
@@ -578,8 +588,8 @@ they are written:
   of this resource, even after its block is removed, can't delete the LAN. Its
   removal is still a `removed { lifecycle { destroy = false } }` block.
 - A precondition fails the plan unless the live object carries
-  `dhcpd_dns_enabled` and `dhcpdv6_dns_auto`, so a wrong field name is never
-  added to the controller.
+  `dhcpd_dns_enabled`, `dhcpdv6_dns_auto`, `dhcpd_start` and `dhcpd_stop`, so a
+  wrong field name is never added to the controller.
 - The output `unifi_network_dns` shows each declared field's live and declared
   value, for reading the plan field by field.
 
@@ -815,18 +825,19 @@ The rest:
   `externalTrafficPolicy: Local`, so client addresses reach the query log and
   only nodes with an endpoint advertise.
 - **The LAN address:** a second `LoadBalancer`, `blocky-lan`, on UDP/TCP 53
-  only, at `blocky-lan` (`10.10.0.33`) in `kubernetes-lan-loadbalancers`
-  (`10.10.0.32/29`, below Default's DHCP range, which starts at `.46`). Cilium
-  L2 announcements answer ARP for it from one node's `enp2s0`, so a prod-LAN
-  client reaches it on-link, through neither uplink nor the gateway (§7 Q2). The
-  label `lan.json64.dev/l2-announce` (`cilium/_l2.nix`) selects it for the LAN
-  pool and the L2 policy, and the BGP advertisement excludes it, so the address
-  is never routed. It is `externalTrafficPolicy: Cluster`: the announcer picks
-  the lease holder without looking at endpoints (`pkg/l2announcer`; upstream's
-  docs call L2 "incompatible with `externalTrafficPolicy: Local`"), so `Local`
-  would drop queries while the holder has no replica, as during a rollout.
-  `blocky-lan` sets `trafficDistribution: PreferSameNode`, which Cilium honours
-  with `loadBalancer.serviceTopology = true` (`enable-service-topology` in
+  only, at `blocky-lan` (`10.10.0.53`) in `kubernetes-lan-loadbalancers`
+  (`10.10.0.48/28`, inside prod's static block and so outside Default's DHCP
+  range, §2.4(a)). Cilium L2 announcements answer ARP for it from one node's
+  `enp2s0`, so a prod-LAN client reaches it on-link, through neither uplink nor
+  the gateway (§7 Q2). The label `lan.json64.dev/l2-announce` (`cilium/_l2.nix`)
+  selects it for the LAN pool and the L2 policy, and the BGP advertisement
+  excludes it, so the address is never routed. It is
+  `externalTrafficPolicy: Cluster`: the announcer picks the lease holder without
+  looking at endpoints (`pkg/l2announcer`; upstream's docs call L2 "incompatible
+  with `externalTrafficPolicy: Local`"), so `Local` would drop queries while the
+  holder has no replica, as during a rollout. `blocky-lan` sets
+  `trafficDistribution: PreferSameNode`, which Cilium honours with
+  `loadBalancer.serviceTopology = true` (`enable-service-topology` in
   `cilium-config`; `pkg/loadbalancer/writer/writer.go:463-511`). With one
   replica per axon, the holder forwards to its own replica, so the query keeps
   the client's address. When that replica is not ready (a restart, a rollout
@@ -838,8 +849,9 @@ The rest:
   `trafficDistribution`. Failover is a lease (5 s duration, 3 s renew, 1 s
   retry: 2-8 s), then a gratuitous ARP; a client that ignores gratuitous ARP
   waits out its ARP cache. `kubernetes-lan-check.nix` holds the selectors, the
-  DHCP range, the host statics and the topology flag; `blocky-k8s` holds
-  `PreferSameNode` on `blocky-lan` and its absence on `blocky`.
+  static block and DHCP range, the host statics and the topology flag;
+  `blocky-k8s` holds `PreferSameNode` on `blocky-lan` and its absence on
+  `blocky`.
 - **CiliumNetworkPolicies** (namespace `blocky`):
   - `allow-blocky-ingress`: `world` on UDP/TCP 53;
     `fromEntities = [ "host" "remote-node" ]` on 53 and TCP 4000, because the

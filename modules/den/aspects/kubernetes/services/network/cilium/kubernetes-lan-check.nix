@@ -6,8 +6,9 @@
 #   pool     the LAN pool draws for exactly those Services too. Control: the same
 #   bgp      the BGP advertisement selects blocky and no Service holding a LAN-pool
 #            address. Control: the L2 label's expression dropped
-#   dhcp     every pool address lies in prod's LAN and below Default's DHCP range.
-#            Control: 10.10.0.32/28, which reaches .46
+#   dhcp     every pool address lies in prod's static block (staticCidr) and
+#            outside its DHCP range (dhcpRange), both derived from the LAN's cidr.
+#            Controls: 10.10.0.0/23, which leaves the block; a DHCP range from .50
 #   topology cilium-config enables service topology, which blocky-lan's
 #            PreferSameNode needs. Control: the key set "false"
 #   statics  no host interface address, gateway or other cluster assignment lies
@@ -18,8 +19,6 @@ let
   axon = config.den.clusters.axon;
   lan = axon.networks.kubernetes-lan-loadbalancers;
   prodLan = config.den.environments.prod.networks.default;
-  # UniFi Default's live dhcpd_start (read 2026-11-11). The range is not managed here.
-  dhcpStart = "10.10.0.46";
   l2Label = import ./_l2.nix;
 
   # nixidy's typed resources carry every unset field as null.
@@ -93,13 +92,14 @@ let
     && lib.all (s: !(lib.elem s (lanServices lan.cidr))) (selected sel);
 
   dhcpOk =
-    cidr:
+    net: cidr:
     let
       r = range cidr;
+      static = range net.staticCidr;
     in
-    r.first >= (range prodLan.cidr).first
-    && r.last <= (range prodLan.cidr).last
-    && r.last < ipToInt dhcpStart;
+    r.first >= static.first
+    && r.last <= static.last
+    && (r.last < ipToInt net.dhcpRange.start || r.first > ipToInt net.dhcpRange.stop);
 
   hostAddrs = lib.concatMap (
     h:
@@ -136,8 +136,17 @@ let
     topology = topologyOk ciliumConfig;
     topologyOffFails = !(topologyOk (ciliumConfig // { enable-service-topology = "false"; }));
     blockyLanOnPool = lanServices lan.cidr == [ "blocky/blocky-lan" ];
-    dhcp = dhcpOk lan.cidr;
-    dhcpWideFails = !(dhcpOk "10.10.0.32/28");
+    dhcp = dhcpOk prodLan lan.cidr;
+    dhcpWideFails = !(dhcpOk prodLan "10.10.0.0/23");
+    dhcpRangeInPoolFails =
+      !(dhcpOk (
+        prodLan
+        // {
+          dhcpRange = prodLan.dhcpRange // {
+            start = "10.10.0.50";
+          };
+        }
+      ) lan.cidr);
     statics = staticsOk lan.cidr;
     staticsUplinkFails = !(staticsOk "10.10.10.0/29");
   };

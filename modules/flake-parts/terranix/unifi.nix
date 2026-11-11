@@ -468,6 +468,8 @@ let
   # IPv6 (dns6, ULA) addresses of those instances in the same environment, the
   # only LAN that address is on-link for; never its own (docs/dns-resolver.md
   # §2.4(a)). An environment whose dns.dhcpResolvers is empty renders none.
+  # Beside the DNS fields, a network with a dhcpRange (the LAN after its static
+  # block, networks.default.staticCidr) renders it as dhcpd_start/dhcpd_stop.
   # The PUT body is the whole live network (the data source, read at plan time)
   # with these fields laid over it, so it is safe whether or not the controller
   # merges a partial PUT (§7 Q4). With that full body, ignore_server_additions
@@ -491,6 +493,8 @@ let
       required = [
         "dhcpd_dns_enabled"
         "dhcpdv6_dns_auto"
+        "dhcpd_start"
+        "dhcpd_stop"
       ];
       slots =
         prefix: values:
@@ -512,6 +516,7 @@ let
         e:
         let
           servers = resolvers.resolversFor { list = "dhcpResolvers"; } e dns-resolvers;
+          range = e.networks.default.dhcpRange or null;
           # servers above has already refused an unknown name.
           servers6 = lib.concatMap (
             n:
@@ -531,7 +536,11 @@ let
             dhcpdv6_dns_auto = false;
           }
           // slots "dhcpd_dns" servers
-          // slots "dhcpdv6_dns" servers6;
+          // slots "dhcpdv6_dns" servers6
+          // lib.optionalAttrs (range != null) {
+            dhcpd_start = range.start;
+            dhcpd_stop = range.stop;
+          };
       nets = lib.concatMap (
         e:
         let
@@ -1604,12 +1613,14 @@ in
       # Fixture (docs/dns-resolver.md §2.4(a)): an environment's network renders the
       # full-body PUT of its live object with these exact DNS fields (Blocky, then
       # the gateway, padded to four; as IPv6 DNS Blocky's dns6, never the
-      # gateway's own), its lookup, import meta and review output; one with no
-      # unifiNetwork or no dhcpResolvers renders none. The render reads
-      # dns.dhcpResolvers, never dns.resolvers. Refused: an unknown instance and
-      # more than four servers. Control: the payload predicate fails on the render
-      # without dhcpResolvers, on one that reads dns.resolvers, on an instance with
-      # no dns6, and on one from another environment (both render no IPv6 DNS).
+      # gateway's own) and its dhcpRange as dhcpd_start/dhcpd_stop, its lookup,
+      # import meta and review output; one with no unifiNetwork or no
+      # dhcpResolvers renders none. The render reads dns.dhcpResolvers, never
+      # dns.resolvers. Refused: an unknown instance and more than four servers.
+      # Control: the payload predicate fails on the render without dhcpResolvers,
+      # on one that reads dns.resolvers, on an instance with no dns6 and on one
+      # from another environment (both render no IPv6 DNS), and on a network with
+      # no dhcpRange (it renders no dhcpd_start/dhcpd_stop).
       # The workspace's Default overlay is the same fields plus option 121's value.
       checks.unifi-dhcp-dns-render =
         let
@@ -1621,6 +1632,10 @@ in
             networks.default = {
               inherit unifiNetwork;
               gatewayIp = "10.0.0.1";
+              dhcpRange = {
+                start = "10.0.1.1";
+                stop = "10.0.255.254";
+              };
             };
           };
           args = {
@@ -1671,8 +1686,16 @@ in
                 dhcpdv6_dns_2 = "";
                 dhcpdv6_dns_3 = "";
                 dhcpdv6_dns_4 = "";
+                dhcpd_start = "10.0.1.1";
+                dhcpd_stop = "10.0.255.254";
               };
             };
+          # Control: a network with no dhcpRange renders no range fields.
+          noRange = render {
+            environments = [
+              (lib.recursiveUpdate (env "t" "Default" [ "r1" ]) { networks.default.dhcpRange = null; })
+            ];
+          };
           ok =
             payloadOk rendered
             &&
@@ -1695,8 +1718,8 @@ in
                     prevent_destroy = true;
                     precondition = [
                       {
-                        condition = "\${alltrue([for k in [\"dhcpd_dns_enabled\",\"dhcpdv6_dns_auto\"] : contains(keys(${live}), k)])}";
-                        error_message = "unifi: network Default lacks one of dhcpd_dns_enabled, dhcpdv6_dns_auto; read unifi-adopt's field list (docs/dns-resolver.md §7 Q4)";
+                        condition = "\${alltrue([for k in [\"dhcpd_dns_enabled\",\"dhcpdv6_dns_auto\",\"dhcpd_start\",\"dhcpd_stop\"] : contains(keys(${live}), k)])}";
+                        error_message = "unifi: network Default lacks one of dhcpd_dns_enabled, dhcpdv6_dns_auto, dhcpd_start, dhcpd_stop; read unifi-adopt's field list (docs/dns-resolver.md §7 Q4)";
                       }
                     ];
                   };
@@ -1737,6 +1760,8 @@ in
             && !(payloadOk (render {
               environments = [ (env "t" "Default" [ "r0" ]) ];
             }))
+            && !(payloadOk noRange)
+            && !(noRange.locals.unifi_network_default_dns ? dhcpd_start)
             && !(payloadOk noDns6)
             && noDns6.locals.unifi_network_default_dns.dhcpdv6_dns_1 == ""
             && !(payloadOk otherEnv)

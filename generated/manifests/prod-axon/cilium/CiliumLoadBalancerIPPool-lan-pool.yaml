@@ -4,7 +4,7 @@ metadata:
   name: lan-pool
 spec:
   blocks:
-    - cidr: 10.10.0.32/29
+    - cidr: 10.10.0.48/28
   serviceSelector:
     matchLabels:
       lan.json64.dev/l2-announce: "true"

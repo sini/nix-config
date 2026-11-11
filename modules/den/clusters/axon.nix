@@ -165,15 +165,16 @@
 
       # LoadBalancer addresses on the prod LAN itself, announced by Cilium L2
       # (ARP) from a node's enp2s0, so prod-LAN clients reach them on-link
-      # without uplink's BGP route (docs/dns-resolver.md §2.7). Below UniFi
-      # Default's DHCP range (dhcpd_start 10.10.0.46) and clear of every host
-      # static; kubernetes-lan-check.nix holds both. NOT BGP-advertised.
+      # without uplink's BGP route (docs/dns-resolver.md §2.7). Inside prod's
+      # static block (networks.default.staticCidr, 10.10.0.0/24), so outside
+      # Default's DHCP range, and clear of every host static and the gateway;
+      # kubernetes-lan-check.nix holds both. NOT BGP-advertised.
       kubernetes-lan-loadbalancers = {
-        cidr = "10.10.0.32/29";
+        cidr = "10.10.0.48/28";
         description = "LoadBalancer addresses on the prod LAN, announced by Cilium L2";
         assignments = {
           # Blocky's DNS ports for LAN clients (network/blocky.nix); its API stays on `blocky`.
-          blocky-lan = "10.10.0.33";
+          blocky-lan = "10.10.0.53";
         };
       };
     };

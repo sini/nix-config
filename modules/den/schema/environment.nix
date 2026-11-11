@@ -76,88 +76,151 @@ let
     in
     if cidr == null then [ ] else lib.filter (a: head16 a == head16 cidr) addrs;
 
-  networkType = types.submodule {
-    options = {
-      cidr = mkOption {
-        type = types.str;
-        description = "Network CIDR (e.g., 10.0.0.0/24)";
-      };
-
-      ipv6_cidr = mkOption {
-        type = types.nullOr types.str;
-        default = null;
-        description = ''
-          IPv6 network CIDR (e.g., a ULA fdxx:xxxx:xxxx::/64). A host's interface
-          address inside it is advertised on-link to the LAN (core/network/networking.nix).
-        '';
-      };
-
-      description = mkOption {
-        type = types.str;
-        default = "";
-        description = "Human-readable description of the network";
-      };
-
-      gatewayIp = mkOption {
-        type = types.nullOr types.str;
-        default = null;
-        description = "Gateway IP address for this network";
-      };
-
-      gatewayIpV6 = mkOption {
-        type = types.nullOr types.str;
-        default = null;
-        description = "Gateway IPv6 address for this network";
-      };
-
-      gatewayAsn = mkOption {
-        type = types.nullOr types.ints.positive;
-        default = null;
-        description = "BGP AS number of the gateway router; its BGP peers and its own config read this one value";
-      };
-
-      dnsServers = mkOption {
-        type = types.listOf types.str;
-        default = [ ];
-        description = "DNS server IPs for this network";
-      };
-
-      unifiNetwork = mkOption {
-        type = types.nullOr types.str;
-        default = null;
-        description = ''
-          The UniFi controller's name (networkconf `name`) for this network. The
-          unifi workspace writes its DHCP and IPv6 DNS from dns.resolvers
-          (docs/dns-resolver.md §2.4(a)). null = the controller's DNS settings stay unmanaged.
-        '';
-      };
-
-      assignments = mkOption {
-        type = types.attrsOf types.str;
-        default = { };
-        description = "Static IP address assignments within this network.";
-      };
-
-      wireless = mkOption {
-        type = types.nullOr (
-          types.submodule {
-            options = {
-              ssid = mkOption {
-                type = types.str;
-                description = "SSID of the wireless network";
-              };
-              pskRef = mkOption {
-                type = types.str;
-                description = "PSK reference for the wireless network (e.g., ext:psk_arcade)";
-              };
-            };
-          }
-        );
-        default = null;
-        description = "Wireless network configuration";
-      };
+  ipToInt = ip: lib.foldl' (acc: o: acc * 256 + lib.toInt o) 0 (lib.splitString "." ip);
+  intToIp =
+    n:
+    lib.concatMapStringsSep "." (s: toString (lib.mod (n / s) 256)) [
+      16777216
+      65536
+      256
+      1
+    ];
+  # { first; last; } addresses of an IPv4 CIDR, as integers.
+  span =
+    cidr:
+    let
+      parts = lib.splitString "/" cidr;
+      size = lib.foldl' (acc: _: acc * 2) 1 (lib.range 1 (32 - lib.toInt (lib.last parts)));
+      first = ipToInt (lib.head parts) / size * size;
+    in
+    {
+      inherit first;
+      last = first + size - 1;
     };
-  };
+
+  networkType = types.submodule (
+    { config, ... }:
+    {
+      options = {
+        cidr = mkOption {
+          type = types.str;
+          description = "Network CIDR (e.g., 10.0.0.0/24)";
+        };
+
+        staticCidr = mkOption {
+          type = types.nullOr types.str;
+          default =
+            if lib.toInt (lib.last (lib.splitString "/" config.cidr)) < 24 then
+              "${intToIp (span config.cidr).first}/24"
+            else
+              null;
+          defaultText = lib.literalMD "the first /24 of `cidr` when `cidr` is wider, else null";
+          description = ''
+            The block reserved for static services (gateway, L2 LoadBalancer pools), kept
+            out of DHCP. Hosts outside it (10.10.10.x on prod) are older statics.
+          '';
+        };
+
+        dhcpRange = mkOption {
+          type = types.nullOr (
+            types.submodule {
+              options.start = mkOption { type = types.str; };
+              options.stop = mkOption { type = types.str; };
+            }
+          );
+          readOnly = true;
+          default =
+            if config.staticCidr == null then
+              null
+            else
+              {
+                # The block's next address is the network's x.y.1.0 on a /16; start one past it.
+                start = intToIp ((span config.staticCidr).last + 2);
+                stop = intToIp ((span config.cidr).last - 1);
+              };
+          defaultText = lib.literalMD "the rest of `cidr` after `staticCidr`, without the broadcast address";
+          description = ''
+            The DHCP pool, derived from cidr and staticCidr. The unifi workspace writes it
+            as the controller network's dhcpd_start/dhcpd_stop (docs/dns-resolver.md §2.4(a)).
+          '';
+        };
+
+        ipv6_cidr = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+          description = ''
+            IPv6 network CIDR (e.g., a ULA fdxx:xxxx:xxxx::/64). A host's interface
+            address inside it is advertised on-link to the LAN (core/network/networking.nix).
+          '';
+        };
+
+        description = mkOption {
+          type = types.str;
+          default = "";
+          description = "Human-readable description of the network";
+        };
+
+        gatewayIp = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+          description = "Gateway IP address for this network";
+        };
+
+        gatewayIpV6 = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+          description = "Gateway IPv6 address for this network";
+        };
+
+        gatewayAsn = mkOption {
+          type = types.nullOr types.ints.positive;
+          default = null;
+          description = "BGP AS number of the gateway router; its BGP peers and its own config read this one value";
+        };
+
+        dnsServers = mkOption {
+          type = types.listOf types.str;
+          default = [ ];
+          description = "DNS server IPs for this network";
+        };
+
+        unifiNetwork = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+          description = ''
+            The UniFi controller's name (networkconf `name`) for this network. The
+            unifi workspace writes its DHCP and IPv6 DNS from dns.resolvers
+            (docs/dns-resolver.md §2.4(a)). null = the controller's DNS settings stay unmanaged.
+          '';
+        };
+
+        assignments = mkOption {
+          type = types.attrsOf types.str;
+          default = { };
+          description = "Static IP address assignments within this network.";
+        };
+
+        wireless = mkOption {
+          type = types.nullOr (
+            types.submodule {
+              options = {
+                ssid = mkOption {
+                  type = types.str;
+                  description = "SSID of the wireless network";
+                };
+                pskRef = mkOption {
+                  type = types.str;
+                  description = "PSK reference for the wireless network (e.g., ext:psk_arcade)";
+                };
+              };
+            }
+          );
+          default = null;
+          description = "Wireless network configuration";
+        };
+      };
+    }
+  );
 
   serviceType = types.submodule {
     options = {
