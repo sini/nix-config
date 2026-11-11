@@ -27,7 +27,7 @@ data:
   cluster-name: prod
   cluster-pool-ipv4-cidr: 172.20.0.0/16
   cluster-pool-ipv4-mask-size: "24"
-  cluster-pool-ipv6-cidr: fdfd:cafe:00:0001::/96
+  cluster-pool-ipv6-cidr: fd3d:f136:2e4e:2:1::/96
   cluster-pool-ipv6-mask-size: "112"
   clustermesh-cache-ttl: 0s
   clustermesh-default-global-namespace: "true"
@@ -121,7 +121,7 @@ data:
   ipam-cilium-node-update-rate: 15s
   iptables-random-fully: "false"
   ipv4-native-routing-cidr: 172.20.0.0/16
-  ipv6-native-routing-cidr: fdfd:cafe:00:0001::/96
+  ipv6-native-routing-cidr: fd3d:f136:2e4e:2:1::/96
   k8s-require-ipv4-pod-cidr: "false"
   k8s-require-ipv6-pod-cidr: "false"
   kube-proxy-replacement: "true"

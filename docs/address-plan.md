@@ -286,7 +286,21 @@ must fail or read non-zero, so an empty render cannot pass.
   which no LAN takes. The controller fields are inert here and are removed in
   the v0.3 implementation (§7).
 - **The cluster's ULA move** renumbers pod and service IPv6 and the fabric
-  loopbacks. It is the last stage-1 commit, held until the owner deploys it.
+  loopbacks. It is the last stage-1 commit, held until the owner deploys it. On
+  each axon the deploy restarts `k3s` (`--cluster-cidr` and `--service-cidr`),
+  reloads networkd (`lo`'s loopback) and nftables (the fabric SNAT6 address),
+  and rolls Cilium's agents and operator (their ConfigMap). The cluster's state
+  does not follow the flags. Read-only on 2026-11-11: each Node's
+  `spec.podCIDRs` holds `fdfd:cafe:0:1::N:0/112`, and so does its CiliumNode.
+  The default ServiceCIDR `kubernetes` holds `fdfd:cafe:0:8001::/112`, and
+  CoreDNS's dual-stack ClusterIP is `fdfd:cafe:0:8001::355d`. None of these is
+  renumbered by a restart. Node podCIDRs and ClusterIPs are immutable, and
+  cluster-pool IPAM never reallocates a CiliumNode. Expected from upstream
+  behaviour, and not measured here: kube-controller-manager refuses a node CIDR
+  outside its cluster CIDR at startup. k3s compares the CIDR flags across
+  servers, so all three servers move together. Each node then needs its Node and
+  CiliumNode recreated, and its pods restarted. The services need a ServiceCIDR
+  for the new range, the old one retired, and each dual-stack Service recreated.
 
 ## 6. Decisions (owner, 2026-11-11)
 

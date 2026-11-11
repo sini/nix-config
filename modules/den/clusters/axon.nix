@@ -6,7 +6,13 @@
 #   kubernetes-services — ClusterIP range (dual-stack), CoreDNS lives here
 #   kubernetes-loadbalancers — external LB pool advertised via BGP
 #   kubernetes-lan-loadbalancers — LB addresses on the prod LAN, announced by Cilium L2
-{ den, ... }:
+{ den, lib, ... }:
+let
+  plan = import ../schema/_address-plan.nix { inherit lib; };
+  # The cluster's IPv6: prod's cluster slice (P = 2) of the site ULA,
+  # fd3d:f136:2e4e:2::/64 (docs/address-plan.md §2.1).
+  ula = plan.clusterUla den.environments.prod.ipv6Nibble;
+in
 {
   den.clusters.axon = {
     environment = "prod";
@@ -101,13 +107,13 @@
 
       kubernetes-pods = {
         cidr = "172.20.0.0/16";
-        ipv6_cidr = "fdfd:cafe:00:0001::/96";
+        ipv6_cidr = "${ula}:1::/96";
         description = "Kubernetes pod network";
       };
 
       kubernetes-services = {
         cidr = "172.21.0.0/16";
-        ipv6_cidr = "fdfd:cafe:00:8001::/112";
+        ipv6_cidr = "${ula}:8001::/112";
         description = "Kubernetes service network";
         assignments = {
           coredns = "172.21.0.10";
@@ -183,7 +189,7 @@
     # networks): thunderbolt fabric loopbacks, assigned per-host in
     # hosts/axon-0N.nix (services.networking.thunderbolt-mesh-of.loopback):
     #   172.16.255.0/24      ipv4 fabric loopbacks (axon-0N = .N/32)
-    #   fdfd:cafe:0:ff::/64  ipv6 fabric loopbacks (axon-0N = ::N/128)
+    #   <ula>:ff::/80        ipv6 fabric loopbacks (axon-0N = <ula>:ff::N/128)
 
     # The NAS exports below must allow non-privileged ports (Synology: "Allow
     # connections from non-privileged ports"; security sys, squash root to

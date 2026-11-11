@@ -45,6 +45,10 @@ rec {
   # s as the controller's ipv6_pd_prefixid and as a group: lowercase hex, unpadded.
   subnetHex = s: lib.toLower (lib.toHexString s);
 
+  # The cluster slice (P = 2) of an environment's site ULA, as its four leading
+  # groups: pods, services and fabric loopbacks are carved from it.
+  clusterUla = nibble: "${ulaHead}:${subnetHex (subnetId nibble purposes.cluster)}";
+
   # The site ULA's /64 with subnet id s, compressed (subnet 0 is ${ulaHead}::/64).
   ulaSubnet = s: if s == 0 then "${ulaHead}::/64" else "${ulaHead}:${subnetHex s}::/64";
 

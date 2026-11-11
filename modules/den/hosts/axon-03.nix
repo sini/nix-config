@@ -1,4 +1,7 @@
-{ den, ... }:
+{ den, lib, ... }:
+let
+  plan = import ../schema/_address-plan.nix { inherit lib; };
+in
 {
   den.hosts.x86_64-linux.axon-03 = {
     channel = "nixos-unstable";
@@ -39,9 +42,9 @@
           "enp199s0f6"
         ];
         loopback.ipv4 = "172.16.255.3/32";
-        # Fabric v6 loopbacks: fdfd:cafe:0:ff::/64 reserved for the mesh
-        # (pods 0:1::/96, services 0:8001::/112 — see clusters/axon.nix)
-        loopback.ipv6 = "fdfd:cafe:0:ff::3/128";
+        # Fabric v6 loopbacks: <cluster ULA>:ff::/80, beside pods :1::/96 and
+        # services :8001::/112 (clusters/axon.nix, docs/address-plan.md §2.1).
+        loopback.ipv6 = "${plan.clusterUla den.environments.prod.ipv6Nibble}:ff::3/128";
         nsap = "49.0000.0000.0003.00";
       };
       disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-KINGSTON_OM8PGP41024Q-A0_50026B738300CCCC";

@@ -4,7 +4,10 @@
 #                        site-ULA subnets, lie in its own /60 and overlap no other;
 #                        prod's LAN ULA is Blocky's fd3d:f136:2e4e::/64 exactly; the
 #                        fleet yields 2 × 3 slices. Controls: two environments on
-#                        one nibble, and a nibble of 16, throw
+#                        one nibble, and a nibble of 16, throw; each cluster's pod
+#                        and service IPv6 and its nodes' fabric loopbacks lie in
+#                        its environment's P = 2 slice (control: fdfd:cafe::/48's
+#                        old pod range fails)
 #   address-plan-tokens  every den host's IPv4 on its LAN is its token, unique
 #                        site-wide with a non-zero first group (prod 5, dev 3);
 #                        each LAN unit, the guests' hand-written 20-lan included,
@@ -59,8 +62,27 @@ let
   fixture = name: ipv6Nibble: { inherit name ipv6Nibble; };
   prodLan = config.den.environments.prod.networks.default.ipv6_cidr;
 
+  # A cluster's IPv6 (pods, services, its nodes' fabric loopbacks) inside its
+  # environment's cluster slice.
+  inClusterSlice =
+    env: a: lib.hasPrefix "${plan.clusterUla config.den.environments.${env}.ipv6Nibble}:" a;
+  clusterAddrs =
+    c:
+    lib.filter (a: a != null) (map (n: n.ipv6_cidr or null) (lib.attrValues c.networks))
+    ++ lib.concatMap (
+      h:
+      lib.optional (
+        h.settings.services.k3s.clusterName or null == c.name
+      ) h.settings.services.networking.thunderbolt-mesh-of.loopback.ipv6 or null
+    ) (lib.concatMap lib.attrValues (lib.attrValues config.den.hosts));
+  clusterOk = c: lib.all (inClusterSlice c.environment) (lib.filter (a: a != null) (clusterAddrs c));
+
   checks = {
     slices = slicesOk slices;
+    clustersInSlice =
+      lib.all clusterOk (lib.attrValues config.den.clusters)
+      && lib.length (lib.filter (a: a != null) (clusterAddrs config.den.clusters.axon)) == 5;
+    oldPodRangeFails = !(inClusterSlice "prod" "fdfd:cafe:00:0001::/96");
     prodLanIsBlockys = prodLan == "fd3d:f136:2e4e::/64";
     devLanIsSubnet10 =
       config.den.environments.dev.networks.default.ipv6_cidr == "fd3d:f136:2e4e:10::/64";
