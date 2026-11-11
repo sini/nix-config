@@ -71,6 +71,13 @@ in
           type = "A";
           content = "10.11.0.31";
         }
+        # The public den configuration audit on GitHub Pages (sini/den-public-audit).
+        # Grey, so GitHub can issue the Pages certificate.
+        {
+          name = "den-showcase";
+          type = "CNAME";
+          content = "sini.github.io";
+        }
       ])
     ];
 
