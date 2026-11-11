@@ -25,7 +25,7 @@ python3.pkgs.buildPythonApplication {
   '';
 
   meta = {
-    description = "Print the remaining usage quota of the agy and codex agents";
+    description = "Print the remaining weekly usage quota of the agy, codex and claude agents";
     mainProgram = "agent-quota";
     platforms = lib.platforms.unix;
   };

@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-"""Print the remaining usage quota of the agy and codex agents.
+"""Print the remaining weekly usage quota of the agy, codex and claude agents.
 
-Read-only and credential-free: agy answers `agy -p /quota` locally without a model call,
-and codex's figures come from the rate_limits object its own session rollouts record.
-No token or auth file is opened. A source that is missing or unparseable prints unknown.
+Read-only and credential-free: agy answers `agy -p /quota` locally without a model call
+(its Gemini Models bucket only), codex's figures come from the rate_limits object its own
+session rollouts record, and claude's from the cachedUsageUtilization field Claude Code
+keeps in ~/.claude.json (the data /usage shows, stamped with its fetch time). Only weekly
+windows are printed. No token or auth file is opened. A source that is missing or
+unparseable prints unknown.
 """
 
 import argparse
@@ -17,7 +20,8 @@ import time
 from datetime import UTC, datetime
 
 UNKNOWN = "unknown"
-WINDOWS = {300: "Five Hour", 10080: "Weekly"}
+WEEK_MINUTES = 10080
+AGY_BUCKET = "Gemini Models"
 
 
 def row(
@@ -67,7 +71,8 @@ def parse_agy(text):
             r["reset"] = utc(reset.timestamp())
         except ValueError:
             pass
-        rows.append(r)
+        if r["bucket"] == AGY_BUCKET and r["window"] == "Weekly":
+            rows.append(r)
     return rows or [row("agy", source="agy -p /quota")]
 
 
@@ -95,12 +100,18 @@ def parse_codex_limits(limits, source):
     rows = []
     for key in ("primary", "secondary"):
         w = limits.get(key)
-        if w is None and key == "secondary":
+        if w is None:
             continue
         r = row("codex", bucket=bucket, source=source)
         try:
             minutes = int(w["window_minutes"])
-            r["window"] = WINDOWS.get(minutes, f"{minutes}m")
+        except (TypeError, KeyError, ValueError):
+            rows.append(r)  # window unreadable: it may be the weekly one, so unknown
+            continue
+        if minutes != WEEK_MINUTES:
+            continue
+        r["window"] = "Weekly"
+        try:
             used = float(w["used_percent"])
             if not 0 <= used <= 100:
                 raise ValueError(used)
@@ -109,7 +120,7 @@ def parse_codex_limits(limits, source):
         except (TypeError, KeyError, ValueError, OverflowError, OSError):
             r["remaining_pct"] = r["reset"] = None
         rows.append(r)
-    return rows
+    return rows or [row("codex", bucket=bucket, source=source)]
 
 
 def codex(now):
@@ -133,6 +144,41 @@ def codex(now):
     return parse_codex_limits(limits, source)
 
 
+def claude(now):
+    """Weekly limits from cachedUsageUtilization: {fetchedAtMs, utilization: {limits}}."""
+    base = os.environ.get("CLAUDE_CONFIG_DIR") or os.path.expanduser("~")
+    try:
+        with open(os.path.join(base, ".claude.json"), encoding="utf-8") as f:
+            cache = json.load(f)["cachedUsageUtilization"]
+        fetched = int(cache["fetchedAtMs"]) / 1000
+        limits = cache["utilization"]["limits"]
+        if not isinstance(limits, list):
+            raise TypeError(limits)
+    except (OSError, TypeError, KeyError, ValueError):
+        return [row("claude")]
+    source = f"~/.claude.json cachedUsageUtilization ({age(now - fetched)} old)"
+    rows = []
+    for lim in limits:
+        if not isinstance(lim, dict) or lim.get("group") != "weekly":
+            continue
+        r = row("claude", window="Weekly", source=source)
+        try:
+            model = ((lim.get("scope") or {}).get("model") or {}).get("display_name")
+            r["bucket"] = model or "All models"
+            used = float(lim["percent"])
+            if not 0 <= used <= 100:
+                raise ValueError(used)
+            reset = datetime.fromisoformat(lim["resets_at"])
+            if reset.tzinfo is None:
+                raise ValueError(reset)
+            r["remaining_pct"] = 100 - used
+            r["reset"] = utc(reset.timestamp())
+        except (AttributeError, TypeError, KeyError, ValueError):
+            r["remaining_pct"] = r["reset"] = None
+        rows.append(r)
+    return rows or [row("claude", source=source)]
+
+
 def fmt(r):
     pct = UNKNOWN if r["remaining_pct"] is None else f"{r['remaining_pct']:g}%"
     return "\t".join(
@@ -144,7 +190,8 @@ def main():
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--json", action="store_true", help="print a JSON list of rows")
     args = p.parse_args()
-    rows = agy() + codex(time.time())
+    now = time.time()
+    rows = agy() + codex(now) + claude(now)
     if args.json:
         json.dump(rows, sys.stdout, indent=2)
         print()
