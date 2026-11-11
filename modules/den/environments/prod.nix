@@ -1,5 +1,14 @@
 # Prod environment entity definition.
-{ self, ... }:
+{ config, self, ... }:
+let
+  # RFC 4193 §3.2: a 40-bit pseudo-random global ID, here a hash of the
+  # environment's domain and name in place of the RFC's time-and-EUI-64 seed:
+  # stable, and as unlikely to collide.
+  globalId = builtins.substring 0 10 (
+    builtins.hashString "sha256" "${config.den.environments.prod.domain}/prod"
+  );
+  hex = from: len: builtins.substring from len globalId;
+in
 {
   den.environments.prod = {
     id = 1;
@@ -114,7 +123,9 @@
     networks = {
       default = {
         cidr = "10.10.0.0/16";
-        ipv6_cidr = "fe80::/64";
+        # The LAN's ULA (subnet 0): uplink's Blocky holds an address in it, which
+        # uplink advertises on-link (docs/dns-resolver.md §2.4(a)).
+        ipv6_cidr = "fd${hex 0 2}:${hex 2 4}:${hex 6 4}::/64";
         description = "Default network for infrastructure hosts";
         # The controller's network: its DHCP and IPv6 DNS follow dns.resolvers (docs/dns-resolver.md §2.4(a)).
         unifiNetwork = "Default";

@@ -12,6 +12,14 @@ let
   isResolver = host: host.settings.services.networking.blocky.isResolver or false;
   httpPortOf = host: host.settings.services.networking.blocky.httpPort or 4000;
   lanOf = environment: host: environment.addressOn "default" host;
+  # The host's address in the LAN's ULA (prefix stripped), or null: stable where
+  # the ISP-delegated prefix is not (docs/dns-resolver.md §2.4(a)).
+  ulaOf =
+    environment: host:
+    let
+      a = environment.ipv6On "default" host.ipv6;
+    in
+    if a == [ ] then null else lib.head (lib.splitString "/" (lib.head a));
   # Owned by the unit's DynamicUser; uplink wipes its root on boot.
   cacheDir = "/var/lib/private/blocky";
 in
@@ -41,6 +49,7 @@ in
       lib.mkIf (isResolver host) (
         let
           lan = lanOf environment host;
+          ula = ulaOf environment host;
           httpPort = toString (httpPortOf host);
           internal =
             lib.findFirst (i: i.cluster == environment.dns.internal)
@@ -59,7 +68,7 @@ in
               tailnetDomain = "ts.${environment.domain}";
               cachePath = "/var/lib/blocky";
               inherit (environment.dns) filter;
-              dnsListen = [ "${lan}:53" ];
+              dnsListen = [ "${lan}:53" ] ++ lib.optional (ula != null) "[${ula}]:53";
               httpListen = [
                 "${lan}:${httpPort}"
                 # Alloy scrapes announced exporters on loopback.
@@ -102,6 +111,7 @@ in
           name = host.name;
           environment = environment.name;
           dns = lanOf environment host;
+          dns6 = ulaOf environment host;
           api = "http://${lanOf environment host}:${toString (httpPortOf host)}";
         }
       ];

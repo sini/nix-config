@@ -58,6 +58,24 @@ let
       (throw "den: host '${host.name}' has no IPv4 in ${name}.networks.${net} (${networks.${net}.cidr})")
       addrs;
 
+  # The addresses among `addrs` (as declared, prefix length kept) inside
+  # networks.<net>.ipv6_cidr; [ ] when the network has none.
+  ipv6On =
+    { networks, ... }:
+    net: addrs:
+    let
+      cidr = networks.${net}.ipv6_cidr or null;
+      parse = a: lib.network.ipv6.fromString a;
+      c = parse cidr;
+      groups =
+        if lib.mod c.prefixLength 16 == 0 then
+          c.prefixLength / 16
+        else
+          throw "den: networks.${net}.ipv6_cidr ${cidr}: a prefix length not a multiple of 16";
+      head16 = a: lib.take groups (lib.splitString ":" (parse a).address);
+    in
+    if cidr == null then [ ] else lib.filter (a: head16 a == head16 cidr) addrs;
+
   networkType = types.submodule {
     options = {
       cidr = mkOption {
@@ -68,7 +86,10 @@ let
       ipv6_cidr = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = "IPv6 network CIDR (e.g., fd64:0:1::/64)";
+        description = ''
+          IPv6 network CIDR (e.g., a ULA fdxx:xxxx:xxxx::/64). A host's interface
+          address inside it is advertised on-link to the LAN (core/network/networking.nix).
+        '';
       };
 
       description = mkOption {
@@ -194,6 +215,13 @@ in
       description = "Get a host's IPv4 address on one of this environment's networks";
       type = lib.types.functionTo (lib.types.functionTo lib.types.str);
       fn = addressOn;
+    };
+
+    # Method: the addresses of a list inside networks.<net>.ipv6_cidr.
+    den.schema.environment.methods.ipv6On = schemaLib.schemaFn {
+      description = "Filter IPv6 addresses to those inside one of this environment's networks' ipv6_cidr";
+      type = lib.types.functionTo (lib.types.functionTo (lib.types.listOf lib.types.str));
+      fn = ipv6On;
     };
 
     # Method: a served-domains quirk record for a host serving these services

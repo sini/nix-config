@@ -103,11 +103,16 @@ in
             ipv4Addrs = ifCfg.ipv4 or [ ];
             ipv6Addrs = ifCfg.ipv6 or [ ];
             dhcp = effectiveDhcp ifCfg;
+            # Addresses in the LAN's ULA (networks.default.ipv6_cidr), which no
+            # router advertises: this link advertises the prefix on-link, so LAN
+            # clients reach them directly (docs/dns-resolver.md §2.4(a)).
+            ula = if environment.networks ? default then environment.ipv6On "default" ipv6Addrs else [ ];
           in
           {
             networkConfig = {
-              Address = ipv4Addrs ++ ipv6Addrs;
+              Address = ipv4Addrs ++ subtractLists ula ipv6Addrs;
               DHCP = dhcp;
+              # Explicit, so networkd keeps accepting the router's RAs while it sends its own.
               IPv6AcceptRA = true;
               IPv6PrivacyExtensions = if ifCfg.privacyExtensions != null then ifCfg.privacyExtensions else "yes";
               LinkLocalAddressing = effectiveLinkLocal ifCfg;
@@ -122,7 +127,30 @@ in
               # The upstreams validate; resolved's own validation fails CNAME
               # chains into unsigned zones ("failed-auxiliary", e.g. the
               # registry.k8s.io -> us-west2-docker.pkg.dev image redirect).
+            }
+            // optionalAttrs (ula != [ ]) { IPv6SendRA = true; };
+            # No DAD: a service binds the address at boot, and a tentative address refuses bind().
+            addresses = map (a: {
+              Address = a;
+              DuplicateAddressDetection = "none";
+            }) ula;
+            # Prefix-only RAs: lifetime 0 (never a default router, RFC 4861 §4.2),
+            # on-link and not autonomous (clients add the route, not an address).
+            ipv6SendRAConfig = optionalAttrs (ula != [ ]) {
+              RouterLifetimeSec = 0;
+              # shortcut: mirrors prod Default's RA flags (DHCPv6 assignment: M and O set),
+              # so a client never sees the two routers disagree; a SLAAC network wants Managed = false.
+              Managed = true;
+              OtherInformation = true;
+              EmitDNS = false;
+              EmitDomains = false;
             };
+            ipv6Prefixes = optionals (ula != [ ]) [
+              {
+                Prefix = environment.networks.default.ipv6_cidr;
+                AddressAutoconfiguration = false;
+              }
+            ];
             # Drop SLAAC address autoconf when an interface opts out (DHCPv6/
             # static-only addressing → one deterministic GUA); RA is still used
             # for the on-link prefix + default route.

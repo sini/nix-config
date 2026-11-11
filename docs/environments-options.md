@@ -122,7 +122,8 @@
   IPv6 address for this network
 
 - `environments.<name>.networks.<name>.ipv6_cidr`: [null or string] IPv6 network
-  CIDR (e.g., fd64:0:1::/64)
+  CIDR (e.g., a ULA fdxx:xxxx:xxxx::/64). A host's interface address inside it
+  is advertised on-link to the LAN (core/network/networking.nix).
 
 - `environments.<name>.networks.<name>.wireless`: Wireless network configuration
   (typically used for 'default' network)

@@ -8,7 +8,11 @@
 
     networking.interfaces.enp4s0 = {
       ipv4 = [ "10.10.10.1/16" ];
-      ipv6 = [ "fe80::3c7a:6eff:fee5:d3a6" ];
+      ipv6 = [
+        "fe80::3c7a:6eff:fee5:d3a6"
+        # Blocky's stable IPv6 address, ::53 in prod's ULA; the ISP prefix can change.
+        (builtins.replaceStrings [ "::/64" ] [ "::53/64" ] den.environments.prod.networks.default.ipv6_cidr)
+      ];
       # br0 adopts the NIC's own MAC, so the router, ARP caches and the SLAAC
       # addresses see no change from bridging.
       mac = "24:8a:07:e0:a8:b0";
