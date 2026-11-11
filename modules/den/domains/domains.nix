@@ -71,6 +71,13 @@ in
           type = "A";
           content = "10.11.0.31";
         }
+        # xmsg docs on GitHub Pages (sini/xmsg). Grey, so GitHub can issue the
+        # Pages certificate.
+        {
+          name = "xmsg";
+          type = "CNAME";
+          content = "sini.github.io";
+        }
       ])
     ];
 
