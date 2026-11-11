@@ -77,7 +77,7 @@ spec:
             - serve
             - --config
             - /etc/xmsg-mcp-gateway/serving.json
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:ae8dcfc6fc117983dacea071806a16e1e50d52723f4ed2331838ad645591e8ed
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:b927d085468eb51e5f094263b0e9269e1b87b55e6734c3388dc8d8dd2baa2ca2
           name: gateway
           securityContext:
             allowPrivilegeEscalation: false
@@ -175,7 +175,7 @@ spec:
             - --state
             - /var/lib/xmsg-mcp-gateway/staging/grants.db
             - init
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:ae8dcfc6fc117983dacea071806a16e1e50d52723f4ed2331838ad645591e8ed
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:b927d085468eb51e5f094263b0e9269e1b87b55e6734c3388dc8d8dd2baa2ca2
           name: store-init
           securityContext:
             allowPrivilegeEscalation: false
@@ -199,7 +199,7 @@ spec:
             - --state
             - /var/lib/xmsg-mcp-gateway/staging/grants.db
             - migrate-custody
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:ae8dcfc6fc117983dacea071806a16e1e50d52723f4ed2331838ad645591e8ed
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:b927d085468eb51e5f094263b0e9269e1b87b55e6734c3388dc8d8dd2baa2ca2
           name: store-migrate-custody
           securityContext:
             allowPrivilegeEscalation: false
@@ -223,7 +223,7 @@ spec:
             - --state
             - /var/lib/xmsg-mcp-gateway/staging/grants.db
             - migrate-outbound
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:ae8dcfc6fc117983dacea071806a16e1e50d52723f4ed2331838ad645591e8ed
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:b927d085468eb51e5f094263b0e9269e1b87b55e6734c3388dc8d8dd2baa2ca2
           name: store-migrate-outbound
           securityContext:
             allowPrivilegeEscalation: false
@@ -249,18 +249,21 @@ spec:
             - -c
             - |
               import os, sqlite3, sys, time
-              LEGACY, RETIREMENT = 0x584d4757, 0x584d4752
+              LEGACY, RETIREMENT, SUMMARY = 0x584d4757, 0x584d4752, 0x584d4753
               os.umask(0o077)
-              target = "/var/lib/xmsg-mcp-gateway/staging/grants.db"
+              target = None
               if os.path.exists("/var/lib/xmsg-mcp-gateway/state/grants.db"):
                   src = sqlite3.connect("file:/var/lib/xmsg-mcp-gateway/state/grants.db?mode=rw", uri=True)
                   app = src.execute("PRAGMA application_id").fetchone()[0]
-                  if app == LEGACY:
+                  if app not in (LEGACY, RETIREMENT, SUMMARY):
+                      sys.exit("/var/lib/xmsg-mcp-gateway/state/grants.db: unrecognized application_id " + hex(app))
+                  retired = src.execute("SELECT 1 FROM sqlite_master WHERE name = 'outbound_retirement_schema'").fetchone() is not None
+                  if app == LEGACY or (app == SUMMARY and not retired):
                       os.makedirs("/var/lib/xmsg-mcp-gateway/backups", mode=0o700, exist_ok=True)
                       out = "/var/lib/xmsg-mcp-gateway/backups/grants.db.pre-retirement-" + time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
                       dst = sqlite3.connect(out + ".partial")
                       src.backup(dst)
-                      ok = dst.execute("PRAGMA application_id").fetchone()[0] == LEGACY and dst.execute("PRAGMA quick_check").fetchone()[0] == "ok"
+                      ok = dst.execute("PRAGMA application_id").fetchone()[0] == app and dst.execute("PRAGMA quick_check").fetchone()[0] == "ok"
                       dst.close()
                       if not ok:
                           sys.exit(out + ".partial: backup failed verification")
@@ -268,13 +271,13 @@ spec:
                       fd = os.open("/var/lib/xmsg-mcp-gateway/backups", os.O_RDONLY)
                       os.fsync(fd)
                       os.close(fd)
-                      print("/var/lib/xmsg-mcp-gateway/state/grants.db: legacy store backed up to " + out + ", migrating")
+                      print("/var/lib/xmsg-mcp-gateway/state/grants.db: backed up to " + out + ", running retirement")
                       target = "/var/lib/xmsg-mcp-gateway/state/grants.db"
-                  elif app == RETIREMENT:
-                      print("/var/lib/xmsg-mcp-gateway/state/grants.db: already migrated, left unchanged")
                   else:
-                      sys.exit("/var/lib/xmsg-mcp-gateway/state/grants.db: unrecognized application_id " + hex(app))
+                      print("/var/lib/xmsg-mcp-gateway/state/grants.db: retirement already applied, left unchanged")
                   src.close()
+              if target is None:
+                  target = "/var/lib/xmsg-mcp-gateway/staging/grants.db"
               os.symlink(target, "/var/lib/xmsg-mcp-gateway/staging/retirement.db")
           image: library/python@sha256:20a82dbc2783112ddb91d1534603f802d222a3e63e593cd002eb2ac534e70211
           name: store-retirement-inspect
@@ -294,8 +297,88 @@ spec:
             - --state
             - /var/lib/xmsg-mcp-gateway/staging/retirement.db
             - migrate-retirement
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:ae8dcfc6fc117983dacea071806a16e1e50d52723f4ed2331838ad645591e8ed
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:b927d085468eb51e5f094263b0e9269e1b87b55e6734c3388dc8d8dd2baa2ca2
           name: store-migrate-retirement
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 10001
+            runAsNonRoot: true
+            runAsUser: 10001
+          volumeMounts:
+            - mountPath: /var/lib/xmsg-mcp-gateway
+              name: data
+            - mountPath: /run/xmsg-mcp-gateway
+              name: keys
+              readOnly: true
+            - mountPath: /etc/xmsg-mcp-gateway
+              name: config
+              readOnly: true
+        - command:
+            - python3
+            - -I
+            - -c
+            - |
+              import os, sqlite3, sys, time
+              LEGACY, RETIREMENT, SUMMARY = 0x584d4757, 0x584d4752, 0x584d4753
+              os.umask(0o077)
+              target = None
+              if os.path.exists("/var/lib/xmsg-mcp-gateway/state/grants.db"):
+                  src = sqlite3.connect("file:/var/lib/xmsg-mcp-gateway/state/grants.db?mode=rw", uri=True)
+                  app = src.execute("PRAGMA application_id").fetchone()[0]
+                  if app not in (LEGACY, RETIREMENT, SUMMARY):
+                      sys.exit("/var/lib/xmsg-mcp-gateway/state/grants.db: unrecognized application_id " + hex(app))
+                  retired = src.execute("SELECT 1 FROM sqlite_master WHERE name = 'outbound_retirement_schema'").fetchone() is not None
+                  if app != SUMMARY:
+                      os.makedirs("/var/lib/xmsg-mcp-gateway/backups", mode=0o700, exist_ok=True)
+                      out = "/var/lib/xmsg-mcp-gateway/backups/grants.db.pre-custody-summaries-" + time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+                      dst = sqlite3.connect(out + ".partial")
+                      src.backup(dst)
+                      ok = dst.execute("PRAGMA application_id").fetchone()[0] == app and dst.execute("PRAGMA quick_check").fetchone()[0] == "ok"
+                      dst.close()
+                      if not ok:
+                          sys.exit(out + ".partial: backup failed verification")
+                      os.replace(out + ".partial", out)
+                      fd = os.open("/var/lib/xmsg-mcp-gateway/backups", os.O_RDONLY)
+                      os.fsync(fd)
+                      os.close(fd)
+                      print("/var/lib/xmsg-mcp-gateway/state/grants.db: backed up to " + out + ", running custody-summaries")
+                      target = "/var/lib/xmsg-mcp-gateway/state/grants.db"
+                  else:
+                      print("/var/lib/xmsg-mcp-gateway/state/grants.db: custody-summaries already applied, left unchanged")
+                  src.close()
+              if target is None:
+                  src = sqlite3.connect("/var/lib/xmsg-mcp-gateway/staging/grants.db")
+                  dst = sqlite3.connect("/var/lib/xmsg-mcp-gateway/staging/custody-summaries-scratch.db")
+                  src.backup(dst)
+                  src.close()
+                  dst.executescript("DROP TABLE custody_refusal_summaries; DROP TABLE custody_gap_summary; PRAGMA application_id = %d;" % RETIREMENT)
+                  dst.close()
+                  target = "/var/lib/xmsg-mcp-gateway/staging/custody-summaries-scratch.db"
+              os.symlink(target, "/var/lib/xmsg-mcp-gateway/staging/custody-summaries.db")
+          image: library/python@sha256:20a82dbc2783112ddb91d1534603f802d222a3e63e593cd002eb2ac534e70211
+          name: store-custody-summaries-inspect
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 10001
+            runAsNonRoot: true
+            runAsUser: 10001
+          volumeMounts:
+            - mountPath: /var/lib/xmsg-mcp-gateway
+              name: data
+        - args:
+            - --state
+            - /var/lib/xmsg-mcp-gateway/staging/custody-summaries.db
+            - migrate-custody-summaries
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:b927d085468eb51e5f094263b0e9269e1b87b55e6734c3388dc8d8dd2baa2ca2
+          name: store-migrate-custody-summaries
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -320,7 +403,7 @@ spec:
             - migrate-events
             - --key-file
             - /run/xmsg-mcp-gateway/keys/events.key
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:ae8dcfc6fc117983dacea071806a16e1e50d52723f4ed2331838ad645591e8ed
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:b927d085468eb51e5f094263b0e9269e1b87b55e6734c3388dc8d8dd2baa2ca2
           name: store-migrate-events
           securityContext:
             allowPrivilegeEscalation: false
@@ -346,7 +429,7 @@ spec:
             - enroll
             - chatgpt
             - /etc/xmsg-mcp-gateway/binding.json
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:ae8dcfc6fc117983dacea071806a16e1e50d52723f4ed2331838ad645591e8ed
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:b927d085468eb51e5f094263b0e9269e1b87b55e6734c3388dc8d8dd2baa2ca2
           name: store-enroll
           securityContext:
             allowPrivilegeEscalation: false

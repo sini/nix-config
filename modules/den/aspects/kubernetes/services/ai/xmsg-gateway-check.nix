@@ -112,46 +112,52 @@ let
     "initContainers"
   ];
   mutant = atOff initsPath;
-  isInspect = c: c.name == "store-retirement-inspect";
+  # The inspect step `inspect` moved after its migration `step`.
+  inspectAfter =
+    inspect: step: inits:
+    let
+      is = c: c.name == inspect;
+      i = lib.findFirst is null inits;
+      rest = lib.filter (c: !is c) inits;
+      at = lib.lists.findFirstIndex (c: c.name == step) null rest;
+    in
+    lib.take (at + 1) rest ++ [ i ] ++ lib.drop (at + 1) rest;
+  # The inspect step `inspect`'s script with `from` replaced by `to`.
+  rewrite =
+    inspect: from: to:
+    map (
+      c:
+      if c.name == inspect then
+        c // { command = map (lib.replaceStrings [ from ] [ to ]) c.command; }
+      else
+        c
+    );
   mutants = {
     # migrate-retirement before the inspect that backs up.
     "inspect runs before migrate-retirement" =
-      inits:
-      let
-        i = lib.findFirst isInspect null inits;
-        rest = lib.filter (c: !isInspect c) inits;
-        at = lib.lists.findFirstIndex (c: c.name == "store-migrate-retirement") null rest;
-      in
-      lib.take (at + 1) rest ++ [ i ] ++ lib.drop (at + 1) rest;
-    # A backup on every start, not only for a legacy store.
-    "inspect, migrated store: link to the staged store, no backup" = map (
-      c:
-      if isInspect c then
-        c
-        // {
-          command = map (lib.replaceStrings [ "if app == LEGACY:" ] [ "if True:" ]) c.command;
-        }
-      else
-        c
-    );
+      inspectAfter "store-retirement-inspect" "store-migrate-retirement";
+    # A backup on every start, not only for a store not yet retired.
+    "inspect, migrated store: link to the staged store, no backup" =
+      rewrite "store-retirement-inspect" "if app == LEGACY or (app == SUMMARY and not retired):"
+        "if True:";
     # The link to the real store made before the backup.
-    "inspect, legacy store, backup impossible: refuses, no link to the real store" = map (
-      c:
-      if isInspect c then
-        c
-        // {
-          command = map (lib.replaceStrings
-            [
-              "os.makedirs("
-            ]
-            [
-              "os.symlink(\"/var/lib/xmsg-mcp-gateway/state/grants.db\", \"/var/lib/xmsg-mcp-gateway/staging/retirement.db\"); os.makedirs("
-            ]
-          ) c.command;
-        }
-      else
-        c
-    );
+    "inspect, legacy store, backup impossible: refuses, no link to the real store" =
+      rewrite "store-retirement-inspect" "os.makedirs("
+        "os.symlink(\"/var/lib/xmsg-mcp-gateway/state/grants.db\", \"/var/lib/xmsg-mcp-gateway/staging/retirement.db\"); os.makedirs(";
+    # A summary store taken for unretired, so it is backed up and migrated again.
+    "inspect, summary store, retired: link to the staged store, no backup" =
+      rewrite "store-retirement-inspect" " and not retired"
+        "";
+    # migrate-custody-summaries before the inspect that backs up.
+    "summaries inspect runs before migrate-custody-summaries" =
+      inspectAfter "store-custody-summaries-inspect" "store-migrate-custody-summaries";
+    # A backup on every start, not only for a store without the summary marker.
+    "summaries inspect, summary store: link to a pre-summary scratch copy of the staged store, no backup" =
+      rewrite "store-custody-summaries-inspect" "if app != SUMMARY:" "if True:";
+    # The link to the real store made before the backup.
+    "summaries inspect, backup impossible: refuses, no link to the real store" =
+      rewrite "store-custody-summaries-inspect" "os.makedirs("
+        "os.symlink(\"/var/lib/xmsg-mcp-gateway/state/grants.db\", \"/var/lib/xmsg-mcp-gateway/staging/custody-summaries.db\"); os.makedirs(";
     # The gateway's `enable` verb in the chain.
     "never runs enable" =
       inits:

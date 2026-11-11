@@ -27,7 +27,8 @@
 # no-op migrations fail, so the real store is created only when absent. The gateway
 # image has no shell, so the steps cannot be skipped by a test inside it: they always
 # build a fresh store in a staging directory on the PVC (init, migrate-custody,
-# migrate-outbound, migrate-retirement, migrate-events, enroll), and the last busybox
+# migrate-outbound, migrate-retirement, migrate-custody-summaries, migrate-events,
+# enroll), and the last busybox
 # step moves it into
 # place only if state/grants.db is absent. Otherwise it discards it. A crash between
 # steps therefore never leaves a half-built real store. The grant stays disabled at
@@ -46,6 +47,16 @@
 # symlink, so the real store's journal stays beside it. A crash before the commit leaves
 # the legacy marker, so the next start backs up and migrates again. Rolling back to an
 # older image means restoring that backup.
+#
+# Custody summaries (custody.md): `migrate-custody-summaries` folds custody refusals and
+# gaps into bounded summaries and sets the application_id to 0x584d4753; older gateways
+# then refuse the store, and a second run fails. `store-custody-summaries-inspect` takes
+# the same shape after retirement: only a real store without that marker is backed up
+# (backups/grants.db.pre-custody-summaries-<UTC time>) and linked. The staged store
+# already has summaries, so otherwise the link points at a throwaway scratch copy of it
+# in the pre-summary format. `store-migrate-custody-summaries` then runs once, on the
+# link. Retirement keeps the summary marker, so a summary store counts as retired by
+# its outbound_retirement_schema table.
 #
 # Backup: the Events key encrypts the store's callback URLs, delivery secrets and
 # retained tokens, so the store is useless without it. The key lives in agenix (git)
@@ -89,6 +100,9 @@ let
   stagedStore = "${stagingDir}/grants.db";
   # What migrate-retirement runs on: a symlink to the real or the staged store.
   retirementLink = "${stagingDir}/retirement.db";
+  # And migrate-custody-summaries: the real store, or a scratch store needing it.
+  summariesLink = "${stagingDir}/custody-summaries.db";
+  summariesScratch = "${stagingDir}/custody-summaries-scratch.db";
   backupsDir = "${dataDir}/backups";
   eventsKey = "${keysDir}/events.key";
   lookupSecret = "${keysDir}/lookup-secret";
@@ -479,37 +493,106 @@ in
           rm -rf ${stagingDir}
         '';
 
-        # LEGACY and RETIREMENT are the application_ids in grants.rs.
-        retirementInspectScript = ''
-          import os, sqlite3, sys, time
-          LEGACY, RETIREMENT = 0x584d4757, 0x584d4752
-          os.umask(0o077)
-          target = "${stagedStore}"
-          if os.path.exists("${grantStore}"):
-              src = sqlite3.connect("file:${grantStore}?mode=rw", uri=True)
-              app = src.execute("PRAGMA application_id").fetchone()[0]
-              if app == LEGACY:
-                  os.makedirs("${backupsDir}", mode=0o700, exist_ok=True)
-                  out = "${backupsDir}/grants.db.pre-retirement-" + time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
-                  dst = sqlite3.connect(out + ".partial")
-                  src.backup(dst)
-                  ok = dst.execute("PRAGMA application_id").fetchone()[0] == LEGACY and dst.execute("PRAGMA quick_check").fetchone()[0] == "ok"
-                  dst.close()
-                  if not ok:
-                      sys.exit(out + ".partial: backup failed verification")
-                  os.replace(out + ".partial", out)
-                  fd = os.open("${backupsDir}", os.O_RDONLY)
-                  os.fsync(fd)
-                  os.close(fd)
-                  print("${grantStore}: legacy store backed up to " + out + ", migrating")
-                  target = "${grantStore}"
-              elif app == RETIREMENT:
-                  print("${grantStore}: already migrated, left unchanged")
-              else:
-                  sys.exit("${grantStore}: unrecognized application_id " + hex(app))
-              src.close()
-          os.symlink(target, "${retirementLink}")
-        '';
+        # A one-way migration of the real store, behind an online backup. The script reads
+        # the real store's application_id (LEGACY, RETIREMENT and SUMMARY are grants.rs's
+        # markers). Only when `needed` holds does it back the store up (the sqlite3 backup
+        # API, never cp) to backups/grants.db.pre-<tag>-<UTC time> and point `link` at it;
+        # otherwise `fallback` sets the target, a store that needs the migration anyway.
+        inspectScript =
+          {
+            tag,
+            needed,
+            link,
+            fallback,
+          }:
+          ''
+            import os, sqlite3, sys, time
+            LEGACY, RETIREMENT, SUMMARY = 0x584d4757, 0x584d4752, 0x584d4753
+            os.umask(0o077)
+            target = None
+            if os.path.exists("${grantStore}"):
+                src = sqlite3.connect("file:${grantStore}?mode=rw", uri=True)
+                app = src.execute("PRAGMA application_id").fetchone()[0]
+                if app not in (LEGACY, RETIREMENT, SUMMARY):
+                    sys.exit("${grantStore}: unrecognized application_id " + hex(app))
+                retired = src.execute("SELECT 1 FROM sqlite_master WHERE name = 'outbound_retirement_schema'").fetchone() is not None
+                if ${needed}:
+                    os.makedirs("${backupsDir}", mode=0o700, exist_ok=True)
+                    out = "${backupsDir}/grants.db.pre-${tag}-" + time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+                    dst = sqlite3.connect(out + ".partial")
+                    src.backup(dst)
+                    ok = dst.execute("PRAGMA application_id").fetchone()[0] == app and dst.execute("PRAGMA quick_check").fetchone()[0] == "ok"
+                    dst.close()
+                    if not ok:
+                        sys.exit(out + ".partial: backup failed verification")
+                    os.replace(out + ".partial", out)
+                    fd = os.open("${backupsDir}", os.O_RDONLY)
+                    os.fsync(fd)
+                    os.close(fd)
+                    print("${grantStore}: backed up to " + out + ", running ${tag}")
+                    target = "${grantStore}"
+                else:
+                    print("${grantStore}: ${tag} already applied, left unchanged")
+                src.close()
+            if target is None:
+            ${lib.concatMapStringsSep "\n" (l: "    " + l) (
+              lib.splitString "\n" (lib.removeSuffix "\n" fallback)
+            )}
+            os.symlink(target, "${link}")
+          '';
+
+        # A SUMMARY store is retired only if summaries ran after retirement; the table says.
+        retirementInspectScript = inspectScript {
+          tag = "retirement";
+          needed = "app == LEGACY or (app == SUMMARY and not retired)";
+          link = retirementLink;
+          fallback = ''
+            target = "${stagedStore}"
+          '';
+        };
+
+        # The staged store already has the summaries (migrate-custody creates them), and the
+        # image has no shell to skip the step, so without a real store to migrate it runs on
+        # a scratch copy of the staged store in the pre-summary format. Install discards it.
+        summariesInspectScript = inspectScript {
+          tag = "custody-summaries";
+          needed = "app != SUMMARY";
+          link = summariesLink;
+          fallback = ''
+            src = sqlite3.connect("${stagedStore}")
+            dst = sqlite3.connect("${summariesScratch}")
+            src.backup(dst)
+            src.close()
+            dst.executescript("DROP TABLE custody_refusal_summaries; DROP TABLE custody_gap_summary; PRAGMA application_id = %d;" % RETIREMENT)
+            dst.close()
+            target = "${summariesScratch}"
+          '';
+        };
+
+        inspectStep = step: script: {
+          name = "store-${step}-inspect";
+          image = python;
+          command = [
+            "python3"
+            "-I"
+            "-c"
+            script
+          ];
+          securityContext = hardened;
+          volumeMounts = [ dataMount ];
+        };
+
+        # A migration on the link its inspect made.
+        linkStep =
+          step: link:
+          storeStep step [ ]
+          // {
+            args = [
+              "--state"
+              link
+              step
+            ];
+          };
 
         tunnelContainer = {
           name = "tunnel-client";
@@ -684,29 +767,10 @@ in
                           (storeStep "init" [ "init" ])
                           (storeStep "migrate-custody" [ "migrate-custody" ])
                           (storeStep "migrate-outbound" [ "migrate-outbound" ])
-                          {
-                            name = "store-retirement-inspect";
-                            image = python;
-                            command = [
-                              "python3"
-                              "-I"
-                              "-c"
-                              retirementInspectScript
-                            ];
-                            securityContext = hardened;
-                            volumeMounts = [ dataMount ];
-                          }
-                          # The real store only when inspect found it legacy.
-                          (
-                            storeStep "migrate-retirement" [ ]
-                            // {
-                              args = [
-                                "--state"
-                                retirementLink
-                                "migrate-retirement"
-                              ];
-                            }
-                          )
+                          (inspectStep "retirement" retirementInspectScript)
+                          (linkStep "migrate-retirement" retirementLink)
+                          (inspectStep "custody-summaries" summariesInspectScript)
+                          (linkStep "migrate-custody-summaries" summariesLink)
                           (storeStep "migrate-events" [
                             "migrate-events"
                             "--key-file"

@@ -53,11 +53,21 @@ STORE_STEPS = [
     "migrate-outbound",
     "retirement-inspect",
     "migrate-retirement",
+    "custody-summaries-inspect",
+    "migrate-custody-summaries",
     "migrate-events",
     "enroll",
 ]
 # The store application_ids (gateway grants.rs).
-LEGACY, RETIREMENT = 0x584D4757, 0x584D4752
+LEGACY, RETIREMENT, SUMMARY = 0x584D4757, 0x584D4752, 0x584D4753
+# Each one-way migration on the link its inspect makes: the inspect, the backup's tag.
+LINKED = {
+    "migrate-retirement": ("store-retirement-inspect", "retirement"),
+    "migrate-custody-summaries": (
+        "store-custody-summaries-inspect",
+        "custody-summaries",
+    ),
+}
 
 failed = []
 
@@ -289,8 +299,9 @@ check(
 )
 check("socket volume is an emptyDir", "emptyDir" in volumes.get(shared, {}), shared)
 
-# 5. Grant store: busybox prepare, the five steps on the staged store, then an install
-# that moves it into place only when the real store is absent.
+# 5. Grant store: busybox prepare, the store steps on the staged store (the one-way
+# migrations on links), then an install that moves it into place only when the real
+# store is absent.
 names = [c["name"] for c in inits]
 check(
     "initContainer order",
@@ -300,14 +311,16 @@ check(
 store = serving.get("grant_store")
 staged = None
 for c in inits:
-    if c["name"] in ("store-install", "store-retirement-inspect") or not c[
-        "name"
-    ].startswith("store-"):
+    if (
+        c["name"] == "store-install"
+        or c["name"].endswith("-inspect")
+        or not c["name"].startswith("store-")
+    ):
         continue
     args = c.get("args", [])
     check(f"{c['name']} uses the gateway image", c.get("image") == gw.get("image"))
     check(f"{c['name']} has no command override", "command" not in c)
-    if c["name"] != "store-migrate-retirement":
+    if c["name"].removeprefix("store-") not in LINKED:
         staged = staged or arg_after(args, "--state")
         check(
             f"{c['name']} runs on the staged store",
@@ -320,70 +333,104 @@ for c in inits:
     )
 check("staged store is not the real one", staged and staged != store, staged)
 
-# 5a. Retirement: inspect, then the one migrate-retirement on the link inspect made.
-# The inspect script is run against fixture stores, so the backup's condition and its
-# ordering before the link to the real store are behaviour, not text.
-retire = next((c for c in inits if c["name"] == "store-migrate-retirement"), {})
-link = arg_after(retire.get("args", []), "--state")
+# 5a. One-way migrations (retirement, custody summaries): each inspect, then its one
+# migration on the link the inspect made. The inspect scripts are run against fixture
+# stores, so each backup's condition and its ordering before the link to the real store
+# are behaviour, not text.
+links = {}
+for step, (inspect_name, _) in LINKED.items():
+    c = next((c for c in inits if c["name"] == f"store-{step}"), {})
+    lk = arg_after(c.get("args", []), "--state")
+    links[step] = lk
+    check(
+        f"{step} runs on a link in the staging directory",
+        lk
+        and staged
+        and posixpath.dirname(lk) == posixpath.dirname(staged)
+        and lk not in (staged, store),
+        lk,
+    )
+    runs = [
+        c["name"]
+        for p in (pod, on_pod)
+        for c in p["containers"] + p.get("initContainers", [])
+        if step in c.get("args", []) + c.get("command", [])
+    ]
+    check(
+        f"{step} runs exactly once per pod",
+        runs == [f"store-{step}"] * 2,
+        runs,
+    )
+    what = "inspect" if step == "migrate-retirement" else "summaries inspect"
+    check(
+        f"{what} runs before {step}",
+        inspect_name in names
+        and f"store-{step}" in names
+        and names.index(inspect_name) == names.index(f"store-{step}") - 1,
+        names,
+    )
+    ic = next((c for c in inits if c["name"] == inspect_name), {})
+    check(
+        f"{inspect_name} is python on the data volume only",
+        ic.get("command", [])[:3] == ["python3", "-I", "-c"]
+        and set(mounts(ic).values()) == {"data"},
+        ic.get("command", [])[:3],
+    )
 check(
-    "migrate-retirement runs on a link in the staging directory",
-    link
-    and staged
-    and posixpath.dirname(link) == posixpath.dirname(staged)
-    and link not in (staged, store),
-    link,
-)
-runs = [
-    c["name"]
-    for p in (pod, on_pod)
-    for c in p["containers"] + p.get("initContainers", [])
-    if "migrate-retirement" in c.get("args", []) + c.get("command", [])
-]
-check(
-    "migrate-retirement runs exactly once per pod",
-    runs == ["store-migrate-retirement"] * 2,
-    runs,
-)
-check(
-    "inspect runs before migrate-retirement",
-    "store-retirement-inspect" in names
-    and "store-migrate-retirement" in names
-    and names.index("store-retirement-inspect")
-    == names.index("store-migrate-retirement") - 1,
+    "summaries migrate after retirement",
+    names.index("store-migrate-retirement")
+    < names.index("store-custody-summaries-inspect"),
     names,
 )
-inspect = next((c for c in inits if c["name"] == "store-retirement-inspect"), {})
-inspect_cmd = inspect.get("command", [])
-check(
-    "inspect is python on the data volume only",
-    inspect_cmd[:3] == ["python3", "-I", "-c"]
-    and set(mounts(inspect).values()) == {"data"},
-    inspect_cmd[:3],
-)
+
+SUMMARY_TABLES = ("custody_refusal_summaries", "custody_gap_summary")
 
 
-def make_store(path, app):
+def make_store(path, app, retired=False, summaries=False):
     db = sqlite3.connect(path)
     db.execute(f"PRAGMA application_id = {app}")
     db.execute("CREATE TABLE grants(id TEXT)")
     db.execute("INSERT INTO grants VALUES ('fixture')")
+    if retired:
+        db.execute("CREATE TABLE outbound_retirement_schema(version INTEGER)")
+    for t in SUMMARY_TABLES if summaries else ():
+        db.execute(f"CREATE TABLE {t}(bus TEXT)")
     db.commit()
     db.close()
 
 
-def run_inspect(app, sealed=False):
-    """Run the inspect script with the data directory moved under a temp dir; sealed
-    makes the data directory itself unwritable, so a backup there cannot be made.
-    Returns (exit code, link target, [(partial, group/other mode bits, marker, rows)])."""
+def describe(path):
+    """(marker, rows, summary tables) of a store."""
+    b = sqlite3.connect(path)
+    marker = b.execute("PRAGMA application_id").fetchone()[0]
+    rows = b.execute("SELECT id FROM grants").fetchall()
+    tables = sorted(
+        r[0]
+        for r in b.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
+        if r[0] in SUMMARY_TABLES
+    )
+    b.close()
+    return marker, rows, tables
+
+
+def run_inspect(step, app, retired=True, sealed=False):
+    """Run step's inspect script with the data directory moved under a temp dir; sealed
+    makes the data directory itself unwritable, so a backup there cannot be made. The
+    staged store is a fresh one: summary marker and tables, retired.
+    Returns (exit code, link target, [(partial, group/other mode bits, marker, rows)],
+    {path: (marker, rows, summary tables)} of the staging directory's stores)."""
+    inspect_name, tag = LINKED[step]
+    cmd = next((c for c in inits if c["name"] == inspect_name), {}).get("command", [])
+    link = links[step]
     data = posixpath.dirname(posixpath.dirname(store))
     with tempfile.TemporaryDirectory() as tmp:
         root = tmp + data
         for d in (posixpath.dirname(store), posixpath.dirname(staged)):
             os.makedirs(root + d.removeprefix(data), exist_ok=True)
-        make_store(root + staged.removeprefix(data), LEGACY)
+        make_store(root + staged.removeprefix(data), SUMMARY, True, True)
         if app is not None:
-            make_store(root + store.removeprefix(data), app)
-        script = inspect_cmd[3].replace(data, root) if len(inspect_cmd) > 3 else ""
+            make_store(root + store.removeprefix(data), app, retired)
+        script = cmd[3].replace(data, root) if len(cmd) > 3 else ""
         if sealed:
             os.chmod(root, 0o555)
         code = subprocess.run(
@@ -398,11 +445,8 @@ def run_inspect(app, sealed=False):
         for dirpath, _, files in os.walk(root):
             for f in files:
                 p = posixpath.join(dirpath, f)
-                if "pre-retirement" in f:
-                    b = sqlite3.connect(p)
-                    marker = b.execute("PRAGMA application_id").fetchone()[0]
-                    rows = b.execute("SELECT id FROM grants").fetchall()
-                    b.close()
+                if f"pre-{tag}-" in f:
+                    marker, rows, _ = describe(p)
                     backups.append(
                         (
                             f.endswith(".partial"),
@@ -411,37 +455,83 @@ def run_inspect(app, sealed=False):
                             rows,
                         )
                     )
-        return code, target, backups
+        sdir = root + posixpath.dirname(staged).removeprefix(data)
+        stores = {
+            data + posixpath.join(sdir, f).removeprefix(root): describe(
+                posixpath.join(sdir, f)
+            )
+            for f in os.listdir(sdir)
+            if f.endswith(".db") and not os.path.islink(posixpath.join(sdir, f))
+        }
+        return code, target, backups, stores
 
 
-if staged and store and link:
-    code, target, backups = run_inspect(None)
-    check(
-        "inspect, no store: link to the staged store, no backup",
-        (code, target, backups) == (0, staged, []),
-        (code, target, backups),
-    )
-    code, target, backups = run_inspect(RETIREMENT)
-    check(
-        "inspect, migrated store: link to the staged store, no backup",
-        (code, target, backups) == (0, staged, []),
-        (code, target, backups),
-    )
-    code, target, backups = run_inspect(LEGACY)
-    check(
-        "inspect, legacy store: one owner-private legacy backup, then link to the real store",
-        (code, target, backups) == (0, store, [(False, 0, LEGACY, [("fixture",)])]),
-        (code, target, backups),
-    )
-    code, target, backups = run_inspect(LEGACY, sealed=True)
+ROWS = [("fixture",)]
+if staged and store and all(links.values()):
+    R = "migrate-retirement"
+    for label, app, retired in (
+        ("no store", None, False),
+        ("migrated store", RETIREMENT, True),
+        ("summary store, retired", SUMMARY, True),
+    ):
+        code, target, backups, _ = run_inspect(R, app, retired)
+        check(
+            f"inspect, {label}: link to the staged store, no backup",
+            (code, target, backups) == (0, staged, []),
+            (code, target, backups),
+        )
+    for label, app in (("legacy", LEGACY), ("summary, unretired", SUMMARY)):
+        code, target, backups, _ = run_inspect(R, app, retired=False)
+        check(
+            f"inspect, {label} store: one owner-private backup, then link to the real store",
+            (code, target, backups) == (0, store, [(False, 0, app, ROWS)]),
+            (code, target, backups),
+        )
+    code, target, backups, _ = run_inspect(R, LEGACY, retired=False, sealed=True)
     check(
         "inspect, legacy store, backup impossible: refuses, no link to the real store",
         code != 0 and target is None,
         (code, target, backups),
     )
-    code, target, backups = run_inspect(0x1234)
+    code, target, backups, _ = run_inspect(R, 0x1234)
     check(
         "inspect, unknown store: refuses, no link",
+        code != 0 and target is None,
+        (code, target, backups),
+    )
+
+    S = "migrate-custody-summaries"
+    for label, app in (("no store", None), ("summary store", SUMMARY)):
+        code, target, backups, stores = run_inspect(S, app)
+        check(
+            f"summaries inspect, {label}: link to a pre-summary scratch copy of the staged store, no backup",
+            code == 0
+            and target not in (None, staged, store)
+            and posixpath.dirname(target) == posixpath.dirname(staged)
+            and backups == []
+            and stores
+            == {
+                staged: (SUMMARY, ROWS, sorted(SUMMARY_TABLES)),
+                target: (RETIREMENT, ROWS, []),
+            },
+            (code, target, backups, stores),
+        )
+    for label, app in (("retired", RETIREMENT), ("legacy", LEGACY)):
+        code, target, backups, _ = run_inspect(S, app)
+        check(
+            f"summaries inspect, {label} store: one owner-private backup, then link to the real store",
+            (code, target, backups) == (0, store, [(False, 0, app, ROWS)]),
+            (code, target, backups),
+        )
+    code, target, backups, _ = run_inspect(S, RETIREMENT, sealed=True)
+    check(
+        "summaries inspect, backup impossible: refuses, no link to the real store",
+        code != 0 and target is None,
+        (code, target, backups),
+    )
+    code, target, backups, _ = run_inspect(S, 0x1234)
+    check(
+        "summaries inspect, unknown store: refuses, no link",
         code != 0 and target is None,
         (code, target, backups),
     )
