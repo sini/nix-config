@@ -27,12 +27,17 @@
                       "ExternalIP"
                       "LoadBalancerIP"
                     ];
+                    # Not headless, and not on the LAN pool (L2-announced, cilium.nix).
                     selector.matchExpressions = [
                       {
                         key = "service.kubernetes.io/headless";
                         operator = "DoesNotExist";
                       }
-                    ];
+                    ]
+                    ++ map (key: {
+                      inherit key;
+                      operator = "DoesNotExist";
+                    }) (lib.attrNames (import ./_l2.nix));
                   }
                 ];
               };

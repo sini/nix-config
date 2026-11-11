@@ -1,6 +1,7 @@
 # The environment's filtering resolver in the cluster (docs/dns-resolver.md
-# §2.7): three Blocky replicas, one per node, behind the `blocky` LoadBalancer
-# address. The config renders from the same _settings.nix as uplink's instance;
+# §2.7): three Blocky replicas, one per node, behind two LoadBalancer addresses:
+# `blocky-lan` on the prod LAN (Cilium L2, the clients' DNS) and `blocky` (BGP,
+# the API, and DNS for routed clients). The config renders from the same _settings.nix as uplink's instance;
 # this instance supplies its listeners, the CoreDNS ClusterIP and an emptyDir
 # list cache. The replicas share blocking state through a Valkey in the same
 # namespace (Blocky's redis sync), so one disable through the LB reaches all.
@@ -31,6 +32,7 @@ let
     "app.kubernetes.io/name" = "blocky-ui";
   };
   lbOf = cluster: cluster.getAssignment "blocky";
+  lanOf = cluster: cluster.getAssignment "blocky-lan";
 in
 {
   den.aspects.kubernetes.services.network.blocky = {
@@ -39,7 +41,8 @@ in
       {
         name = cluster.name;
         inherit (cluster) environment;
-        dns = lbOf cluster;
+        # LAN clients reach the L2 address on-link; the API stays on the BGP one.
+        dns = lanOf cluster;
         api = "http://${lbOf cluster}:${toString httpPort}";
       };
 
@@ -135,6 +138,9 @@ in
               };
               service.main = {
                 controller = "main";
+                primary = true;
+                # Kept as `blocky` beside the second Service (the chart would suffix -main).
+                forceRename = name;
                 type = "LoadBalancer";
                 # Local: only nodes with a replica advertise, and the client address
                 # reaches the query log.
@@ -150,6 +156,27 @@ in
                     protocol = "TCP";
                   };
                   http.port = httpPort;
+                };
+              };
+              # DNS on the LAN pool, ARP-announced by one node (cilium.nix). Cluster:
+              # L2 announcements ignore endpoints, so Local could blackhole on a node
+              # with no replica; a query balanced to another node's replica is SNATed,
+              # and that query logs the announcing node's address.
+              service.lan = {
+                controller = "main";
+                type = "LoadBalancer";
+                externalTrafficPolicy = "Cluster";
+                labels = import ./cilium/_l2.nix;
+                annotations."lbipam.cilium.io/ips" = lanOf cluster;
+                ports = {
+                  dns-udp = {
+                    port = 53;
+                    protocol = "UDP";
+                  };
+                  dns-tcp = {
+                    port = 53;
+                    protocol = "TCP";
+                  };
                 };
               };
               persistence = {
@@ -222,6 +249,8 @@ in
                 description = "Blocky: DNS from anywhere routed to the LB; its API from the LAN, the nodes, the panel and Prometheus.";
                 endpointSelector.matchLabels = pod;
                 ingress = [
+                  # LAN clients via blocky-lan arrive as world at the announcing node's
+                  # replica, or SNATed to that node (remote-node, below) at another's.
                   {
                     fromEntities = [ "world" ];
                     toPorts = [ { ports = dnsPorts; } ];

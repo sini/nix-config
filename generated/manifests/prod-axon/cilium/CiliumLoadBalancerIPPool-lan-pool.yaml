@@ -1,0 +1,10 @@
+apiVersion: cilium.io/v2
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: lan-pool
+spec:
+  blocks:
+    - cidr: 10.10.0.32/29
+  serviceSelector:
+    matchLabels:
+      lan.json64.dev/l2-announce: "true"

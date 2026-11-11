@@ -5,6 +5,7 @@
 #   kubernetes-pods — CNI pod overlay (Cilium, dual-stack)
 #   kubernetes-services — ClusterIP range (dual-stack), CoreDNS lives here
 #   kubernetes-loadbalancers — external LB pool advertised via BGP
+#   kubernetes-lan-loadbalancers — LB addresses on the prod LAN, announced by Cilium L2
 { den, ... }:
 {
   den.clusters.axon = {
@@ -159,6 +160,20 @@
           # (network/blocky.nix, docs/dns-resolver.md §2.7). BGP-advertised,
           # NOT internet-routable.
           blocky = "10.11.0.54";
+        };
+      };
+
+      # LoadBalancer addresses on the prod LAN itself, announced by Cilium L2
+      # (ARP) from a node's enp2s0, so prod-LAN clients reach them on-link
+      # without uplink's BGP route (docs/dns-resolver.md §2.7). Below UniFi
+      # Default's DHCP range (dhcpd_start 10.10.0.46) and clear of every host
+      # static; kubernetes-lan-check.nix holds both. NOT BGP-advertised.
+      kubernetes-lan-loadbalancers = {
+        cidr = "10.10.0.32/29";
+        description = "LoadBalancer addresses on the prod LAN, announced by Cilium L2";
+        assignments = {
+          # Blocky's DNS ports for LAN clients (network/blocky.nix); its API stays on `blocky`.
+          blocky-lan = "10.10.0.33";
         };
       };
     };

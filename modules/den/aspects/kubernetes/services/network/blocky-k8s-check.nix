@@ -9,6 +9,10 @@
 #   redis     the Valkey admits only the blocky pods on 6379. Control: from world
 #   lb        a LoadBalancer on the cluster's `blocky` assignment, Local, on UDP/TCP
 #             53 and TCP 4000. Controls: Cluster policy, the UDP port dropped
+#   lan       a LoadBalancer `blocky-lan` on the `blocky-lan` assignment, Cluster
+#             (L2 ignores endpoints), the L2 label, UDP/TCP 53 only; the resolver
+#             record's dns is it and its api the `blocky` LB. Controls: Local
+#             policy, port 4000 added
 #   pods      3 replicas, one per node, no surge, the config's checksum on the pod.
 #             Control: the checksum of another config
 #   monitor   a ServiceMonitor on the Service's http port with job="blocky".
@@ -23,6 +27,8 @@
 let
   axon = config.den.clusters.axon;
   lb = axon.networks.kubernetes-loadbalancers.assignments.blocky;
+  lanLb = axon.networks.kubernetes-lan-loadbalancers.assignments.blocky-lan;
+  record = config.den.aspects.kubernetes.services.network.blocky.dns-resolvers { cluster = axon; };
   coredns = axon.networks.kubernetes-services.assignments.coredns;
   uplink = config.flake.nixosConfigurations.uplink;
 
@@ -43,6 +49,7 @@ let
     ) (throw "blocky-k8s: no ${kind}/${name}") objects;
   cnp = n: (get "CiliumNetworkPolicy" n).spec;
   service = get "Service" "blocky";
+  lanService = get "Service" "blocky-lan";
   deployment = get "Deployment" "blocky";
   monitor = get "ServiceMonitor" "blocky";
   configText = (get "ConfigMap" "blocky-config").data."config.yml";
@@ -161,6 +168,25 @@ let
       }
     ];
 
+  lanOk =
+    s:
+    s.spec.type == "LoadBalancer"
+    && s.spec.externalTrafficPolicy == "Cluster"
+    && s.metadata.annotations."lbipam.cilium.io/ips" == lanLb
+    && lib.all (k: s.metadata.labels.${k} or null == (import ./cilium/_l2.nix).${k}) (
+      lib.attrNames (import ./cilium/_l2.nix)
+    )
+    && sameSet (map (p: { inherit (p) port protocol; }) s.spec.ports) [
+      {
+        port = 53;
+        protocol = "UDP";
+      }
+      {
+        port = 53;
+        protocol = "TCP";
+      }
+    ];
+
   podsOk =
     d: text:
     let
@@ -230,6 +256,23 @@ let
       !(lbOk (
         lib.recursiveUpdate service { spec.ports = lib.filter (p: p.protocol != "UDP") service.spec.ports; }
       ));
+    lan = lanOk lanService;
+    lanLocalFails = !(lanOk (lib.recursiveUpdate lanService { spec.externalTrafficPolicy = "Local"; }));
+    lanApiFails =
+      !(lanOk (
+        lanService
+        // {
+          spec = lanService.spec // {
+            ports = lanService.spec.ports ++ [
+              {
+                port = 4000;
+                protocol = "TCP";
+              }
+            ];
+          };
+        }
+      ));
+    record = record.dns == lanLb && record.api == "http://${lb}:4000";
     pods = podsOk deployment configText;
     podsStaleChecksumFails = !(podsOk deployment (configText + " "));
     monitor = monitorOk monitor;

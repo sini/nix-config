@@ -47,6 +47,8 @@
         loadbalancerNetwork = cluster.networks.kubernetes-loadbalancers;
         loadbalancer-cidr = loadbalancerNetwork.cidr;
         inherit (cluster.settings.kubernetes.services.network.cilium) devices;
+        lanNetwork = cluster.networks.kubernetes-lan-loadbalancers or null;
+        l2Label = import ./_l2.nix;
       in
       {
         applications.cilium = {
@@ -215,15 +217,47 @@
               # BGP control-plane (for FRR peering)
               bgpControlPlane.enabled = true;
 
+              # L2 (ARP) announcements for the LAN pool, where the cluster has one.
+              # Failover takes leaseDuration - renewDeadline to leaseDuration +
+              # renewDeadline, 2-8 s here (upstream's 15/5/2 s defaults: 10-20 s).
+              # API load is one lease, a GET (and the holder's PUT) per agent per
+              # retryPeriod, well inside the agent's default 10 QPS / 20 burst
+              # client limit, so k8sClientRateLimit stays at its default.
+              l2announcements = lib.mkIf (lanNetwork != null) {
+                enabled = true;
+                leaseDuration = "5s";
+                leaseRenewDeadline = "3s";
+                leaseRetryPeriod = "1s";
+              };
+
               policyEnforcementMode = "default";
               policyAuditMode = false;
             };
           };
 
           resources = {
-            ciliumLoadBalancerIPPools."lb-pool" = {
-              metadata.name = "lb-pool";
-              spec.blocks = [ { cidr = loadbalancer-cidr; } ];
+            ciliumLoadBalancerIPPools = {
+              "lb-pool" = {
+                metadata.name = "lb-pool";
+                spec.blocks = [ { cidr = loadbalancer-cidr; } ];
+              };
+            }
+            # Only labelled Services draw from the LAN pool; the BGP advertisement skips them.
+            // lib.optionalAttrs (lanNetwork != null) {
+              "lan-pool".spec = {
+                blocks = [ { cidr = lanNetwork.cidr; } ];
+                serviceSelector.matchLabels = l2Label;
+              };
+            };
+
+            ciliumL2AnnouncementPolicies = lib.optionalAttrs (lanNetwork != null) {
+              # ARP from the LAN NIC alone, never the thunderbolt fabric, on any node.
+              lan.spec = {
+                serviceSelector.matchLabels = l2Label;
+                interfaces = [ "^enp2s0$" ];
+                loadBalancerIPs = true;
+                externalIPs = false;
+              };
             };
 
             ciliumClusterwideNetworkPolicies = {

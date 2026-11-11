@@ -74,6 +74,7 @@ data:
   enable-ipv6-big-tcp: "false"
   enable-ipv6-masquerade: "true"
   enable-k8s-networkpolicy: "true"
+  enable-l2-announcements: "true"
   enable-l2-neigh-discovery: "false"
   enable-l7-proxy: "true"
   enable-lb-ipam: "true"
@@ -125,6 +126,9 @@ data:
   k8s-require-ipv6-pod-cidr: "false"
   kube-proxy-replacement: "true"
   kube-proxy-replacement-healthz-bind-address: ""
+  l2-announcements-lease-duration: 5s
+  l2-announcements-renew-deadline: 3s
+  l2-announcements-retry-period: 1s
   max-connected-clusters: "255"
   mesh-auth-enabled: "false"
   mesh-auth-gc-interval: 5m0s

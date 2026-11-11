@@ -814,6 +814,24 @@ The rest:
   `kubernetes-loadbalancers`, UDP/TCP 53 and TCP 4000, with
   `externalTrafficPolicy: Local`, so client addresses reach the query log and
   only nodes with an endpoint advertise.
+- **The LAN address:** a second `LoadBalancer`, `blocky-lan`, on UDP/TCP 53
+  only, at `blocky-lan` (`10.10.0.33`) in `kubernetes-lan-loadbalancers`
+  (`10.10.0.32/29`, below Default's DHCP range, which starts at `.46`). Cilium
+  L2 announcements answer ARP for it from one node's `enp2s0`, so a prod-LAN
+  client reaches it on-link, through neither uplink nor the gateway (§7 Q2). The
+  label `lan.json64.dev/l2-announce` (`cilium/_l2.nix`) selects it for the LAN
+  pool and the L2 policy, and the BGP advertisement excludes it, so the address
+  is never routed. It is `externalTrafficPolicy: Cluster`: the announcer picks
+  the lease holder without looking at endpoints (`pkg/l2announcer`; upstream's
+  docs call L2 "incompatible with `externalTrafficPolicy: Local`"), so `Local`
+  would drop queries while the holder has no replica, as during a rollout. The
+  cost is the source address. A query the holder balances to its own replica
+  keeps the client's address, and one it balances to another node's replica is
+  SNATed to the holder (Cilium's default `snat` mode), so the query log shows
+  that axon for roughly two queries in three. Failover is a lease (5 s duration,
+  3 s renew, 1 s retry: 2-8 s), then a gratuitous ARP; a client that ignores
+  gratuitous ARP waits out its ARP cache. `kubernetes-lan-check.nix` holds the
+  selectors, the DHCP range and the host statics.
 - **CiliumNetworkPolicies** (namespace `blocky`):
   - `allow-blocky-ingress`: `world` on UDP/TCP 53;
     `fromEntities = [ "host" "remote-node" ]` on 53 and TCP 4000, because the
@@ -851,7 +869,8 @@ The rest:
   fails to start rather than serve with its own blocking state, and a running
   replica reconnects on its own (`redis/pubsub.go`, `reconnect`).
 - **The `dns-resolvers` record:**
-  `{ name = "axon"; environment = cluster.environment; dns = <blocky LB>; api = "http://<blocky LB>:4000"; }`.
+  `{ name = "axon"; environment = cluster.environment; dns = <blocky-lan>; api = "http://<blocky LB>:4000"; }`.
+  Clients get the LAN address; the panel and `dns-filter` keep the BGP one.
   `environment` is the name string (§2.1), so the CoreDNS `fromCIDR` filter
   (§2.3) keeps this record.
 - **Replica state:** `dns-filter` reaches one replica through the LB, so the
@@ -1333,6 +1352,15 @@ passes means the test proves nothing.
    `Default` DHCP list and headscale's list as they were. Each moves when its
    path is proven: DHCP after option 121 or L2 announcements, roaming after the
    LB is measured reachable over the tailnet.
+
+   **Answered for DNS by L2 (2026-11-11):** the record's `dns` is `blocky-lan`
+   (§2.7), an address on `10.10.0.0/16` that a node answers ARP for, so a
+   prod-LAN client's UDP and TCP to it stay on-link and symmetric. `Default`'s
+   DHCP list moves to `[ "axon" "uplink" ]` in its own commit. Roaming stays on
+   uplink: the L2 address is reachable over the tailnet only if a tailnet node
+   advertises `10.10.0.0/16` as a subnet route, and none does (no
+   `--advertise-routes` in the repo). Option 121 stays the path for the other
+   cluster services, whose addresses are on the BGP pool.
 
    Option 121 is in `modules/flake-parts/terranix/unifi.nix`: the definition
    (`rest/dhcpoption`: code 121, `classless-routes`, `hexarray`) and its value

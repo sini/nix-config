@@ -2,7 +2,7 @@
 # property with a control that must fail the same predicate:
 #   dns-clients  test 5 (eval part): every static host's and guest's LAN link
 #                lists exactly its environment's instances (prod: the cluster's
-#                LB, then uplink; dev: uplink) then its gateway, in plain DNS, with no
+#                LAN (L2) address, then uplink; dev: uplink) then its gateway, in plain DNS, with no
 #                RDNSS, and tailscale takes --accept-dns=false; blade (roaming)
 #                keeps the DoT upstreams and MagicDNS. Controls: the same
 #                predicates over dns.resolvers = [ ] and over blade fail, and
@@ -27,12 +27,12 @@ let
   uplink = nixosConfigurations.uplink.config;
   guest = parent: name: nixosConfigurations.${parent}.config.microvm.vms.${name}.config.config;
 
-  # Blocky's own listen address, as uplink renders it, and the cluster's LB.
+  # Blocky's own listen address, as uplink renders it, and the cluster's LAN address.
   blocky = lib.head (lib.splitString ":" (lib.head uplink.services.blocky.settings.ports.dns));
-  axonLb = config.den.clusters.axon.networks.kubernetes-loadbalancers.assignments.blocky;
+  axonDns = config.den.clusters.axon.networks.kubernetes-lan-loadbalancers.assignments.blocky-lan;
   # prod names the cluster instance first (docs/dns-resolver.md §2.7); dev keeps uplink.
   instances.prod = [
-    axonLb
+    axonDns
     blocky
   ];
   instances.dev = [ blocky ];

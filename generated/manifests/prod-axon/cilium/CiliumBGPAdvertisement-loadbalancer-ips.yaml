@@ -11,6 +11,8 @@ spec:
         matchExpressions:
           - key: service.kubernetes.io/headless
             operator: DoesNotExist
+          - key: lan.json64.dev/l2-announce
+            operator: DoesNotExist
       service:
         addresses:
           - ExternalIP
