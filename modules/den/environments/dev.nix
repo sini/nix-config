@@ -3,6 +3,8 @@
 {
   den.environments.dev = {
     id = 2;
+    # The /56's environment nibble: dev's slices are …10–1f (docs/address-plan.md §2.1).
+    ipv6Nibble = 1;
     domain = "json64.dev";
     system-access-groups = [ "system-access" ];
     # prod's gateway policy "Prod to Dev access" lets the prod LAN in; uplink's break-glass
@@ -42,7 +44,7 @@
     networks = {
       default = {
         cidr = "10.9.0.0/16";
-        ipv6_cidr = "fd64:1:1::/64";
+        # ipv6_cidr: the site ULA's subnet 10 (ipv6Nibble).
         description = "Default network for infrastructure hosts";
         # The controller's network: its DHCP and IPv6 DNS follow dns.resolvers (docs/dns-resolver.md §2.4(a)).
         unifiNetwork = "dev";

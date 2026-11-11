@@ -8,6 +8,7 @@
 let
   inherit (lib) mkOption types;
   schemaLib = (inputs.gen.lib.mkGenLibs { }).schema;
+  plan = import ./_address-plan.nix { inherit lib; };
 
   domainFor =
     {
@@ -149,8 +150,10 @@ let
           type = types.nullOr types.str;
           default = null;
           description = ''
-            IPv6 network CIDR (e.g., a ULA fdxx:xxxx:xxxx::/64). A host's interface
-            address inside it is advertised on-link to the LAN (core/network/networking.nix).
+            IPv6 network CIDR (e.g., a ULA fdxx:xxxx:xxxx::/64). An environment with an
+            ipv6Nibble gets its default network's from the site ULA (docs/address-plan.md
+            §2.1). Its hosts hold their token address in it; an interface declaring
+            advertiseUla advertises it on-link (core/network/networking.nix).
           '';
         };
 
@@ -334,6 +337,18 @@ in
               type = types.int;
               default = 0;
               description = "Numeric ID of the environment";
+            };
+
+            ipv6Nibble = mkOption {
+              type = types.nullOr (types.ints.between 0 15);
+              default = null;
+              example = 0;
+              description = ''
+                The environment's nibble E in the /56 subnet id E·16 + P (docs/address-plan.md
+                §2.1): its slices are one /60 of the delegated prefix and of the site ULA,
+                and its default network's ipv6_cidr is the ULA's LAN slice. Declared, never
+                derived from `id`. null = the environment has no IPv6 slices.
+              '';
             };
 
             domain = mkOption {
@@ -599,6 +614,9 @@ in
 
           config = {
             secretPath = lib.mkDefault (self + "/.secrets/env/${config.name}");
+            networks = lib.mkIf (config.ipv6Nibble != null) {
+              default.ipv6_cidr = plan.ulaSubnet (plan.subnetId config.ipv6Nibble plan.purposes.lan);
+            };
           };
         }
       )
