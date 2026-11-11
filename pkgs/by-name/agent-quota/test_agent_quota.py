@@ -1,5 +1,6 @@
 """Self-check for agent-quota: fake agy, codex and claude sources, run it end to end."""
 
+import hashlib
 import json
 import os
 import subprocess
@@ -61,7 +62,7 @@ def event(limits):
     )
 
 
-def run(t, agy_out, sessions, claude=None):
+def run(t, agy_out, sessions, claude=None, agy_log=None):
     bindir = os.path.join(t, "bin")
     os.makedirs(bindir, exist_ok=True)
     if agy_out is not None:
@@ -77,6 +78,11 @@ def run(t, agy_out, sessions, claude=None):
     if claude is not None:
         with open(os.path.join(t, ".claude.json"), "w") as f:
             json.dump(claude, f)
+    if agy_log is not None:
+        logdir = os.path.join(t, ".gemini", "antigravity-cli", "log")
+        os.makedirs(logdir, exist_ok=True)
+        with open(os.path.join(logdir, "cli-20261111_000000.log"), "w") as f:
+            f.write(agy_log)
     # a source checkout's shebang needs python3; link only it, never its directory's agy
     if not os.path.exists(os.path.join(bindir, "python3")):
         os.symlink(sys.executable, os.path.join(bindir, "python3"))
@@ -88,10 +94,21 @@ def run(t, agy_out, sessions, claude=None):
         text=True,
         check=True,
     )
-    text = subprocess.run(
-        [tool], env=env, capture_output=True, text=True, check=True
-    ).stdout
-    return json.loads(out.stdout), text
+    plain = subprocess.run([tool], env=env, capture_output=True, text=True, check=True)
+    global everything
+    everything = out.stdout + out.stderr + plain.stdout + plain.stderr
+    return json.loads(out.stdout), plain.stdout
+
+
+def sha12(raw):
+    return hashlib.sha256(raw.encode()).hexdigest()[:12]
+
+
+def accounts(rows):
+    return {a: {r["account"] for r in rows if r["agent"] == a} for a in AGENTS}
+
+
+AGENTS = ("agy", "codex", "claude")
 
 
 def pick(rows, agent):
@@ -147,12 +164,24 @@ with tempfile.TemporaryDirectory() as t:
         "claude\tAll models\tWeekly\t40%\t2026-11-13T00:59:59Z\t"
         "~/.claude.json cachedUsageUtilization (1h old)" in text
     ), text
+    # age_s is a number agreeing with the age in the text source
+    for r in rows:
+        assert type(r["age_s"]) is int, r
+    assert all(5400 <= r["age_s"] < 5460 for r in claude_rows), claude_rows
+    assert all(
+        0 <= r["age_s"] < 60 and f"({r['age_s']}s old)" in r["source"]
+        for r in codex_rows
+    ), codex_rows
+    assert [r["age_s"] for r in rows if r["agent"] == "agy"] == [0], rows
+    # no ID recorded anywhere: unknown
+    assert all(r["account"] == "unknown" for r in rows), rows
 
 # Missing sources: no agy on PATH, no codex sessions, no ~/.claude.json.
 with tempfile.TemporaryDirectory() as t:
     rows, text = run(t, None, {})
     for agent in ("agy", "codex", "claude"):
         assert pick(rows, agent) == [("unknown", "unknown", None, None)], rows
+    assert all(r["account"] == "unknown" and r["age_s"] is None for r in rows), rows
     assert text.count("unknown") >= 12, text
 
 # A ~/.claude.json without the usage cache is unknown, never a guess.
@@ -194,5 +223,85 @@ with tempfile.TemporaryDirectory() as t:
 with tempfile.TemporaryDirectory() as t:
     rows, _ = run(t, AGY, {"rollout-b.jsonl": [event(LIMITS), event(LIMITS)[:-20]]})
     assert pick(rows, "codex") == [("unknown", "unknown", None, None)], rows
+
+# Account hashes. Canary: every fixture we read plants an email and a token next to the
+# ID; neither may surface anywhere, while the ID's hash must (so the fixture IS read).
+EMAIL, TOKEN = "canary@example.invalid", "canary-token-XYZ"
+
+
+def account_run(codex_id, claude_id, agy_email):
+    meta = {
+        "type": "session_meta",
+        "payload": {
+            "id": "s1",
+            "creator_account_id": codex_id,
+            "creator_user_id": "user-" + TOKEN,
+            "email": EMAIL,
+            "access_token": TOKEN,
+        },
+    }
+    claude = claude_json(CLAUDE_LIMITS)
+    claude["oauthAccount"] = {
+        "accountUuid": claude_id,
+        "emailAddress": EMAIL,
+        "displayName": TOKEN,
+    }
+    claude["primaryApiKey"] = TOKEN
+    log = (
+        f"I1111 applyAuthResult: email={agy_email}, authMethod=consumer, quotaProject=\n"
+        f"I1111 refresh: access_token={TOKEN} id_token={TOKEN} user={EMAIL}\n"
+    )
+    with tempfile.TemporaryDirectory() as t:
+        rows, _ = run(
+            t,
+            AGY,
+            {"rollout-c.jsonl": [json.dumps(meta), event(LIMITS)]},
+            claude,
+            log,
+        )
+    for canary in (EMAIL, TOKEN, "canary", codex_id, claude_id):
+        assert canary not in everything, canary
+    assert agy_email not in everything, agy_email
+    return rows
+
+
+ID_A, ID_B = "acct-0000-aaaa", "acct-0000-bbbb"
+rows_a = account_run(ID_A, ID_A, "a@agy.invalid")
+assert accounts(rows_a) == {
+    "agy": {sha12("a@agy.invalid")},
+    "codex": {sha12(ID_A)},
+    "claude": {sha12(ID_A)},
+}, rows_a
+rows_a2 = account_run(ID_A, ID_B, "b@agy.invalid")
+assert accounts(rows_a2)["codex"] == accounts(rows_a)["codex"], (
+    rows_a2
+)  # same ID, same hash
+assert accounts(rows_a2)["claude"] != accounts(rows_a)["claude"], (
+    rows_a2
+)  # different ID
+assert accounts(rows_a2)["agy"] != accounts(rows_a)["agy"], rows_a2
+assert all(len(r["account"]) == 12 for r in rows_a2), rows_a2
+
+# The field missing (or empty) beside an otherwise good source is unknown.
+with tempfile.TemporaryDirectory() as t:
+    claude = claude_json(CLAUDE_LIMITS)
+    claude["oauthAccount"] = {"emailAddress": EMAIL}
+    rows, _ = run(
+        t,
+        AGY,
+        {
+            "rollout-d.jsonl": [
+                '{"type":"session_meta","payload":{"creator_account_id":""}}',
+                event(LIMITS),
+            ]
+        },
+        claude,
+        "I1111 applyAuthResult: email=, authMethod=consumer\n",
+    )
+    assert all(r["account"] == "unknown" for r in rows), rows
+    assert pick(rows, "codex") == [("codex", "Weekly", 32.0, "2026-11-12T20:09:33Z")], (
+        rows
+    )
+    assert EMAIL not in everything
 
 print("agent-quota self-test: ok")
