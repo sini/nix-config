@@ -43,6 +43,8 @@
             # variable. Only for dashboards whose instance IS app-name (NOT
             # node-exporter dashboards where instance is legitimately host:port).
             excludeColonInstances ? false,
+            # A jq program applied last, for local corrections to an upstream dashboard.
+            jqFilter ? null,
           }:
           builtins.readFile (
             pkgs.runCommand "grafana-dashboard-${name}"
@@ -69,7 +71,11 @@
                     ''sed -E 's/\$\{DS_[A-Z0-9_]+\}/prometheus/g' "$src" | sed '/-- .* --/! s/"datasource":.*,/"datasource": "Prometheus",/g' ''
                   else
                     ''cat "$src"''
-                } | jq '.title = "${title}"'${lib.optionalString excludeColonInstances " | jq '(.templating.list) |= map(if ((.name // \"\") | test(\"instance\")) then . + {regex:\"/^[^:]+$/\"} else . end)'"} > "$out"
+                } | jq '.title = "${title}"'${lib.optionalString excludeColonInstances " | jq '(.templating.list) |= map(if ((.name // \"\") | test(\"instance\")) then . + {regex:\"/^[^:]+$/\"} else . end)'"}${
+                  lib.optionalString (
+                    jqFilter != null
+                  ) " | jq -f ${pkgs.writeText "grafana-dashboard-${name}.jq" jqFilter}"
+                } > "$out"
               ''
           );
 
@@ -200,15 +206,208 @@
           # Blocky's query log: one journal line per query (queryLog.type = console).
           blocky-queries = {
             folder = "Networking";
-            dashboard = mkLogsDashboard {
-              uid = "blocky-queries";
-              title = "Blocky Queries";
-              variables = [
-                (mkLabelVar "instance" "label_values({unit=\"blocky.service\"}, instance)")
-              ];
-              selector = "{unit=\"blocky.service\", instance=~\"$instance\"}";
-              volumeBy = "instance";
-            };
+            dashboard =
+              let
+                base = mkLogsDashboard {
+                  uid = "blocky-queries";
+                  title = "Blocky Queries";
+                  variables = [
+                    (mkLabelVar "instance" "label_values({unit=\"blocky.service\"}, instance)")
+                  ];
+                  selector = "{unit=\"blocky.service\", instance=~\"$instance\"}";
+                  volumeBy = "instance";
+                };
+                # Query lines only, narrowed by the search box. The line is
+                # `key=value` sorted by key, but answer and response_reason
+                # hold spaces, so fields are cut by regexp, not logfmt.
+                queries = "{unit=\"blocky.service\", instance=~\"$instance\"} |= \"queryLog\" |= `$search`";
+                domain = "regexp `question_name=(?P<domain>\\S+)`";
+                mkTop =
+                  {
+                    title,
+                    filter ? "",
+                    field,
+                    regexp,
+                    x,
+                  }:
+                  {
+                    inherit title;
+                    type = "table";
+                    datasource = lokiDs;
+                    gridPos = {
+                      h = 10;
+                      w = 8;
+                      inherit x;
+                      y = 0;
+                    };
+                    targets = [
+                      {
+                        refId = "A";
+                        datasource = lokiDs;
+                        queryType = "instant";
+                        expr = "topk(15, sum by (${field}) (count_over_time(${queries}${filter} | ${regexp} [$__range])))";
+                        legendFormat = "{{${field}}}";
+                      }
+                    ];
+                    # One frame per series: fold each to a row, largest first.
+                    transformations = [
+                      {
+                        id = "reduce";
+                        options.reducers = [ "lastNotNull" ];
+                      }
+                      {
+                        id = "organize";
+                        options.renameByName = {
+                          Field = field;
+                          "Last *" = "queries";
+                        };
+                      }
+                    ];
+                    options.sortBy = [
+                      {
+                        displayName = "queries";
+                        desc = true;
+                      }
+                    ];
+                    fieldConfig.overrides = [
+                      {
+                        matcher = {
+                          id = "byName";
+                          options = "queries";
+                        };
+                        properties = [
+                          {
+                            id = "custom.cellOptions";
+                            value = {
+                              type = "gauge";
+                              mode = "basic";
+                            };
+                          }
+                        ];
+                      }
+                    ];
+                  };
+                shift =
+                  p:
+                  p
+                  // {
+                    gridPos = p.gridPos // {
+                      y = p.gridPos.y + 36;
+                    };
+                  };
+              in
+              base
+              // {
+                panels = [
+                  (mkTop {
+                    title = "Top queried domains";
+                    field = "domain";
+                    regexp = domain;
+                    x = 0;
+                  })
+                  (mkTop {
+                    title = "Top blocked domains";
+                    filter = " |= \"response_type=BLOCKED\"";
+                    field = "domain";
+                    regexp = domain;
+                    x = 8;
+                  })
+                  (mkTop {
+                    title = "Top clients";
+                    field = "client";
+                    regexp = "regexp `client_ip=(?P<client>\\S+)`";
+                    x = 16;
+                  })
+                  {
+                    title = "Queries by response type";
+                    type = "timeseries";
+                    datasource = lokiDs;
+                    gridPos = {
+                      h = 6;
+                      w = 24;
+                      x = 0;
+                      y = 10;
+                    };
+                    fieldConfig.defaults.custom = {
+                      drawStyle = "bars";
+                      fillOpacity = 50;
+                      stacking.mode = "normal";
+                    };
+                    targets = [
+                      {
+                        refId = "A";
+                        datasource = lokiDs;
+                        expr = "sum by (type) (count_over_time(${queries} | regexp `response_type=(?P<type>\\S+)` [$__auto]))";
+                        legendFormat = "{{type}}";
+                      }
+                    ];
+                  }
+                  {
+                    title = "Query log";
+                    type = "table";
+                    datasource = lokiDs;
+                    gridPos = {
+                      h = 20;
+                      w = 24;
+                      x = 0;
+                      y = 16;
+                    };
+                    targets = [
+                      {
+                        refId = "A";
+                        datasource = lokiDs;
+                        expr = lib.concatStringsSep " | " [
+                          queries
+                          "regexp `client_ip=(?P<client>\\S+)`"
+                          "regexp `question_name=(?P<domain>\\S+) question_type=(?P<qtype>\\S+)`"
+                          "regexp `response_code=(?P<rcode>\\S+) response_reason=(?P<reason>.*) response_type=(?P<type>\\S+)`"
+                          "regexp `answer=(?P<answer>.*) client_ip=`"
+                          "regexp `duration_ms=(?P<duration_ms>\\d+)`"
+                        ];
+                      }
+                    ];
+                    # Loki's labels object to columns, the stream labels and raw line hidden.
+                    transformations = [
+                      {
+                        id = "extractFields";
+                        options.source = "labels";
+                      }
+                      {
+                        id = "organize";
+                        options = {
+                          excludeByName = lib.genAttrs [
+                            "labels"
+                            "Line"
+                            "tsNs"
+                            "id"
+                            "cluster"
+                            "detected_level"
+                            "instance"
+                            "job"
+                            "level"
+                            "service_name"
+                            "unit"
+                          ] (_: true);
+                          indexByName = lib.listToAttrs (
+                            lib.imap0 (i: n: lib.nameValuePair n i) [
+                              "Time"
+                              "client"
+                              "domain"
+                              "qtype"
+                              "type"
+                              "reason"
+                              "rcode"
+                              "answer"
+                              "duration_ms"
+                            ]
+                          );
+                        };
+                      }
+                    ];
+                  }
+                ]
+                ++ map shift base.panels;
+              };
           };
           kubernetes-events = {
             folder = "Logs";
@@ -297,6 +496,59 @@
             url = "https://raw.githubusercontent.com/0xERR0R/blocky/v0.35.0/docs/blocky-grafana.json";
             sha256 = "00hpb1j3km226nwcyn9a0bp3ii3fm3y3c3qy1932fnf2pmh4xvpj";
             fixDatasource = true;
+            # Live-checked against uplink's blocky: drop what never has data
+            # here, add query rate by type and upstream latency, and size the
+            # rate window to the scrape interval.
+            jqFilter = ''
+              def panel($id): first(.panels[] | select(.id == $id));
+              def target($expr; $legend): {
+                refId: "A", datasource: {type: "prometheus", uid: "prometheus"}, editorMode: "code",
+                expr: $expr, legendFormat: $legend, range: true, instant: false
+              };
+              def resolved($window): "blocky_request_duration_seconds_bucket{response_type=\"RESOLVED\", job=~\"$job\", instance=~\"$instance\"}[\($window)]";
+              panel(5) as $stat | panel(16) as $byOutcome | panel(23) as $percentiles
+              | .panels |= map(
+                  # DNSSEC and rate limiting are off on our blocky, so these rows only ever hold empty panels.
+                  select((.type == "row" and (.title == "DNSSEC" or .title == "Rate limiting")) | not)
+                  # Its buttons call $blocky_url from the browser: unbound here, and mixed content from https Grafana.
+                  | if .id == 14 then
+                      $stat + {
+                        id: 14, title: "Upstream p95",
+                        description: "95th percentile duration of queries resolved by an upstream (response_type RESOLVED), over the dashboard range.",
+                        gridPos: .gridPos,
+                        # Over the range: most queries are cached or conditional, so a short window is often empty.
+                        targets: [target("histogram_quantile(0.95, sum by (le) (rate(\(resolved("$__range")))))"; "") | .range = false | .instant = true]
+                      }
+                    elif .id == 2 then .description = "Ad/tracker blocking status."
+                    elif .id == 16 or .id == 25 then .gridPos.w = 12
+                    else . end)
+              | .panels += [
+                  $byOutcome + {
+                    id: 50, title: "Queries by type",
+                    description: "Query rate by DNS record type.",
+                    gridPos: {h: 9, w: 12, x: 12, y: 10},
+                    fieldConfig: ($byOutcome.fieldConfig | .overrides = []),
+                    targets: [target("sum by (type) (rate(blocky_query_total{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]))"; "{{type}}")]
+                  },
+                  $percentiles + {
+                    id: 51, title: "Upstream response time",
+                    description: "Median, 95th and 99th percentile duration of queries resolved by an upstream (response_type RESOLVED).",
+                    gridPos: {h: 8, w: 12, x: 12, y: 46},
+                    targets: [
+                      target("histogram_quantile(0.50, sum by (le) (rate(\(resolved("$__rate_interval")))))"; "p50"),
+                      (target("histogram_quantile(0.95, sum by (le) (rate(\(resolved("$__rate_interval")))))"; "p95") | .refId = "B"),
+                      (target("histogram_quantile(0.99, sum by (le) (rate(\(resolved("$__rate_interval")))))"; "p99") | .refId = "C")
+                    ]
+                  }
+                ]
+              | .panels |= sort_by(.gridPos.y, .gridPos.x)
+              # Alloy scrapes blocky every 60s, not the datasource's 30s: a 1m min
+              # interval makes $__rate_interval 4m, so a rate window never holds one sample.
+              | .panels |= map(if .type == "row" then .panels |= map(.interval = "1m") else .interval = "1m" end)
+              | .description |= sub(", DNSSEC, rate limiting and"; " and")
+              | .templating.list |= map(select(.name != "blocky_url"))
+              | .__inputs |= map(select(.name != "VAR_BLOCKY_URL"))
+            '';
           };
 
           # Media exporters. The *arr/sabnzbd metrics come from exportarr
@@ -585,6 +837,7 @@
                     inherit (d) title url sha256;
                     fixDatasource = d.fixDatasource or false;
                     excludeColonInstances = d.excludeColonInstances or false;
+                    jqFilter = d.jqFilter or null;
                   };
                 }
               ) importedDashboards
