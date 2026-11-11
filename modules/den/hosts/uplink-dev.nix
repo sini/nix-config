@@ -147,8 +147,11 @@ in
               IPv6AcceptRA = true;
               DHCP = "no";
             };
-            # The list is exactly the environment's: no RDNSS from the router.
+            # The list is exactly the environment's: no RDNSS from the router, and
+            # none from the DHCPv6 client an RA's managed flag starts (DHCP = "no"
+            # does not stop it; uplink-dev listed the router's address from it).
             ipv6AcceptRAConfig.UseDNS = false;
+            dhcpV6Config.UseDNS = false;
             # The cluster's LoadBalancer pool via uplink, the prod BGP hub, which holds a
             # per-address route to the announcing node. Through the gateway this breaks:
             # the guest shares 10.10.0.0/16 with the nodes, so a node's reply comes back

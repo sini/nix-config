@@ -256,8 +256,11 @@ in
               IPv6AcceptRA = true;
               DHCP = "no";
             };
-            # The list is exactly the environment's: no RDNSS from the router.
+            # The list is exactly the environment's: no RDNSS from the router, and
+            # none from the DHCPv6 client an RA's managed flag starts (DHCP = "no"
+            # does not stop it; uplink-dev listed the router's address from it).
             ipv6AcceptRAConfig.UseDNS = false;
+            dhcpV6Config.UseDNS = false;
           };
         };
 
