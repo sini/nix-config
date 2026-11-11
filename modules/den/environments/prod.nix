@@ -22,6 +22,15 @@
     # Public DNS: modules/flake-parts/terranix, infra/dns/README.md.
     dns.publicIPv4 = "157.131.140.225";
 
+    # The resolver instance (services/networking/blocky) runs in prod and reads
+    # these from its own environment; docs/dns-resolver.md.
+    dns.internal = "axon";
+    dns.filter = {
+      # hagezi's documented URL for its "Wildcard Asterisk" format, the one it names for Blocky
+      denylists = [ "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/pro.txt" ];
+      allowlist = [ ];
+    };
+
     services = {
       argocd.domain = "argocd.zeroday.run";
       hubble-ui.domain = "hubble.zeroday.run";

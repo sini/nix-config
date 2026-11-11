@@ -12,10 +12,21 @@
       '';
     };
 
+    # CoreDNS on its off-cluster address, for resolver instances
+    # (services/networking/blocky), which send served names here.
+    dns-internal =
+      { cluster, ... }:
+      {
+        cluster = cluster.name;
+        inherit (cluster) environment;
+        address = cluster.getAssignment "coredns-internal";
+      };
+
     k8s-manifests =
       {
         cluster,
         charts,
+        dns-resolvers,
         environment,
         served-domains,
         lib,
@@ -46,6 +57,10 @@
           "k8s:io.kubernetes.pod.namespace" = "kube-system";
           "app.kubernetes.io/name" = "coredns";
         };
+        # The only off-cluster clients: the environment's resolver instances.
+        resolverCidrs = map (r: "${r.dns}/32") (
+          lib.unique (lib.filter (r: r.environment == cluster.environment) dns-resolvers)
+        );
         # TCP/53 for glibc's TCP fallback on truncated/large DNS answers;
         # without it those retries are dropped.
         dnsPorts = [
@@ -164,6 +179,36 @@
           };
 
           resources = {
+            # The ClusterIP is not routed off-cluster. Local: only nodes with a
+            # CoreDNS pod advertise the address, and the client's source address
+            # survives for the fromCIDR rule below (Cluster would SNAT it to a node).
+            services.coredns-internal = {
+              metadata.annotations."lbipam.cilium.io/ips" = cluster.getAssignment "coredns-internal";
+              spec = {
+                type = "LoadBalancer";
+                externalTrafficPolicy = "Local";
+                selector = {
+                  "app.kubernetes.io/instance" = "coredns";
+                  "app.kubernetes.io/name" = "coredns";
+                  "k8s-app" = "coredns";
+                };
+                ports = [
+                  {
+                    name = "udp-53";
+                    port = 53;
+                    protocol = "UDP";
+                    targetPort = 53;
+                  }
+                  {
+                    name = "tcp-53";
+                    port = 53;
+                    protocol = "TCP";
+                    targetPort = 53;
+                  }
+                ];
+              };
+            };
+
             ciliumNetworkPolicies = {
               # Allow kube-dns to talk to upstream DNS
               allow-kube-dns-upstream-egress = {
@@ -258,6 +303,12 @@
                     fromEndpoints = [ { } ];
                     toPorts = [ { ports = dnsPorts; } ];
                   }
+                ]
+                ++ lib.optional (resolverCidrs != [ ]) {
+                  fromCIDR = resolverCidrs;
+                  toPorts = [ { ports = dnsPorts; } ];
+                }
+                ++ [
                   # prometheus -> coredns metrics (Corefile prometheus plugin)
                   {
                     fromEndpoints = [

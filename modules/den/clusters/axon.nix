@@ -149,6 +149,11 @@
           # Host metrics/log push into Prometheus + Loki
           # (monitoring/ingest.nix), published as ingest.json64.dev.
           monitoring-ingest = "10.11.0.31";
+
+          # CoreDNS for the resolver instances off-cluster
+          # (network/coredns/coredns.nix, docs/dns-resolver.md).
+          # BGP-advertised, NOT internet-routable.
+          coredns-internal = "10.11.0.53";
         };
       };
     };
