@@ -73,12 +73,20 @@ class ImageUpdater:
         return remote_digest != image.image_digest
 
     @staticmethod
-    def update_image(image: ImageMetadata, dry_run: bool = False) -> UpdateOperation:
+    def update_image(
+        image: ImageMetadata,
+        dry_run: bool = False,
+        explicit: bool = False,
+        tag_changed: bool = False,
+    ) -> UpdateOperation:
         """Update an image's metadata file.
 
         Args:
             image: Image metadata to update
             dry_run: If True, don't write changes
+            explicit: The operator named this image, so a pin doesn't skip it
+            tag_changed: image.image_tag differs from the file's, so write it
+                even when the new tag resolves to the stored digest
 
         Returns:
             UpdateOperation describing what was done
@@ -86,7 +94,7 @@ class ImageUpdater:
         logger.info(f"Checking {image.path_str}...")
 
         # Check if image is pinned
-        if image.pinned:
+        if image.pinned and not explicit:
             logger.info("  Pinned (skipping)")
             return UpdateOperation(
                 path=image.path_str,
@@ -115,7 +123,7 @@ class ImageUpdater:
                 updated=False,
             )
 
-        if remote_digest == image.image_digest:
+        if remote_digest == image.image_digest and not tag_changed:
             logger.info("  Up to date")
             return UpdateOperation(
                 path=image.path_str,

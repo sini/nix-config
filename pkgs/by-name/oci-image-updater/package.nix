@@ -53,6 +53,13 @@ python3.pkgs.buildPythonApplication {
       }
   '';
 
+  doInstallCheck = true;
+  installCheckPhase = ''
+    runHook preInstallCheck
+    PYTHONPATH=$out/${python3.sitePackages} ${python3}/bin/python3 ${./test_update_one.py}
+    runHook postInstallCheck
+  '';
+
   meta = {
     description = "Update OCI container image metadata for Nix flakes";
     mainProgram = "oci-image-updater";

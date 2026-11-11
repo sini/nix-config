@@ -43,6 +43,37 @@ def cmd_update_all(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_update(args: argparse.Namespace) -> int:
+    """Handle update command: one image, optionally to a new tag.
+
+    Args:
+        args: Parsed arguments
+
+    Returns:
+        Exit code
+    """
+    configure_logging(args.verbose)
+
+    git_root = validate_git_root(args)
+
+    if args.dry_run:
+        logger.info("DRY RUN MODE: No changes will be made")
+
+    manager = ImageManager(
+        flake_ref=args.flake,
+        git_root=git_root,
+        dry_run=args.dry_run,
+        commit=args.commit,
+    )
+
+    try:
+        manager.update_one(args.image_path, tag=args.tag)
+    except KeyError as e:
+        logger.error(str(e.args[0]))
+        return 1
+    return 0
+
+
 def cmd_check_all(args: argparse.Namespace) -> int:
     """Handle check-all command.
 

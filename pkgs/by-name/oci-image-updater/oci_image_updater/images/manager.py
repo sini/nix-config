@@ -1,6 +1,7 @@
 """Image update manager."""
 
 import logging
+from dataclasses import replace
 from pathlib import Path
 
 from ..models import UpdateOperation
@@ -67,15 +68,53 @@ class ImageManager:
 
         # Commit if requested
         if self.commit and updated_count > 0 and not self.dry_run:
-            self._commit_changes(operations)
+            self._commit_changes(operations, [self.images_dir])
 
         return operations
 
-    def _commit_changes(self, operations: list[UpdateOperation]) -> None:
+    def update_one(self, image_path: str, tag: str | None = None) -> UpdateOperation:
+        """Update one image, optionally moving it to another tag.
+
+        A named image is updated even when pinned: naming it is the operator's
+        intent, and the pin still holds against update-all.
+
+        Args:
+            image_path: Image path under images/ (e.g., "sini/xmsg")
+            tag: New tag to track; the file's tag when None
+
+        Returns:
+            The update operation
+
+        Raises:
+            KeyError: No image has that path
+        """
+        metadata = NixUtils.get_images_metadata(self.flake_ref)
+        images = ImageDiscovery.discover_images(metadata or {}, self.images_dir)
+        image = next((i for i in images if i.path_str == image_path), None)
+        if image is None:
+            known = ", ".join(sorted(i.path_str for i in images))
+            raise KeyError(f"no image {image_path!r}; known: {known}")
+
+        tag_changed = tag is not None and tag != image.image_tag
+        if tag_changed:
+            logger.info(f"Tag: {image.image_tag} -> {tag}")
+            image = replace(image, image_tag=tag)
+
+        op = ImageUpdater.update_image(
+            image, dry_run=self.dry_run, explicit=True, tag_changed=tag_changed
+        )
+        if self.commit and op.updated and not self.dry_run:
+            self._commit_changes([op], [image.file_path])
+        return op
+
+    def _commit_changes(
+        self, operations: list[UpdateOperation], paths: list[Path]
+    ) -> None:
         """Commit updated image metadata files.
 
         Args:
             operations: List of update operations
+            paths: Files or directories to stage
         """
         updated_ops = [op for op in operations if op.updated]
         if not updated_ops:
@@ -84,8 +123,7 @@ class ImageManager:
         logger.info("")
         logger.info("Committing changes...")
 
-        # Add all image files
-        GitUtils.add([self.images_dir], self.git_root)
+        GitUtils.add(paths, self.git_root)
 
         # Create commit message
         if len(updated_ops) == 1:

@@ -12,6 +12,7 @@ from .commands import (
     cmd_init,
     cmd_list_path,
     cmd_list_paths,
+    cmd_update,
     cmd_update_all,
 )
 
@@ -63,6 +64,47 @@ def parse_arguments() -> argparse.Namespace:
         "--pinned",
         action="store_true",
         help="Mark image as pinned (prevent automatic updates)",
+    )
+
+    # update command
+    one_parser = subparsers.add_parser(
+        "update",
+        help="Update one image's metadata file (even if pinned), optionally to a new tag",
+    )
+    one_parser.add_argument(
+        "image_path",
+        help="Image path under images/ (e.g., sini/xmsg)",
+    )
+    one_parser.add_argument(
+        "--tag",
+        type=str,
+        help="Move the image to this tag before resolving its digest",
+    )
+    one_parser.add_argument(
+        "--git-root",
+        type=Path,
+        help="Git repository root path (auto-detected if not specified)",
+    )
+    one_parser.add_argument(
+        "--flake",
+        type=str,
+        default=".",
+        help="Flake reference to use (default: current directory)",
+    )
+    one_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be changed without actually making changes",
+    )
+    one_parser.add_argument(
+        "--commit",
+        action="store_true",
+        help="Commit the changed file to git",
+    )
+    one_parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Enable debug logging",
     )
 
     # update-all command
@@ -204,6 +246,7 @@ def main() -> int:
     # Route to command handlers
     command_map = {
         "init": cmd_init,
+        "update": cmd_update,
         "update-all": cmd_update_all,
         "check-all": cmd_check_all,
         "list-path": cmd_list_path,
