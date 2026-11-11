@@ -47,6 +47,7 @@
         lib,
         certificate-domains,
         apex-domains,
+        redirect-domains,
         ...
       }:
       let
@@ -280,6 +281,41 @@
             # it gateway-wide just above the route timeout so the route timeout is
             # the binding limit. This is a ceiling only: routes that don't raise
             # their own request timeout still hit Envoy's 15s route default.
+            # web.redirect hostnames: a 301 to https://<to>/, path and query kept
+            # (a RequestRedirect without `path` keeps them).
+            httpRoutes = lib.listToAttrs (
+              map (
+                r:
+                lib.nameValuePair "redirect-${lib.replaceStrings [ "." ] [ "-" ] r.hostname}" {
+                  spec = {
+                    hostnames = [ r.hostname ];
+                    parentRefs = [
+                      {
+                        name = "default-gateway";
+                        namespace = "gateways";
+                        sectionName = "${cluster.resourceForDomain r.hostname}-${lib.optionalString r.apex "apex-"}https";
+                      }
+                    ];
+                    rules = [
+                      {
+                        name = "redirect";
+                        filters = [
+                          {
+                            type = "RequestRedirect";
+                            requestRedirect = {
+                              hostname = r.to;
+                              scheme = "https";
+                              statusCode = 301;
+                            };
+                          }
+                        ];
+                      }
+                    ];
+                  };
+                }
+              ) redirect-domains
+            );
+
             clientTrafficPolicies.long-search-stream-idle.spec = {
               targetRefs = [
                 {

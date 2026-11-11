@@ -540,6 +540,41 @@ spec:
     - allowedRoutes:
         namespaces:
           from: All
+      hostname: '*.xmsg.net'
+      name: xmsg-net-http
+      port: 80
+      protocol: HTTP
+    - allowedRoutes:
+        namespaces:
+          from: All
+      hostname: '*.xmsg.net'
+      name: xmsg-net-https
+      port: 443
+      protocol: HTTPS
+      tls:
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: xmsg-net-wildcard-tls
+            namespace: certs
+        mode: Terminate
+    - allowedRoutes:
+        namespaces:
+          from: All
+      hostname: xmsg.net
+      name: xmsg-net-apex-https
+      port: 443
+      protocol: HTTPS
+      tls:
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: xmsg-net-wildcard-tls
+            namespace: certs
+        mode: Terminate
+    - allowedRoutes:
+        namespaces:
+          from: All
       hostname: '*.zeroday.pub'
       name: zeroday-pub-http
       port: 80

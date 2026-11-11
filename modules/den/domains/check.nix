@@ -13,10 +13,13 @@ let
   zones = [
     "gen.wtf"
     "json64.dev"
+    "xmsg.dev"
+    "xmsg.net"
   ];
   domains = zones ++ [
     "dev.json64.dev"
     "s3.json64.dev"
+    "xmsg.json64.dev"
   ];
 
   failures = lib.runTests {
@@ -69,6 +72,15 @@ let
     };
     testParentOfSubZone = {
       expr = parentOf domains "dev.json64.dev";
+      expected = "json64.dev";
+    };
+    # A redirect subdomain's record lands in its parent zone, not xmsg.dev.
+    testRedirectSubdomainInParentZone = {
+      expr = longestSuffix zones "xmsg.json64.dev";
+      expected = "json64.dev";
+    };
+    testParentOfRedirectSubdomain = {
+      expr = parentOf domains "xmsg.json64.dev";
       expected = "json64.dev";
     };
     testParentOfTopLevel = {

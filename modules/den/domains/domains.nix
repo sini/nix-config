@@ -71,13 +71,6 @@ in
           type = "A";
           content = "10.11.0.31";
         }
-        # xmsg docs on GitHub Pages (sini/xmsg). Grey, so GitHub can issue the
-        # Pages certificate.
-        {
-          name = "xmsg";
-          type = "CNAME";
-          content = "sini.github.io";
-        }
       ])
     ];
 
@@ -109,6 +102,24 @@ in
       (pages.github {
         user = "sini";
         verification = "976e8aa7ced3167338668254c4f312";
+      })
+    ];
+
+    # xmsg docs on GitHub Pages (sini/xmsg); the other xmsg names 301 to it.
+    "xmsg.dev".includes = [
+      cloudflare
+      (pages.github { user = "sini"; })
+    ];
+    "xmsg.net".includes = [
+      cloudflare
+      (tls.dns01 "global")
+      (web.redirect { to = "xmsg.dev"; })
+    ];
+    # Hosted in the json64.dev zone, on its wildcard listener and cert.
+    "xmsg.json64.dev".includes = [
+      (web.redirect {
+        to = "xmsg.dev";
+        subdomain = true;
       })
     ];
 

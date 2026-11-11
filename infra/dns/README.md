@@ -10,21 +10,23 @@ with one state. The code lives in `modules/flake-parts/terranix/`:
 Zones are den domain entities (`den.domains.<fqdn>`, `modules/den/domains/`),
 composed from the aspects in `modules/den/aspects/domain/domain.nix`. A domain
 with `dns.cloudflare <account>` is a managed Cloudflare zone; the prod list is
-`json64.dev`, `gen.wtf` and the seven landing zones. A domain without it is
-either hosted in its nearest managed ancestor (`dev.json64.dev` and
-`s3.json64.dev` in `json64.dev`) or, with no managed ancestor, not managed at
-all (`zeroday.run`, certificates only).
+`json64.dev`, `gen.wtf`, `xmsg.dev`, `xmsg.net` and the seven landing zones. A
+domain without it is either hosted in its nearest managed ancestor
+(`dev.json64.dev` and `s3.json64.dev` in `json64.dev`) or, with no managed
+ancestor, not managed at all (`zeroday.run`, certificates only).
 
 The records come from two places, and each record lands in the longest managed
 zone that contains it, from whichever environment produced it:
 
 - **The domains' own records** (`dns-records`): `web.apex` (the apex and `www.`,
-  proxied, for `json64.dev` and every `web.landing` zone), `pages.github` (the
-  `gen.wtf` GitHub Pages A/AAAA records, the `www` CNAME and the Pages challenge
-  TXT), `mail.protonmail` (the `json64.dev` MX, SPF, verification, DKIM and
-  DMARC records) and `dns.records` (`hs` and `jellyfin`, grey CNAMEs to the apex
-  as live; `vpn`; `*.s3.json64.dev` for S3 vhost-style buckets). A null content
-  is the edge's public IPv4.
+  proxied, for `json64.dev` and every `web.landing` and `web.redirect` zone),
+  `web.redirect` with `subdomain` (one proxied name, `xmsg.json64.dev`),
+  `pages.github` (the `gen.wtf` and `xmsg.dev` GitHub Pages A/AAAA records, the
+  `www` CNAME and, for `gen.wtf`, the Pages challenge TXT), `mail.protonmail`
+  (the `json64.dev` MX, SPF, verification, DKIM and DMARC records) and
+  `dns.records` (`hs` and `jellyfin`, grey CNAMEs to the apex as live; `vpn`;
+  `*.s3.json64.dev` for S3 vhost-style buckets). A null content is the edge's
+  public IPv4.
 - **Served names** (`served-domains`): an `A` record to the serving
   environment's `dns.publicIPv4` (prod: `157.131.140.225`) for every name a host
   (nginx vhosts) or a cluster (gateway routes) emits through

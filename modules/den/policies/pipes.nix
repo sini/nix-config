@@ -220,6 +220,7 @@ in
         "certificate-domains"
         "apex-domains"
         "site-domains"
+        "redirect-domains"
       ];
 
   # Public DNS (modules/flake-parts/terranix): the zones and zone records from

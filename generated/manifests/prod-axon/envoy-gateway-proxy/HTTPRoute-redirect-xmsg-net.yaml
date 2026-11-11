@@ -1,0 +1,20 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: redirect-xmsg-net
+  namespace: gateways
+spec:
+  hostnames:
+    - xmsg.net
+  parentRefs:
+    - name: default-gateway
+      namespace: gateways
+      sectionName: xmsg-net-apex-https
+  rules:
+    - filters:
+        - requestRedirect:
+            hostname: xmsg.dev
+            scheme: https
+            statusCode: 301
+          type: RequestRedirect
+      name: redirect

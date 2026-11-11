@@ -7,6 +7,7 @@
 #   tls.dns01 <issuer>         certificate-domains  wildcard cert + gateway listeners
 #   web.apex                   apex-domains, dns-records (apex, www)
 #   web.landing                web.apex + site-domains (Garage website bucket)
+#   web.redirect { to; ... }   redirect-domains     301 to https://<to>/, path kept
 #   pages.github { ... }       dns-records          GitHub Pages at the apex
 #   mail.protonmail { ... }    dns-records          Proton Mail
 #
@@ -95,6 +96,38 @@ in
           }))
         ];
       };
+
+      # The domain and its www 301 to https://<to>/ at the gateway, keeping the
+      # path; a zone needs tls.dns01 for its apex listener. A subdomain is one
+      # name, no www, on its parent's wildcard listener and cert (xmsg.json64.dev).
+      redirect =
+        {
+          to,
+          subdomain ? false,
+        }:
+        {
+          name = "web.redirect";
+          includes = lib.optional (!subdomain) apex ++ [
+            (forDomain "web.redirect" (
+              domain:
+              {
+                redirect-domains = map (hostname: {
+                  inherit hostname to;
+                  apex = !subdomain && hostname == domain.name;
+                }) ([ domain.name ] ++ lib.optional (!subdomain) "www.${domain.name}");
+              }
+              // lib.optionalAttrs subdomain {
+                dns-records = [
+                  {
+                    name = domain.name;
+                    type = "A";
+                    proxied = true;
+                  }
+                ];
+              }
+            ))
+          ];
+        };
     };
 
     pages.github =
