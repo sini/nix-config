@@ -679,8 +679,16 @@ let
   # shortcut: destroy_data is the record as of the last apply, so a field changed
   #   on the controller since then is rewritten on removal.
   # Output unifi_reservations shows each declared field's live and declared value.
+  # releases: MACs of stale clients whose fixed IP a reservation needs (the
+  # controller refuses a duplicate fixed_ip). Each is its live record with only
+  # use_fixedip false laid over it, adopted by MAC, and every reservation applies
+  # after them; a MAC a reservation holds is refused.
   renderReservations =
-    { site, reservations }:
+    {
+      site,
+      reservations,
+      releases ? [ ],
+    }:
     let
       path = "/api/s/${site}/rest/user";
       byId = "${path}/{id}";
@@ -688,24 +696,44 @@ let
       res = r: "client_${key r.name}";
       clientKey = r: "unifi_client_${key r.name}";
       live = r: "jsondecode(data.restapi_object.${clientKey r}.api_response)";
+      released = map (m: {
+        name = key "release-${m}";
+        mac = lib.toLower m;
+      }) releases;
+      held = lib.filter (r: lib.elem r.mac (map (x: x.mac) reservations)) released;
+      lookup = r: {
+        inherit path;
+        results_key = "data";
+        search_key = "mac";
+        search_value = r.mac;
+        results_contains_object = true;
+      };
+      putById = {
+        inherit path;
+        create_method = "PUT";
+        create_path = byId;
+        read_path = byId;
+        read_search = {
+          results_key = "data";
+          search_key = "_id";
+          search_value = "{id}";
+        };
+        update_path = byId;
+        destroy_method = "PUT";
+        destroy_path = byId;
+      };
+      cleared = r: "\${jsonencode(merge(${live r}, { use_fixedip = false }))}";
     in
-    if reservations == [ ] then
+    if held != [ ] then
+      throw "unifi: released client MAC ${
+        lib.concatMapStringsSep ", " (r: r.mac) held
+      } is a den host's reservation"
+    else if reservations == [ ] && released == [ ] then
       { }
     else
       {
         data.restapi_object =
-          lib.listToAttrs (
-            map (
-              r:
-              lib.nameValuePair (clientKey r) {
-                inherit path;
-                results_key = "data";
-                search_key = "mac";
-                search_value = r.mac;
-                results_contains_object = true;
-              }
-            ) reservations
-          )
+          lib.listToAttrs (map (r: lib.nameValuePair (clientKey r) (lookup r)) (reservations ++ released))
           // lib.genAttrs' (lib.unique (map (r: r.network) reservations)) (
             n:
             lib.nameValuePair (netKey n) {
@@ -727,27 +755,35 @@ let
             }
           ) reservations
         );
-        resource.restapi_object = lib.listToAttrs (
-          map (
-            r:
-            lib.nameValuePair (res r) {
-              inherit path;
-              create_method = "PUT";
-              create_path = byId;
-              read_path = byId;
-              read_search = {
-                results_key = "data";
-                search_key = "_id";
-                search_value = "{id}";
-              };
-              update_path = byId;
-              destroy_method = "PUT";
-              destroy_path = byId;
-              data = "\${jsonencode(merge(${live r}, local.${clientKey r}_fixed))}";
-              destroy_data = "\${jsonencode(merge(${live r}, { use_fixedip = false }))}";
-            }
-          ) reservations
-        );
+        resource.restapi_object =
+          lib.listToAttrs (
+            map (
+              r:
+              lib.nameValuePair (res r) (
+                putById
+                // {
+                  data = "\${jsonencode(merge(${live r}, local.${clientKey r}_fixed))}";
+                  destroy_data = cleared r;
+                }
+                // lib.optionalAttrs (released != [ ]) {
+                  depends_on = map (x: "restapi_object.${res x}") released;
+                }
+              )
+            ) reservations
+          )
+          # Removal from releases leaves the record released.
+          // lib.listToAttrs (
+            map (
+              r:
+              lib.nameValuePair (res r) (
+                putById
+                // {
+                  data = cleared r;
+                  destroy_data = cleared r;
+                }
+              )
+            ) released
+          );
         output.unifi_reservations.value = lib.listToAttrs (
           map (
             r:
@@ -755,7 +791,9 @@ let
           ) reservations
         );
         # Read by unifi-adopt, which imports each reservation by the one live client with its MAC.
-        _meta.clients = lib.listToAttrs (map (r: lib.nameValuePair (res r) r.mac) reservations);
+        _meta.clients = lib.listToAttrs (
+          map (r: lib.nameValuePair (res r) r.mac) (reservations ++ released)
+        );
       };
 
   # A custom DHCP option definition (rest/dhcpoption, go-unifi's DHCPOption),
@@ -1115,6 +1153,12 @@ in
         reservations = reservationsOf config.den.environments (
           lib.concatMap lib.attrValues (lib.attrValues config.den.hosts)
         );
+        # Stale records (Microsoft OUI, unseen since 2025) holding 10.9.2.1 and
+        # 10.9.2.2, the fixed IPs of cortex and cortex-cuda; owner-cleared 2026-11-11.
+        releases = [
+          "28:16:a8:59:29:8b" # "ghost"
+          "b4:ae:2b:cc:ae:40" # "shell"
+        ];
       })
       (renderNetworkDns {
         inherit (unifi) site;
@@ -2052,7 +2096,11 @@ in
       # den host with an IPv4 on a LAN, fixed_ip its addressOn: prod 5, dev 3.
       # Controls: the payload predicate fails on a reservation with another
       # address and on one with use_fixedip unset; the count predicate fails on
-      # one host short.
+      # one host short. A released MAC renders its record with only use_fixedip
+      # false laid over it (create and destroy), adopt meta, and a depends_on from
+      # every reservation (in the workspace: cortex, cortex-cuda, bitstream); one a
+      # reservation holds is refused. Controls: the release predicate fails on an
+      # overlay with a second field, the ordering predicate on a resource with none.
       checks.unifi-reservation-render =
         let
           envs = {
@@ -2102,6 +2150,29 @@ in
             inherit reservations;
           };
           refused = hs: !(builtins.tryEval (builtins.deepSeq (reservationsOf envs hs) null)).success;
+          # A release, given uppercase: rendered and adopted lowercase, ahead of every reservation.
+          withReleases =
+            releases:
+            renderReservations {
+              site = "s";
+              inherit reservations releases;
+            };
+          relRendered = withReleases [ "28:16:A8:59:29:8B" ];
+          relKey = "release_28_16_a8_59_29_8b";
+          relCleared = "\${jsonencode(merge(jsondecode(data.restapi_object.unifi_client_${relKey}.api_response), { use_fixedip = false }))}";
+          releaseOk =
+            r:
+            r.resource.restapi_object."client_${relKey}".data or null == relCleared
+            && r.resource.restapi_object."client_${relKey}".destroy_data or null == relCleared;
+          releaseRefused = ms: !(builtins.tryEval (builtins.deepSeq (withReleases ms) null)).success;
+          workspaceRes = terraformConfiguration.config.resource.restapi_object;
+          workspaceOrdered = lib.all (
+            h:
+            workspaceRes."client_${h}".depends_on or [ ] == [
+              "restapi_object.client_release_28_16_a8_59_29_8b"
+              "restapi_object.client_release_b4_ae_2b_cc_ae_40"
+            ]
+          );
           live = "jsondecode(data.restapi_object.unifi_client_h1.api_response)";
           byId = "/api/s/s/rest/user/{id}";
           payloadOk =
@@ -2217,7 +2288,27 @@ in
                 })
               ]
             )
+            && releaseOk relRendered
+            && relRendered.resource.restapi_object.client_h1.depends_on == [ "restapi_object.client_${relKey}" ]
+            && relRendered.data.restapi_object."unifi_client_${relKey}".search_value == "28:16:a8:59:29:8b"
+            && relRendered._meta.clients."client_${relKey}" == "28:16:a8:59:29:8b"
+            && !(rendered.resource.restapi_object.client_h1 ? depends_on)
+            && !(releaseRefused [ "28:16:A8:59:29:8B" ])
+            && releaseRefused [ "AA:BB:CC:00:00:01" ]
+            && workspaceOrdered [
+              "cortex"
+              "cortex_cuda"
+              "bitstream"
+            ]
             # Controls.
+            && !(releaseOk (
+              lib.recursiveUpdate relRendered {
+                resource.restapi_object."client_${relKey}".data =
+                  lib.replaceStrings [ "use_fixedip = false" ] [ "use_fixedip = false, fixed_ip = null" ]
+                    relCleared;
+              }
+            ))
+            && !(workspaceOrdered [ "release_28_16_a8_59_29_8b" ])
             && !(payloadOk (withRes (r: r // { ip = "10.0.10.9"; })))
             && !(payloadOk (
               rendered
