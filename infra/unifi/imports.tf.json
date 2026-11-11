@@ -55,6 +55,38 @@
     {
       "to": "restapi_object.dhcp_option_classless_routes",
       "id": "/api/s/default/rest/dhcpoption/0a260c8b-953e-4538-9e9a-58b3fb64fc1a"
+    },
+    {
+      "to": "restapi_object.client_axon_01",
+      "id": "/api/s/default/rest/user/6c771dec-4bef-4176-bdab-8ace9a63e78e"
+    },
+    {
+      "to": "restapi_object.client_axon_02",
+      "id": "/api/s/default/rest/user/53c1dbb3-55f5-4912-a89b-e43d77ed7df6"
+    },
+    {
+      "to": "restapi_object.client_axon_03",
+      "id": "/api/s/default/rest/user/eb350317-43e2-48f9-906a-76fe7e3ce67f"
+    },
+    {
+      "to": "restapi_object.client_bitstream",
+      "id": "/api/s/default/rest/user/6e9fb86b-5a16-4caf-8bb3-79863319a504"
+    },
+    {
+      "to": "restapi_object.client_cortex",
+      "id": "/api/s/default/rest/user/81537e8c-5ff4-4915-a23d-73ef39cf2e06"
+    },
+    {
+      "to": "restapi_object.client_cortex_cuda",
+      "id": "/api/s/default/rest/user/0ef55f8e-72e7-4fdc-a33e-f4e818a07233"
+    },
+    {
+      "to": "restapi_object.client_uplink",
+      "id": "/api/s/default/rest/user/0a73aac9-3691-44da-a4dd-9c7534516e16"
+    },
+    {
+      "to": "restapi_object.client_uplink_dev",
+      "id": "/api/s/default/rest/user/62c732f0-ae6f-4070-91bb-056b63e98983"
     }
   ]
 }
