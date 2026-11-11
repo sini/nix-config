@@ -13,6 +13,7 @@
 #   nix build .#checks.<system>.unifi-network-policy-render
 #   nix build .#checks.<system>.unifi-dhcp-dns-render
 #   nix build .#checks.<system>.unifi-dhcp-option-render
+#   nix build .#checks.<system>.unifi-reservation-render
 #   unifi-adopt / unifi-plan / unifi-apply (devshell)
 {
   den,
@@ -24,11 +25,14 @@ let
   inherit (lib) mkOption types;
   inherit (den.lib.policy) pipe;
   resolvers = import ../../den/aspects/core/network/_resolvers.nix { inherit lib; };
+  plan = import ../../den/schema/_address-plan.nix { inherit lib; };
 
   # ponytail: one environment owns the gateway; key configs by env if a second controller appears.
   unifiEnv = "prod";
   workdir = "infra/unifi";
   unifiTerranixModules = config.flake.unifiTerranixModules.${unifiEnv};
+  # The fleet's den config, for perSystem (whose `config` is the system's).
+  fleet = config.den;
 
   # A controller name as a resource name: lowercased, each run of other
   # characters as `_`, the key unifi-adopt derives (portForwardImports).
@@ -608,6 +612,144 @@ let
         _meta.networks = lib.listToAttrs (map ({ n, ... }: lib.nameValuePair "network_${key n}" n) nets);
       };
 
+  # The DHCP reservations (docs/address-plan.md §2.3): every den host with an
+  # IPv4 on an environment's controller network (networks.default with a
+  # unifiNetwork), as { name; ip; mac; network; }, its MAC the one declared on the
+  # interface holding that address, lowercased. Hosts outside den (the NAS) and
+  # addresses no host holds (the API VIP) are never in it. A host with no MAC
+  # there, and two hosts on one MAC, are refused.
+  reservationsOf =
+    environments: hosts:
+    let
+      rows = lib.concatMap (
+        h:
+        let
+          net = (environments.${h.environment} or { }).networks.default or null;
+          holding = lib.concatMap (
+            i:
+            map (ip: { inherit ip i; }) (
+              lib.filter (plan.ipv4InCidr net.cidr) (map (a: lib.head (lib.splitString "/" a)) (i.ipv4 or [ ]))
+            )
+          ) (lib.attrValues (h.networking.interfaces or { }));
+          held = lib.head holding;
+        in
+        if net == null || net.unifiNetwork or null == null || holding == [ ] then
+          [ ]
+        else if held.i.mac or null == null then
+          throw "unifi: host ${h.name} holds ${held.ip} on ${net.unifiNetwork} but declares no MAC on that interface (networking.interfaces.<n>.mac); its reservation needs one"
+        else
+          [
+            {
+              inherit (h) name;
+              inherit (held) ip;
+              mac = lib.toLower held.i.mac;
+              network = net.unifiNetwork;
+            }
+          ]
+      ) hosts;
+      shared = lib.filterAttrs (_: rs: lib.length rs > 1) (lib.groupBy (r: r.mac) rows);
+    in
+    if shared != { } then
+      throw "unifi: hosts ${
+        lib.concatMapStringsSep ", " (rs: lib.concatMapStringsSep "/" (r: r.name) rs) (
+          lib.attrValues shared
+        )
+      } share a MAC"
+    else
+      rows;
+
+  # Each reservation as its live client record (rest/user, go-unifi's Client)
+  # with fixed_ip, name, use_fixedip and network_id laid over it: the networks'
+  # full-body pattern (renderNetworkDns), so ignore_server_additions stays false
+  # and the plan shows exactly the declared fields that differ.
+  #   lookup: the one live client with the MAC (the controller stores it lowercase)
+  #   create: PUT to the live _id, never a POST
+  #   destroy: a PUT of the live record with use_fixedip false; the client is
+  #     never forgotten
+  # shortcut: a MAC the controller has never seen fails the plan at its lookup;
+  #   connect the host once (or POST rest/user by hand) before applying.
+  # shortcut: destroy_data is the record as of the last apply, so a field changed
+  #   on the controller since then is rewritten on removal.
+  # Output unifi_reservations shows each declared field's live and declared value.
+  renderReservations =
+    { site, reservations }:
+    let
+      path = "/api/s/${site}/rest/user";
+      byId = "${path}/{id}";
+      netKey = n: "unifi_network_${key n}";
+      res = r: "client_${key r.name}";
+      clientKey = r: "unifi_client_${key r.name}";
+      live = r: "jsondecode(data.restapi_object.${clientKey r}.api_response)";
+    in
+    if reservations == [ ] then
+      { }
+    else
+      {
+        data.restapi_object =
+          lib.listToAttrs (
+            map (
+              r:
+              lib.nameValuePair (clientKey r) {
+                inherit path;
+                results_key = "data";
+                search_key = "mac";
+                search_value = r.mac;
+                results_contains_object = true;
+              }
+            ) reservations
+          )
+          // lib.genAttrs' (lib.unique (map (r: r.network) reservations)) (
+            n:
+            lib.nameValuePair (netKey n) {
+              path = "/api/s/${site}/rest/networkconf";
+              results_key = "data";
+              search_key = "name";
+              search_value = n;
+              results_contains_object = true;
+            }
+          );
+        locals = lib.listToAttrs (
+          map (
+            r:
+            lib.nameValuePair "${clientKey r}_fixed" {
+              inherit (r) name;
+              fixed_ip = r.ip;
+              use_fixedip = true;
+              network_id = "\${data.restapi_object.${netKey r.network}.id}";
+            }
+          ) reservations
+        );
+        resource.restapi_object = lib.listToAttrs (
+          map (
+            r:
+            lib.nameValuePair (res r) {
+              inherit path;
+              create_method = "PUT";
+              create_path = byId;
+              read_path = byId;
+              read_search = {
+                results_key = "data";
+                search_key = "_id";
+                search_value = "{id}";
+              };
+              update_path = byId;
+              destroy_method = "PUT";
+              destroy_path = byId;
+              data = "\${jsonencode(merge(${live r}, local.${clientKey r}_fixed))}";
+              destroy_data = "\${jsonencode(merge(${live r}, { use_fixedip = false }))}";
+            }
+          ) reservations
+        );
+        output.unifi_reservations.value = lib.listToAttrs (
+          map (
+            r:
+            lib.nameValuePair r.name "\${{ for k, v in local.${clientKey r}_fixed : k => { live = try(${live r}[k], null), declared = v } }}"
+          ) reservations
+        );
+        # Read by unifi-adopt, which imports each reservation by the one live client with its MAC.
+        _meta.clients = lib.listToAttrs (map (r: lib.nameValuePair (res r) r.mac) reservations);
+      };
+
   # A custom DHCP option definition (rest/dhcpoption, go-unifi's DHCPOption),
   # which a network then sets a value for. The v1 API answers a POST with
   # { meta, data = [ object ] }, so the id is data/0/_id, and with that id path
@@ -959,7 +1101,13 @@ in
         inherit (unifi) site;
         policies = unifi.networkPolicies;
       })
-      # Every environment's network lives on this one controller.
+      # Every environment's network, and every den host's reservation, lives on this one controller.
+      (renderReservations {
+        inherit (unifi) site;
+        reservations = reservationsOf config.den.environments (
+          lib.concatMap lib.attrValues (lib.attrValues config.den.hosts)
+        );
+      })
       (renderNetworkDns {
         inherit (unifi) site;
         inherit dns-resolvers;
@@ -1149,6 +1297,18 @@ in
             | [ $live[] | select((.code | tostring) == ($c | tostring)) ]
             | if length > 1 then error("unifi-adopt: \(length) live DHCP options with code \($c); delete all but one")
               elif length == 1 then { to: "restapi_object.\($res)", id: "/api/s/\($site)/rest/dhcpoption/\(.[0]._id)" }
+              else empty end ]
+      '';
+
+      # Each declared reservation ($meta.clients) as an import block, by the one
+      # live client (rest/user) with its MAC, lowercased; restapi_object imports
+      # by its full path. None is created here, and two are refused.
+      clientImports = pkgs.writeText "unifi-client-imports.jq" ''
+        . as $live
+        | [ ($meta.clients // {}) | to_entries[] | .key as $res | .value as $m
+            | [ $live[] | select((.mac // "" | ascii_downcase) == $m) ]
+            | if length > 1 then error("unifi-adopt: \(length) live clients with MAC \($m); forget all but one")
+              elif length == 1 then { to: "restapi_object.\($res)", id: "/api/s/\($site)/rest/user/\(.[0]._id)" }
               else empty end ]
       '';
 
@@ -1852,6 +2012,197 @@ in
         assert lib.assertMsg ok "unifi-dhcp-option-render:\n${builtins.toJSON rendered}\n${live}";
         pkgs.writeText "unifi-dhcp-option-render" (builtins.toJSON rendered);
 
+      # Fixture (docs/address-plan.md §3 test 3): a host's reservation is the
+      # interface holding its LAN IPv4, MAC lowercased; a host off every controller
+      # network, or in an environment with no unifiNetwork, has none. A reservation
+      # renders its MAC lookup, the full-body PUT of the live client with exactly
+      # fixed_ip, name, use_fixedip and network_id laid over it, a destroy that
+      # only clears use_fixedip, its review output and adopt meta. Refused: an
+      # IPv4 with no MAC, and two hosts on one MAC. The workspace reserves each
+      # den host with an IPv4 on a LAN, fixed_ip its addressOn: prod 5, dev 3.
+      # Controls: the payload predicate fails on a reservation with another
+      # address and on one with use_fixedip unset; the count predicate fails on
+      # one host short.
+      checks.unifi-reservation-render =
+        let
+          envs = {
+            t.networks.default = {
+              cidr = "10.0.0.0/16";
+              unifiNetwork = "LAN 1";
+            };
+            u.networks.default = {
+              cidr = "10.1.0.0/16";
+              unifiNetwork = null;
+            };
+          };
+          host = name: environment: interfaces: {
+            inherit name environment;
+            networking.interfaces = interfaces;
+          };
+          hosts = [
+            (host "h1" "t" {
+              eth0 = {
+                ipv4 = [ "10.0.10.1/16" ];
+                mac = "AA:BB:CC:00:00:01";
+              };
+            })
+            (host "h2" "t" {
+              wg0 = {
+                ipv4 = [ "192.168.0.1/24" ];
+                mac = null;
+              };
+            })
+            (host "h3" "u" {
+              eth0 = {
+                ipv4 = [ "10.1.10.1/16" ];
+                mac = null;
+              };
+            })
+            (host "h4" "t" {
+              lo.ipv4 = [ "172.16.0.4/32" ];
+              br0 = {
+                ipv4 = [ "10.0.10.4/16" ];
+                mac = "aa:bb:cc:00:00:04";
+              };
+            })
+          ];
+          reservations = reservationsOf envs hosts;
+          rendered = renderReservations {
+            site = "s";
+            inherit reservations;
+          };
+          refused = hs: !(builtins.tryEval (builtins.deepSeq (reservationsOf envs hs) null)).success;
+          live = "jsondecode(data.restapi_object.unifi_client_h1.api_response)";
+          byId = "/api/s/s/rest/user/{id}";
+          payloadOk =
+            r:
+            r.locals.unifi_client_h1_fixed or null == {
+              name = "h1";
+              fixed_ip = "10.0.10.1";
+              use_fixedip = true;
+              network_id = "\${data.restapi_object.unifi_network_lan_1.id}";
+            };
+          withRes =
+            f:
+            renderReservations {
+              site = "s";
+              reservations = map (r: if r.name == "h1" then f r else r) reservations;
+            };
+
+          # The workspace: one reservation per den host with an IPv4 on a LAN.
+          inherit (terraformConfiguration.config) locals;
+          fixed = lib.filterAttrs (n: _: lib.hasPrefix "unifi_client_" n) locals;
+          denHosts = lib.concatMap lib.attrValues (lib.attrValues fleet.hosts);
+          onLan = lib.filter (
+            h:
+            let
+              net = fleet.environments.${h.environment}.networks.default or null;
+            in
+            net != null
+            && lib.any (plan.ipv4InCidr net.cidr) (
+              lib.concatMap (i: map (a: lib.head (lib.splitString "/" a)) i.ipv4) (
+                lib.attrValues h.networking.interfaces
+              )
+            )
+          ) denHosts;
+          countOk = fs: hs: lib.length (lib.attrNames fs) == lib.length hs && lib.length hs == 8;
+          workspaceOk = lib.all (
+            h:
+            (fixed."unifi_client_${key h.name}_fixed".fixed_ip or null)
+            == fleet.environments.${h.environment}.addressOn "default" h
+          ) onLan;
+          ok =
+            map (r: r.name) reservations == [
+              "h1"
+              "h4"
+            ]
+            &&
+              lib.findFirst (r: r.name == "h1") null reservations == {
+                name = "h1";
+                ip = "10.0.10.1";
+                mac = "aa:bb:cc:00:00:01";
+                network = "LAN 1";
+              }
+            && payloadOk rendered
+            &&
+              rendered.resource.restapi_object.client_h1 == {
+                path = "/api/s/s/rest/user";
+                create_method = "PUT";
+                create_path = byId;
+                read_path = byId;
+                read_search = {
+                  results_key = "data";
+                  search_key = "_id";
+                  search_value = "{id}";
+                };
+                update_path = byId;
+                destroy_method = "PUT";
+                destroy_path = byId;
+                data = "\${jsonencode(merge(${live}, local.unifi_client_h1_fixed))}";
+                destroy_data = "\${jsonencode(merge(${live}, { use_fixedip = false }))}";
+              }
+            &&
+              rendered.data.restapi_object.unifi_client_h1 == {
+                path = "/api/s/s/rest/user";
+                results_key = "data";
+                search_key = "mac";
+                search_value = "aa:bb:cc:00:00:01";
+                results_contains_object = true;
+              }
+            && rendered.data.restapi_object.unifi_network_lan_1.search_value == "LAN 1"
+            &&
+              rendered._meta.clients == {
+                client_h1 = "aa:bb:cc:00:00:01";
+                client_h4 = "aa:bb:cc:00:00:04";
+              }
+            &&
+              builtins.attrNames rendered.output.unifi_reservations.value == [
+                "h1"
+                "h4"
+              ]
+            &&
+              renderReservations {
+                site = "s";
+                reservations = [ ];
+              } == { }
+            && refused (
+              hosts
+              ++ [
+                (host "h5" "t" {
+                  eth0 = {
+                    ipv4 = [ "10.0.10.5/16" ];
+                    mac = null;
+                  };
+                })
+              ]
+            )
+            && refused (
+              hosts
+              ++ [
+                (host "h6" "t" {
+                  eth0 = {
+                    ipv4 = [ "10.0.10.6/16" ];
+                    mac = "AA:BB:CC:00:00:01";
+                  };
+                })
+              ]
+            )
+            # Controls.
+            && !(payloadOk (withRes (r: r // { ip = "10.0.10.9"; })))
+            && !(payloadOk (
+              rendered
+              // {
+                locals.unifi_client_h1_fixed = removeAttrs rendered.locals.unifi_client_h1_fixed [ "use_fixedip" ];
+              }
+            ))
+            && countOk fixed onLan
+            && workspaceOk
+            && !(countOk fixed (lib.tail onLan));
+        in
+        assert lib.assertMsg ok
+          "unifi-reservation-render:\n${builtins.toJSON rendered}\n${builtins.toJSON fixed}";
+        pkgs.writeText "unifi-reservation-render" (builtins.toJSON rendered);
+
       # Fixture: a policy renders one Internal -> Internal zone policy and one
       # address group per source environment from its cluster's node addresses,
       # drops the legacy rule of that name from state, a same-environment source
@@ -1977,13 +2328,17 @@ in
               dhcpopts=$(curl -fksS -H @<(printf 'X-Api-Key: %s\n' "$UNIFI_API_KEY") \
                 "$api/proxy/network/api/s/$site/rest/dhcpoption" | jq .data)
               dhcpopt=$(jq --arg site "$site" --argjson meta "$(< ${meta})" -f ${dhcpOptionImports} <<<"$dhcpopts")
+              users=$(curl -fksS -H @<(printf 'X-Api-Key: %s\n' "$UNIFI_API_KEY") \
+                "$api/proxy/network/api/s/$site/rest/user" | jq .data)
+              clients=$(jq --arg site "$site" --argjson meta "$(< ${meta})" -f ${clientImports} <<<"$users")
               # unifi_bgp is a per-site singleton; its import id is the site name.
               # A port forward imports by its controller _id. Its config is the
               # declared one (port-forwards); a live forward with none fails the plan.
               # A zone policy imports by its _id, a custom NAT rule by its path.
               jq --arg site "$site" --argjson pf "$(jq -f ${portForwardImports} <<<"$pfs")" \
                 --argjson pol "$pol" --argjson nat "$nat" --argjson net "$net" --argjson dhcpopt "$dhcpopt" \
-                '{ import: ([ { to: .bgp, id: $site } ] + $pf + $pol + $nat + $net + $dhcpopt) }' \
+                --argjson clients "$clients" \
+                '{ import: ([ { to: .bgp, id: $site } ] + $pf + $pol + $nat + $net + $dhcpopt + $clients) }' \
                 ${meta} > ${workdir}/imports.tf.json
               # The flake reads imports.tf.json only once git tracks it.
               git add ${workdir}/imports.tf.json
@@ -2022,6 +2377,16 @@ in
                   | select(.key | ascii_downcase | . as $k
                       | (test("^dhcpd_") and (test("dns") | not)) or any($needles[]; . as $s | $k | contains($s)))
                   | "    \(.key) = \(.value | tojson)")' <<<"$netconf"
+              # Each declared reservation's live client record, as the controller holds
+              # it (docs/address-plan.md §2.3), and whether it is imported.
+              echo "unifi-adopt: $(jq length <<<"$clients") of $(jq '.clients // {} | length' ${meta}) reservations to import (rest/user):"
+              jq -r --argjson meta "$(< ${meta})" --argjson nets "$netconf" '
+                (($nets | map({ (._id): .name }) | add) // {}) as $net
+                | . as $live
+                | ($meta.clients // {}) | to_entries[] | .key as $res | .value as $m
+                | [ $live[] | select((.mac // "" | ascii_downcase) == $m) ] as $c
+                | if ($c | length) == 0 then "  \($res)\t\($m)\tno live client: the plan fails at its lookup until the host is seen"
+                  else $c[] | "  \($res)\t\($m)\t\(._id)\tname=\(.name // "-" | tojson)\tnetwork=\($net[.network_id // ""] // .network_id // "-")\tuse_fixedip=\(.use_fixedip // false)\tfixed_ip=\(.fixed_ip // "-")\tlast_ip=\(.last_ip // "-")" end' <<<"$users"
               echo "unifi-adopt: wrote ${workdir}/imports.tf.json"
             '';
       };

@@ -78,6 +78,19 @@ own. The `PUT` body is the whole live network with those fields laid over it, a
 create is a `PUT` to the live `_id`, and a destroy is a `GET`, so no plan can
 wipe or delete a LAN. `checks.<system>.unifi-dhcp-dns-render` fixes the payload.
 
+`restapi_object.client_<host>` is a den host's DHCP reservation
+(docs/address-plan.md §2.3), rendered by `renderReservations` for every den host
+with an IPv4 on an environment's controller network: its client record
+(`rest/user`), looked up by the MAC declared on the interface holding that
+address (`networking.interfaces.<n>.mac`, lowercased). The `PUT` body is the
+whole live client with `fixed_ip`, `name`, `use_fixedip = true` and `network_id`
+laid over it, as for the networks. A create is a `PUT` to the live `_id`, and a
+destroy is a `PUT` that only clears `use_fixedip`, so no plan forgets a client.
+A host with an IPv4 there and no MAC fails the evaluation. The NAS and the API
+VIP are not den hosts and get none. A MAC the controller has never seen fails
+the plan at its lookup. `checks.<system>.unifi-reservation-render` fixes the
+payload and the fleet's count.
+
 `restapi_object.dhcp_option_classless_routes` is the custom DHCP option
 definition for option 121 (`rest/dhcpoption`: code `121`, `classless-routes`,
 `hexarray`), rendered by `renderDhcpOption`. A network sets a custom option's
@@ -152,12 +165,15 @@ the passphrase into its own environment, and prints neither.
    it is declared or deleted. It imports each declared network by its `_id`,
    from the one live network with its name. It prints the live forward list and
    each declared network's DNS, RA and DHCPv6 fields. It imports each declared
-   DHCP option definition by its code. The restapi provider never drops an
-   object deleted on the controller from state, and an import block whose
-   address is already in state is skipped, so `unifi-adopt` runs `tofu init` and
-   removes from state each `restapi_object` it imports whose state id is not the
-   live `_id` (it prints each one). The plan then imports the live object at
-   that address instead of creating a duplicate.
+   DHCP option definition by its code, and each declared reservation from the
+   one live client (`rest/user`) with its MAC, printing that client's record
+   (name, network, `use_fixedip`, `fixed_ip`, last IP) or that none exists. The
+   restapi provider never drops an object deleted on the controller from state,
+   and an import block whose address is already in state is skipped, so
+   `unifi-adopt` runs `tofu init` and removes from state each `restapi_object`
+   it imports whose state id is not the live `_id` (it prints each one). The
+   plan then imports the live object at that address instead of creating a
+   duplicate.
 2. `unifi-plan` builds the config and runs `tofu init` and `tofu plan`. The
    adoption plan must be `N to import, 0 to add, 0 to change, 0 to destroy`, N
    being the port forwards (`unifi_bgp.prod` is already in the state). A change
