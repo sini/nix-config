@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: blocky-redis
+    app.kubernetes.io/name: valkey
+  name: blocky-redis
+  namespace: blocky
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: blocky-redis
+      app.kubernetes.io/name: valkey
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        checksum/initconfig: 22bc3bece2d9ba8ea0d633c14f11808f
+      labels:
+        app.kubernetes.io/instance: blocky-redis
+        app.kubernetes.io/name: valkey
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - args:
+            - /data/conf/valkey.conf
+          command:
+            - valkey-server
+          env:
+            - name: VALKEY_LOG_LEVEL
+              value: notice
+          image: docker.io/valkey/valkey:9.1.3
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+                - valkey-cli
+                - ping
+            failureThreshold: 3
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 1
+          name: blocky-redis
+          ports:
+            - containerPort: 6379
+              name: tcp
+              protocol: TCP
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+          startupProbe:
+            exec:
+              command:
+                - valkey-cli
+                - ping
+            failureThreshold: 3
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 1
+          volumeMounts:
+            - mountPath: /data
+              name: valkey-data
+      initContainers:
+        - command:
+            - /scripts/init.sh
+          image: docker.io/valkey/valkey:9.1.3
+          imagePullPolicy: IfNotPresent
+          name: blocky-redis-init
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+          volumeMounts:
+            - mountPath: /data
+              name: valkey-data
+            - mountPath: /scripts
+              name: scripts
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: blocky-redis
+      volumes:
+        - configMap:
+            defaultMode: 365
+            name: blocky-redis-init-scripts
+          name: scripts
+        - emptyDir: {}
+          name: valkey-data

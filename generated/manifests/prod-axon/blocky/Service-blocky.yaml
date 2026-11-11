@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    lbipam.cilium.io/ips: 10.11.0.54
+  labels:
+    app.kubernetes.io/instance: blocky
+    app.kubernetes.io/name: blocky
+    app.kubernetes.io/service: blocky
+  name: blocky
+  namespace: blocky
+spec:
+  externalTrafficPolicy: Local
+  ports:
+    - name: dns-tcp
+      port: 53
+      protocol: TCP
+      targetPort: 53
+    - name: dns-udp
+      port: 53
+      protocol: UDP
+      targetPort: 53
+    - name: http
+      port: 4000
+      protocol: TCP
+      targetPort: 4000
+  selector:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: blocky
+    app.kubernetes.io/name: blocky
+  type: LoadBalancer

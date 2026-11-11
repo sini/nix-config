@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: blocky
+    app.kubernetes.io/name: blocky
+  name: blocky
+  namespace: blocky
+spec:
+  replicas: 3
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/controller: main
+      app.kubernetes.io/instance: blocky
+      app.kubernetes.io/name: blocky
+  strategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        checksum/config: b06a96a47921fb5c5983262b8fcf0e16b2beecdcec0135b0147caa84510d83b2
+      labels:
+        app.kubernetes.io/controller: main
+        app.kubernetes.io/instance: blocky
+        app.kubernetes.io/name: blocky
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: blocky
+              topologyKey: kubernetes.io/hostname
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: BLOCKY_CONFIG_FILE
+              value: /config/config.yml
+          image: ghcr.io/0xerr0r/blocky@sha256:191c0f1e688aa37698297ef4059e11a2b080299a878f5b31d6d32ace9d0c54b2
+          livenessProbe:
+            tcpSocket:
+              port: 53
+          name: main
+          readinessProbe:
+            tcpSocket:
+              port: 53
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - mountPath: /cache
+              name: cache
+            - mountPath: /config/config.yml
+              name: config
+              readOnly: true
+              subPath: config.yml
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      securityContext:
+        runAsGroup: 100
+        runAsNonRoot: true
+        runAsUser: 100
+        sysctls:
+          - name: net.ipv4.ip_unprivileged_port_start
+            value: "53"
+      serviceAccountName: blocky
+      volumes:
+        - emptyDir: {}
+          name: cache
+        - configMap:
+            name: blocky-config
+          name: config

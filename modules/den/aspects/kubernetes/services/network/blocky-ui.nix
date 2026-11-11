@@ -3,7 +3,8 @@
 # garage-ui pattern: the kanidm client's scope map is the authorization). Its
 # servers are the environment's resolver instances, from their dns-resolvers
 # records' `api`; Blocky's API has no authentication, so the pod may reach those
-# addresses on their API ports and nothing else.
+# addresses on their API ports and nothing else (the cluster's own instance by
+# its pods, docs/dns-resolver.md §2.7).
 { lib, ... }:
 let
   serviceDomains = [ "dns" ];
@@ -195,8 +196,24 @@ in
                   let
                     a = apiOf r;
                   in
-                  {
-                    toCIDR = [ "${a.ip}/32" ];
+                  # This cluster's own instance: its LB address is translated to the
+                  # blocky pods before policy applies, so the rule names the pods.
+                  (
+                    if r.name == cluster.name then
+                      {
+                        toEndpoints = [
+                          {
+                            matchLabels = {
+                              "k8s:io.kubernetes.pod.namespace" = "blocky";
+                              "app.kubernetes.io/name" = "blocky";
+                            };
+                          }
+                        ];
+                      }
+                    else
+                      { toCIDR = [ "${a.ip}/32" ]; }
+                  )
+                  // {
                     toPorts = [ { ports = [ (tcp a.port) ]; } ];
                   }
                 ) resolvers;

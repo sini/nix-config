@@ -5,9 +5,11 @@
 #            another route, a second route on the name
 #   admins   the policy's client is blocky-ui, whose only scope map is admins;
 #            controls: a media.access map added, the oauth2-proxy client
-#   egress   the pod's one egress policy allows exactly 10.10.10.1/32 TCP 4000, and
-#            the panel's one server is http://10.10.10.1:4000 (uplink's Blocky API);
-#            controls: a world rule added, the port widened to a range, a /24
+#   egress   the pod's one egress policy allows exactly 10.10.10.1/32 TCP 4000
+#            (uplink's Blocky API) and the cluster's blocky pods on TCP 4000 (its LB
+#            address is translated to them before policy), and the panel's servers
+#            are exactly those two; controls: a world rule added, the port widened
+#            to a range, a /24
 #   ingress  only the gateways namespace, on the panel's port; control: from world
 #   uplink   uplink serves no dns.<domain> vhost and runs no blocky-ui container;
 #            control: the vhost added back
@@ -35,6 +37,12 @@ let
       ciliumNetworkPolicies
       configMaps
       ;
+  };
+  sameSet = a: b: lib.length a == lib.length b && lib.all (x: lib.elem x b) a;
+  axonLb = config.den.clusters.axon.networks.kubernetes-loadbalancers.assignments.blocky;
+  blockyPods = {
+    "k8s:io.kubernetes.pod.namespace" = "blocky";
+    "app.kubernetes.io/name" = "blocky";
   };
   selectsPanel =
     p: (p.spec.endpointSelector.matchLabels or { }) == { "app.kubernetes.io/name" = "blocky-ui"; };
@@ -74,20 +82,29 @@ let
       ps = lib.filter (p: selectsPanel p && p.spec ? egress) (lib.attrValues r.ciliumNetworkPolicies);
     in
     lib.length ps == 1
+    && sameSet (lib.head ps).spec.egress [
+      {
+        toCIDR = [ "10.10.10.1/32" ];
+        toPorts = tcp "4000";
+      }
+      {
+        toEndpoints = [ { matchLabels = blockyPods; } ];
+        toPorts = tcp "4000";
+      }
+    ]
     &&
-      (lib.head ps).spec.egress == [
-        {
-          toCIDR = [ "10.10.10.1/32" ];
-          toPorts = tcp "4000";
-        }
-      ]
-    &&
-      lib.attrValues (builtins.fromJSON r.configMaps.blocky-ui-config.data."blocky-ui.yml").servers == [
-        {
-          name = "uplink";
-          url = "http://10.10.10.1:4000";
-        }
-      ];
+      sameSet
+        (lib.attrValues (builtins.fromJSON r.configMaps.blocky-ui-config.data."blocky-ui.yml").servers)
+        [
+          {
+            name = "uplink";
+            url = "http://10.10.10.1:4000";
+          }
+          {
+            name = "axon";
+            url = "http://${axonLb}:4000";
+          }
+        ];
 
   ingressOk =
     r:

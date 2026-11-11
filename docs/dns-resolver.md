@@ -2,13 +2,14 @@
 
 Status: **draft v0.5** (2026-11-10), revised against review rounds 1 to 4 and
 two owner rulings (§8: Q13 decided, runtime blocklists). The review loop stopped
-after round 4 by owner decision (objections per round: 14, 4, 7, 7), and the
-phase-1 build follows. This is a design, not implemented. It is written against
-`main` at `03b84230`. The owner's rulings are fixed: Blocky through the NixOS
-`services.blocky` module, a `dns-filter` wrapper, the uplink → Kubernetes →
-uplink-as-secondary phases, encrypted upstreams only, four client paths, and the
-observability path. This document designs within them. Where a measurement
-contradicts a ruling's premise, the section says so (§1, internal names).
+after round 4 by owner decision (objections per round: 14, 4, 7, 7). Phase 1 is
+built. Phase 2 is built (2026-11-11), with its cutover line held by §7 Q2. It is
+written against `main` at `03b84230`. The owner's rulings are fixed: Blocky
+through the NixOS `services.blocky` module, a `dns-filter` wrapper, the uplink →
+Kubernetes → uplink-as-secondary phases, encrypted upstreams only, four client
+paths, and the observability path. This document designs within them. Where a
+measurement contradicts a ruling's premise, the section says so (§1, internal
+names).
 
 ## 1. Problem
 
@@ -620,45 +621,35 @@ they are written:
 
 That closes D10 and the two copies D10 didn't list.
 
-**Failback.** resolved may keep the router as a link's current server after a
-failover. A failover can come from Blocky being down, and also from a SERVFAIL
-that Blocky passes through: quad-100 during a tailscaled restart on uplink, a
-served name while the cluster is down, or a DNSSEC-broken domain (§4). Whether
-resolved rotates on a SERVFAIL is UNVERIFIED. Test 5 records the LAN link's
-current server after each case.
+**Failback.** resolved keeps a link's current server on the router after a
+failover. Measured on 2026-11-10: one SERVFAIL from Blocky moved cortex's `br0`
+to the gateway, and it stayed there. A failover can come from Blocky being down,
+and also from a SERVFAIL that Blocky passes through: quad-100 during a
+tailscaled restart on uplink, a served name while the cluster is down, or a
+DNSSEC-broken domain (§4).
 
-The rule: if any of test 5's records shows the link's current server on the
-gateway, the failback timer joins phase 1, in rollout step 2, before step 3.
-Otherwise it is not built. Its minimal shape is in `core.network.networking`, on
-the hosts that take `--accept-dns=false` (§2.4b): `resolversFor` non-null and no
-`core.network.manager`. A NetworkManager host (`blade`) keeps MagicDNS and gets
-no timer. The script finds the link at runtime from the default route. Den holds
-no LAN-link name: a DHCP-only host has no static address to find it by, and a
-guest's link is named by its PCI slot inside the guest (`enp0s9` on uplink-dev,
-`enp0s12` on cortex-cuda, measured 2026-11-10).
+Re-setting the same list with `resolvectl dns <link> …` does not move the
+current server back (measured 2026-11-10). Restarting resolved does:
+`systemctl restart systemd-resolved` starts each link on its first server. So
+the failback timer is built (`core/network/_failback.nix`, wired in
+`networking.nix`), on the hosts that take `--accept-dns=false` (§2.4b):
+`resolversFor` non-null and no `core.network.manager`. A NetworkManager host
+(`blade`) keeps MagicDNS and gets no timer. Every minute (first run 2 min after
+boot), the script finds the LAN link from the default route, reads its first and
+current servers from `resolvectl`, and does nothing unless they differ. Then it
+asks the first server directly for the probe name, and restarts resolved only on
+a `NOERROR` answer with records. Den holds no LAN-link name: a DHCP-only host
+has no static address to find it by, and a guest's link is named by its PCI slot
+inside the guest (`enp0s9` on uplink-dev, `enp0s12` on cortex-cuda, measured
+2026-11-10).
 
-```nix
-# servers = resolversFor { } environment dns-resolvers; first = head servers
-systemd.services.dns-failback = {
-  serviceConfig.Type = "oneshot";
-  path = [ config.systemd.package pkgs.dnsutils pkgs.gnugrep pkgs.iproute2 pkgs.gawk ];
-  script = ''
-    link=$(ip -o route show default | awk '{print $5; exit}')
-    [ -n "$link" ] || exit 0                                                       # no default route yet
-    resolvectl status "$link" | grep -q "Current DNS Server: ${first}$" && exit 0
-    dig +time=2 +tries=1 @${first} example.com | grep -q "status: NOERROR" || exit 0   # still down
-    resolvectl dns "$link" ${lib.escapeShellArgs servers}                          # re-set the same list
-  '';
-};
-systemd.timers.dns-failback = {
-  wantedBy = [ "timers.target" ];
-  timerConfig = { OnBootSec = "5min"; OnUnitActiveSec = "5min"; };
-};
-```
-
-That re-setting the same list moves the current server back to the first entry
-is UNVERIFIED. The timer's own check is part of test 5. If it fails, the last
-line becomes `systemctl restart systemd-resolved`.
+The probe is the tailnet name of the first **host** instance in `dns.resolvers`
+(`uplink.ts.<domain>`, which `hostsfile.nix` also pins as a `tsName`). Every
+instance answers it through quad-100 (§2.2, §2.7), so a `NOERROR` from the first
+server means it answers tailnet names again. A cluster instance is skipped
+because no tailnet node carries its name: with `[ "axon" "uplink" ]` the probe
+stays `uplink.ts.<domain>`. The VM test `checks.x86_64-linux.dns-failback-vm`
+runs the unit.
 
 **(c) headscale, for roaming devices.** After (b), only roaming devices use
 MagicDNS: the three mobile nodes, `blade`, and the darwin hosts
@@ -724,11 +715,13 @@ oauth2-proxy) is kept but included by no host.
   every capability dropped, no privilege escalation, `HOSTNAME=0.0.0.0` (the
   kubelet sets `HOSTNAME` to the pod name) and `PORT=3000`. Its servers are the
   environment's `dns-resolvers` records, by their `api` field: in prod, uplink's
-  `http://10.10.10.1:4000`.
+  `http://10.10.10.1:4000` and, from phase 2, the cluster's
+  `http://10.11.0.54:4000`.
 - **Network.** Ingress only from the `gateways` namespace on 3000. Egress only
-  to each resolver's API address and port (`10.10.10.1/32` TCP 4000), plus DNS
-  from `coredns.nix`'s cluster-wide grant (the panel grants no port 53 of its
-  own). Blocky's `:4000` stays as §2.2 and test 8 have it.
+  to each resolver's API on its port: `10.10.10.1/32` TCP 4000, and the
+  cluster's own instance by its pods (§2.7), plus DNS from `coredns.nix`'s
+  cluster-wide grant (the panel grants no port 53 of its own). Blocky's `:4000`
+  stays as §2.2 and test 8 have it.
 - **Name and auth.** `served-domains` gains `dns` from the cluster
   (`cluster.servedDomains`), like every gateway UI: a proxied Cloudflare `A`
   record (unchanged from the uplink design, same address), an `HTTPRoute` on the
@@ -770,24 +763,67 @@ The rest:
 
 - **Config:** `pkgs.formats.yaml` output in a ConfigMap. Its checksum is a pod
   annotation, so a config change, a list URL included, rolls the pods.
-- **Image:** Nix-built (`dockerTools.streamLayeredImage` of `pkgs.blocky`), so
-  the pod runs the same binary as phase 1. The lists are downloaded at runtime,
-  as on uplink, so the image carries none.
-- **Deployment:** 3 replicas, one per node (pod anti-affinity).
+- **Image:** upstream's `ghcr.io/0xerr0r/blocky`, tag `latest`, held by digest
+  in `images/0xerr0r/blocky/default.nix` (`oci-image-updater init`,
+  `pinned = false`), so `update-all` moves the digest when upstream moves
+  `latest`. It is not Nix-built: an upstream image needs no publishing (§7 Q7),
+  and the pod runs the digest the repo records. The lists are downloaded at
+  runtime, as on uplink, so the image carries none. The image runs as uid 100.
+  The pod sets the safe sysctl `net.ipv4.ip_unprivileged_port_start = 53`, so it
+  binds `:53` with every capability dropped. On 2026-11-11 `latest` is `v0.36.0`
+  (digest `sha256:191c0f1e…54b2`, built 2026-11-09), one release ahead of
+  uplink's nixpkgs Blocky `0.35.0`.
+- **Version drift:** both instances render from one `_settings.nix`, but they
+  can run different Blocky releases, so a key that one release adds, renames or
+  drops can break the other. `checks.x86_64-linux.blocky-k8s` runs
+  `blocky validate` on the rendered cluster config twice, with the image's own
+  `/app/blocky` (unpacked from the pinned digest) and with uplink's package. A
+  digest bump that the config doesn't pass fails the check. Validation doesn't
+  cover behaviour: a release that changes a default without changing the schema
+  passes it.
+- **Deployment:** 3 replicas, one per node (required pod anti-affinity on
+  `kubernetes.io/hostname`), rolled one at a time with no surge (a fourth pod
+  has no node).
 - **Service:** `LoadBalancer` on a new `blocky` assignment in
   `kubernetes-loadbalancers`, UDP/TCP 53 and TCP 4000, with
   `externalTrafficPolicy: Local`, so client addresses reach the query log and
   only nodes with an endpoint advertise.
-- **CiliumNetworkPolicies:** ingress from `world` on 53, and from the `blocky`
-  LB clients on 4000; ingress from `fromEntities = [ "host" "remote-node" ]` on
-  53 and 4000, because the axons query their own LB first (§4, phase-2 boot
-  ordering) and Cilium gives that traffic the `host` or `remote-node` identity,
-  not `world` (the precedent is `tdarr.nix:454` and `cilium.nix:250`); egress to
-  `world` on TCP 853 (upstreams) and TCP 443 (list downloads), and to
-  `100.100.100.100/32` on 53 (tailnet names); and Prometheus on 4000. Egress
-  from the blocky pods to the Redis pod on TCP 6379, and on the Redis side
-  ingress on 6379 from the blocky pods only. Without that egress rule the
-  replicas start, serve, and silently keep separate blocking state.
+- **CiliumNetworkPolicies** (namespace `blocky`):
+  - `allow-blocky-ingress`: `world` on UDP/TCP 53;
+    `fromEntities = [ "host" "remote-node" ]` on 53 and TCP 4000, because the
+    axons query their own LB first (§4, phase-2 boot ordering) and Cilium gives
+    that traffic the `host` or `remote-node` identity, not `world` (the
+    precedent is `tdarr.nix:454` and `cilium.nix:250`); the LB's off-cluster API
+    clients (`dns-filter`) as `fromCIDR 10.0.0.0/8` on TCP 4000, as every
+    internal LB here admits them (`searxng.nix`, `hindsight.nix`); the panel's
+    pods (`blocky-ui`) on 4000; and Prometheus on 4000.
+  - `allow-blocky-egress`: `world` on TCP 853 (upstreams) and TCP 443 (list
+    downloads), `100.100.100.100/32` on UDP/TCP 53 (tailnet names), and the
+    Valkey pods on TCP 6379. CoreDNS (the conditional upstream) comes from
+    `coredns.nix`'s cluster-wide grant.
+  - `allow-blocky-redis-ingress`: the Valkey admits only the blocky pods,
+    on 6379.
+
+  Cilium's cluster-wide `allow-internal-egress` (`cilium.nix`) already lets
+  every pod reach every other pod, so the Valkey egress rule is explicit, not
+  load-bearing. The Valkey-side ingress rule is the one that decides whether the
+  replicas can sync.
+
+- **The panel** reaches this instance at its LB address. In-cluster, Cilium
+  translates that address to a blocky pod before policy applies, so the panel's
+  egress rule for the cluster's own instance names the blocky pods
+  (`toEndpoints`, TCP 4000), not the LB `/32`. uplink's instance stays a
+  `toCIDR 10.10.10.1/32` rule.
+- **Valkey** (`blocky-redis`, the `valkey` chart as `immich-redis` uses it): one
+  replica, no persistence, a ClusterIP Service on 6379 in namespace `blocky`. It
+  is reachable from the blocky pods only, and not exposed outside the namespace:
+  the design needs it nowhere else, since uplink stays a separate instance
+  (below). No password. Anyone who can reach Blocky's API (the LAN,
+  unauthenticated, §2.2) can already do what a Valkey client could (pause
+  blocking), and the ingress rule admits only the blocky pods.
+  `redis.required = true` (10 attempts, 3 s apart): a replica that can't sync
+  fails to start rather than serve with its own blocking state, and a running
+  replica reconnects on its own (`redis/pubsub.go`, `reconnect`).
 - **The `dns-resolvers` record:**
   `{ name = "axon"; environment = cluster.environment; dns = <blocky LB>; api = "http://<blocky LB>:4000"; }`.
   `environment` is the name string (§2.1), so the CoreDNS `fromCIDR` filter
@@ -795,15 +831,22 @@ The rest:
 - **Replica state:** `dns-filter` reaches one replica through the LB, so the
   replicas share blocking state through Blocky's `redis` option. Blocky
   documents that it "can synchronize its cache and blocking state between
-  multiple instances". This needs a small in-cluster Redis or Valkey (§7 Q3).
-  uplink stays a separate instance, and the wrapper fans out to both. Test 14
-  checks the state per pod.
-- **Metrics:** in-cluster Prometheus scrapes the pods (a ServiceMonitor), with
-  the same `job="blocky"`, so the dashboard is unchanged. Pod stdout reaches
-  Loki through the cluster's existing log collection.
+  multiple instances". In 0.35.0 that is a pub/sub channel
+  (`blocky_sync_enabled`, `redis/event_bridge.go`) plus a shared response cache
+  (`blocky:cache:`); a replica that starts after a disable doesn't learn it, and
+  the disable ends on its own with the wrapper's duration. The keys used are
+  `redis.address`, `required`, `connectionAttempts` and `connectionCooldown`
+  (`config/redis.go`). uplink stays a separate instance, and the wrapper fans
+  out to both. Test 14 checks the state per pod.
+- **Metrics:** in-cluster Prometheus scrapes the pods (a ServiceMonitor on the
+  Service's `http` port), relabelled to `job="blocky"`, so the dashboard and the
+  alerts are unchanged. Pod stdout reaches Loki through the cluster's existing
+  log collection.
 
 Then `prod.nix`: `dns.resolvers = [ "axon" "uplink" ];`. That one line moves
-DHCP, static hosts, guests and headscale.
+prod's DHCP network, its static hosts and guests, and headscale. dev keeps
+`[ "uplink" ]` until its own line changes. The line is its own commit, held
+behind §7 Q2's answer (below).
 
 ### 2.8 Phase 3: uplink secondary
 
@@ -831,16 +874,17 @@ can change. The gateway stays the last resort.
 3. The UniFi DHCP and RA change (`unifi-plan`, reviewed, then `unifi-apply`).
    Tests 5 (DHCP client), 10 and 13. Test 13 decides whether the gateway stays
    in the DHCP list.
-4. Phase 2 starts once tests 1–13 hold for a week, with §7 Q2 and Q3 answered.
+4. Phase 2. The owner waived the week (2026-11-11). §7 Q3 and Q7 are decided. §7
+   Q2 is measured, and its answer holds the cutover line (§7 Q2).
 
 ### 2.10 Later phases
 
 Cut from phase 1 by review round 1. Each is built only when its gate holds.
 
-- **A failback timer** moves to phase 1 if test 5's records show a link on the
-  gateway (§2.4, which gives its shape).
-- **Test 9's phase-2 render equality.** Lands with phase 2, when the second
-  renderer exists.
+- **A failback timer:** built in phase 1, once test 5's record showed a link
+  staying on the gateway (§2.4).
+- **Test 9's phase-2 render equality:** landed with phase 2, in
+  `checks.x86_64-linux.blocky-k8s` (test 14).
 
 Each step is reversible by reverting its commit. `dns.resolvers = [ ]` restores
 today's client lists exactly.
@@ -1001,7 +1045,9 @@ passes means the test proves nothing.
      `allowlists` key, and the same VM test logs no `could not init allowlist`
      line. Control: forcing `allowlists.default = [ "" ]` logs it (under
      `strategy = fast` the unit stays up, so the log line is the signal).
-   - The phase-2 render-equality check moves to phase 2 (§2.10).
+   - Phase-2 render equality: the cluster config equals uplink's but for the
+     instance inputs and the Valkey sync (`blocky-k8s`, test 14). Control:
+     another denylist URL fails it.
 10. **No RDNSS bypass.** After step 3, a LAN phone's and laptop's DNS list holds
     only `resolversFor` and the gateway, with no `2001:5a8:…::1`. Control:
     before step 3, the same device lists the router's IPv6 address.
@@ -1026,8 +1072,19 @@ passes means the test proves nothing.
 14. **Phase 2: shared blocking state, and the axons reach their own LB.**
     - `dns-filter off 5m` through the LB, then `GET /api/blocking/status` on
       each pod IP from a node: every pod reports `enabled=false`. Control: with
-      the Redis egress rule removed, only the pod the LB picked reports
-      `enabled=false`.
+      the Valkey-side ingress rule (`allow-blocky-redis-ingress`) removed, the
+      replicas can't sync. With `redis.required = true` a restarted replica then
+      fails to start, and a running one reports only its own state, so only the
+      pod the LB picked reports `enabled=false`. (Removing the blocky pods'
+      egress rule alone is no control: `allow-internal-egress` still admits the
+      traffic, §2.7.)
+    - `checks.x86_64-linux.blocky-k8s`, pure, over axon's rendered `blocky`
+      application: the three policies above exactly, the LoadBalancer (`blocky`
+      assignment, `Local`, UDP/TCP 53 and TCP 4000), the Deployment (3 replicas,
+      required anti-affinity, no surge, the config checksum), the
+      ServiceMonitor's `job`, and test 9's render equality with uplink. Each has
+      a control that must fail it, and the config validates under both Blocky
+      binaries (§2.7).
     - On axon-01, after `dns.resolvers = [ "axon" "uplink" ]`:
       `resolvectl query <uuid>.example.com` succeeds, `resolvectl status enp2s0`
       (axon-01's LAN link, test 5) shows the `blocky` LB address as
@@ -1049,8 +1106,9 @@ passes means the test proves nothing.
         `admins`. Controls: a `media.access` map added, the `oauth2-proxy`
         client.
       - _Egress._ One egress policy selects the pod and allows exactly
-        `10.10.10.1/32` TCP 4000, and the panel's one server is
-        `http://10.10.10.1:4000`. Controls: a world rule, a port range, a `/24`.
+        `10.10.10.1/32` TCP 4000 and the blocky pods on TCP 4000, and the
+        panel's servers are exactly `http://10.10.10.1:4000` and
+        `http://10.11.0.54:4000`. Controls: a world rule, a port range, a `/24`.
       - _Ingress._ Only `gateways` on 3000. Control: a world rule.
       - _Uplink._ uplink has no `dns.<domain>` vhost and no `blocky-ui`
         container. Control: the vhost added back.
@@ -1121,18 +1179,28 @@ passes means the test proves nothing.
   a DHCP client on `Default`. If it breaks, those clients need the VIP route (§7
   Q2), or the conditional mapping limits prod-LAN answers to host-served names.
 - **The same asymmetry in phase 2,** for the `blocky` LB address. UDP works, but
-  DNS over TCP (truncated answers) from prod-LAN clients breaks. This is §7 Q2's
-  gate.
+  DNS over TCP (truncated answers) from prod-LAN DHCP clients breaks. This is §7
+  Q2's gate, and it is measured (§7 Q2): the dev LAN is fine, the prod LAN
+  through the gateway is not.
+- **Image drift (phase 2).** The cluster instance follows upstream `latest`, so
+  it can run a newer Blocky than uplink. `blocky-k8s` validates the one config
+  under both binaries, but a behaviour change within a valid schema passes it
+  (§2.7).
+- **Valkey down (phase 2).** Running replicas keep serving and reconnect; a
+  replica that (re)starts while Valkey is down fails until it returns
+  (`redis.required`), so a reschedule during a Valkey outage loses that replica.
+  The other replicas and uplink still answer.
 - **The cluster being down** fails served names with SERVFAIL (§2.3). No worse
   than today's public path, which also crosses the cluster.
 - **The API guarantee is the wrapper's.** Anyone on the LAN can
   `GET /api/blocking/disable` with no duration, and filtering then stays off
   until `on` or a restart. That is accepted under the necessity pass. The
   `BlockyFilteringOff` alert (§2.2) fires after 15 min.
-- **The UniFi write.** The networks go from read-only data to managed objects. A
-  partial-body `PUT` on `rest/networkconf/<id>` must merge, not replace (§7 Q4),
-  and `prevent_destroy` must hold. The first `unifi-plan` is read field by
-  field.
+- **The UniFi write.** The networks go from read-only data to managed objects.
+  Every `PUT` on `rest/networkconf/<id>` carries the whole live object with the
+  declared fields laid over it (§2.4a), so the controller needn't merge a
+  partial body, and §7 Q4's partial-`PUT` question gates nothing. What must hold
+  is `prevent_destroy`, and the first `unifi-plan` is read field by field.
 - **Query logs in Loki** are the household's browsing history, kept for Loki's
   retention. Blocky's `queryLog.fields` can drop `clientIP` and `clientName` if
   that is wanted.
@@ -1199,14 +1267,41 @@ passes means the test proves nothing.
    lose DNS off the LAN and whenever uplink is down, or drop it in phase 3, once
    two filtering instances make an outage unlikely? Default: keep it in phases 1
    and 2, then decide on test 1's measured leak rate.
-2. **Prod-LAN to VIP asymmetry** (§4). Does a DHCP client on `Default` reach
-   cluster-served names over TCP once it gets internal answers, and does it
-   reach the phase-2 LB over TCP? If not, the options are a per-address route on
-   clients, Cilium L2 announcements on `10.10.0.0/16`, or limiting the prod-LAN
-   mapping. It is measured before rollout step 3.
-3. **Phase-2 state sharing.** Blocky's Redis sync needs an in-cluster
-   Redis/Valkey. The alternative is per-pod LB addresses, so the wrapper fans
-   out to each pod. Default: Redis.
+2. **Prod-LAN to VIP asymmetry** (§4). **Measured, 2026-11-11; it holds the
+   cutover.** Read-only, from each host's normal route:
+   - dev LAN, through the router (`10.11.0.0/16 via 10.9.0.1`): cortex and
+     cortex-cuda complete TCP to every LAN-admitting LB (`nc -z` to
+     `10.11.0.1:443`, `.24:8080`, `.31:443`, `.20:8888`), and cortex fetches
+     SearXNG's page (`curl http://10.11.0.24:8080/` → 200, 7892 bytes). The dev
+     LAN doesn't share a subnet with the nodes, so the path is symmetric.
+   - prod LAN, uplink-dev, routed through uplink (its host-file route,
+     `via 10.10.10.1`): the same TCP checks and the same 200. uplink itself (the
+     BGP hub, `via 10.10.10.4`) completes TCP 53 to `10.11.0.53`.
+   - prod LAN through the gateway: not measurable read-only (no den host routes
+     that way), but uplink-dev measured it on 2026-11-09 (`uplink-dev.nix`, the
+     route's comment): the SYN goes to `10.10.0.1`, the SYN-ACK comes back
+     on-link from axon-03, and the data is never acknowledged. A prod-LAN DHCP
+     client (phones, laptops on `Default`) takes exactly that path.
+   - `10.11.0.53` (`coredns-internal`) answers neither UDP nor TCP from cortex
+     or uplink-dev: its policy admits only the resolver `/32`s (§2.3), so it is
+     no probe for LAN clients.
+
+   So prod-LAN DHCP clients can't reach the `blocky` LB over TCP, or
+   cluster-served names over HTTPS through the VIP. UDP DNS works, and a
+   truncated answer's TCP retry fails. The cutover commit
+   (`dns.resolvers = [ "axon" "uplink" ]` in prod.nix) is held until one of the
+   options lands for the `Default` network: a per-address route on clients (DHCP
+   option 121, `10.11.0.0/16 via 10.10.10.1`, the route uplink-dev already
+   carries), Cilium L2 announcements on `10.10.0.0/16`, or limiting the prod-LAN
+   mapping. Static prod hosts are unaffected: uplink is the hub, and uplink-dev
+   routes through it.
+
+3. **Phase-2 state sharing.** **Decided: Valkey** (2026-11-11). Blocky's `redis`
+   sync against a one-replica Valkey (`blocky-redis`) in namespace `blocky`, the
+   `valkey` chart the repo already runs for immich, paperless and RomM. No
+   password, no persistence, reachable from the blocky pods only (§2.7). Per-pod
+   LB addresses were the alternative; they would make the wrapper and the panel
+   fan out to every pod.
 4. **UniFi `networkconf` semantics.** Does a partial `PUT` merge? Which fields
    carry RA RDNSS and DHCPv6 DNS, and can RDNSS be off while SLAAC stays on?
    This is answered by the owner's `unifi-adopt` run. It prints each declared
@@ -1223,10 +1318,14 @@ passes means the test proves nothing.
 6. **CoreDNS forwarding vs `customDNS`** for host-served names (§5). Forwarding
    follows the ruling and has one renderer. `customDNS` would keep
    `idm.json64.dev` resolving while the cluster is down. Default: the ruling.
-7. **Phase-2 image publishing.** The Nix-built image changes on every Blocky
-   bump (lists are downloaded at runtime). Push it to `registry.json64.dev`, as
-   `tdarr-node` is pushed (manual `skopeo`), or to `ghcr.io/sini/blocky` from
-   CI? Default: undecided, and it must be settled before phase 2.
+7. **Phase-2 image.** **Decided: upstream** (owner, 2026-11-11).
+   `ghcr.io/0xerr0r/blocky:latest`, held by digest and moved by
+   `oci-image-updater update-all` (`pinned = false`). Upstream rather than
+   Nix-built: nothing to publish (no `registry.json64.dev` push, no CI job), and
+   the digest the repo records is the image the pods run. The cost is version
+   drift from uplink's nixpkgs Blocky (`v0.36.0` against `0.35.0` today), which
+   `blocky-k8s` bounds by validating the one config under both binaries (§2.7,
+   §4).
 8. **Which lists.** The default here is hagezi `pro` alone. `tif` (threat
    intelligence) is a candidate second list, and the allowlist starts empty.
 

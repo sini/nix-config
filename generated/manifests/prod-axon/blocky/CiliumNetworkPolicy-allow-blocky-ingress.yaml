@@ -1,0 +1,52 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-blocky-ingress
+  namespace: blocky
+spec:
+  description: 'Blocky: DNS from anywhere routed to the LB; its API from the LAN, the nodes, the panel and Prometheus.'
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: blocky
+  ingress:
+    - fromEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+    - fromEntities:
+        - host
+        - remote-node
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+            - port: "4000"
+              protocol: TCP
+    - fromCIDR:
+        - 10.0.0.0/8
+      toPorts:
+        - ports:
+            - port: "4000"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: blocky-ui
+            k8s:io.kubernetes.pod.namespace: blocky-ui
+      toPorts:
+        - ports:
+            - port: "4000"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: prometheus
+            k8s:io.kubernetes.pod.namespace: monitoring
+      toPorts:
+        - ports:
+            - port: "4000"
+              protocol: TCP

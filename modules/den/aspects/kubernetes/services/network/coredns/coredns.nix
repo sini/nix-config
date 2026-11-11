@@ -52,9 +52,12 @@
           "k8s:io.kubernetes.pod.namespace" = "kube-system";
           "app.kubernetes.io/name" = "coredns";
         };
-        # The only off-cluster clients: the environment's resolver instances.
+        # The only off-cluster clients: the environment's resolver instances
+        # (this cluster's own instance reaches CoreDNS in-cluster).
         resolverCidrs = map (r: "${r.dns}/32") (
-          lib.unique (lib.filter (r: r.environment == cluster.environment) dns-resolvers)
+          lib.unique (
+            lib.filter (r: r.environment == cluster.environment && r.name != cluster.name) dns-resolvers
+          )
         );
         # TCP/53 for glibc's TCP fallback on truncated/large DNS answers;
         # without it those retries are dropped.

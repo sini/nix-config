@@ -20,7 +20,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: e89d0beb167fe6bd69c365ff4b0f38850f8adc86d0ff06cd0ecd64c66b3b37e0
+        checksum/config: 5fdea6dca10fff4479f6099d6fc2059f17c6dfe2d5f187c9cedb4f4e69716394
       labels:
         app.kubernetes.io/controller: main
         app.kubernetes.io/instance: blocky-ui

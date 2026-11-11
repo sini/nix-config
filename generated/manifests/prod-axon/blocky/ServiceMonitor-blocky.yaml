@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: blocky
+  namespace: blocky
+spec:
+  endpoints:
+    - port: http
+      relabelings:
+        - action: replace
+          replacement: blocky
+          targetLabel: job
+  selector:
+    matchLabels:
+      app.kubernetes.io/service: blocky

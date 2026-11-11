@@ -154,6 +154,11 @@
           # (network/coredns/coredns.nix, docs/dns-resolver.md).
           # BGP-advertised, NOT internet-routable.
           coredns-internal = "10.11.0.53";
+
+          # The environment's filtering resolver, Blocky's replicas
+          # (network/blocky.nix, docs/dns-resolver.md §2.7). BGP-advertised,
+          # NOT internet-routable.
+          blocky = "10.11.0.54";
         };
       };
     };
@@ -218,6 +223,8 @@
       services.network.cilium.hubble-ui
       # The resolver's admin panel at dns.<domain> (docs/dns-resolver.md §2.6).
       services.network.blocky-ui
+      # The resolver's replicas behind the blocky LB (docs/dns-resolver.md §2.7).
+      services.network.blocky
       services.media.base
       services.media.media-pg
       services.media.api-keys

@@ -317,7 +317,9 @@ in
       (pipe.from "served-domains" [ (pipe.collectAll ({ cluster, ... }: true)) ])
     ];
 
-  # Resolver instances to clusters, for CoreDNS's off-cluster ingress rule.
+  # Resolver instances to clusters, for CoreDNS's off-cluster ingress rule and
+  # the admin panel's servers. A cluster already sees its own record, as CoreDNS
+  # sees the cluster's served-domains; a cluster pipe would duplicate it.
   # Consumers filter by environment.
   den.policies.cluster-collect-dns-resolvers =
     { cluster, ... }:
@@ -328,8 +330,8 @@ in
     ];
 
   # Resolver instances to every host, whose clients (core/network/_resolvers.nix)
-  # pick theirs by environment.dns.resolvers. Hosts emit them today, clusters in
-  # phase 2; a collectAll predicate matches only the kind it names.
+  # pick theirs by environment.dns.resolvers. Hosts and clusters emit them;
+  # a collectAll predicate matches only the kind it names.
   den.policies.collect-dns-resolvers =
     { host, ... }:
     [

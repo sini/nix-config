@@ -43,12 +43,20 @@ in
           else
             null;
 
-        # The first resolver's own tailnet name (hostsfile.nix's tsName): Blocky
-        # answers it through quad-100 on the same host.
-        failback = import ./_failback.nix {
-          inherit pkgs;
-          systemd = config.systemd.package;
-        } "${lib.head environment.dns.resolvers}.ts.${environment.domain}";
+        # The first host instance's tailnet name (hostsfile.nix's tsName), which
+        # every instance answers through quad-100: the first server answering it
+        # means it answers tailnet names again. A cluster instance has no node name.
+        failback =
+          import ./_failback.nix
+            {
+              inherit pkgs;
+              systemd = config.systemd.package;
+            }
+            "${
+              lib.findFirst (
+                n: !(den.clusters ? ${n})
+              ) (throw "dns-failback: dns.resolvers names no host instance to probe") environment.dns.resolvers
+            }.ts.${environment.domain}";
 
         mkNameValue = name: value: { inherit name value; };
 

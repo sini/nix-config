@@ -6,6 +6,14 @@ metadata:
 spec:
   description: blocky-ui to the resolvers' Blocky API.
   egress:
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: blocky
+            k8s:io.kubernetes.pod.namespace: blocky
+      toPorts:
+        - ports:
+            - port: "4000"
+              protocol: TCP
     - toCIDR:
         - 10.10.10.1/32
       toPorts:
