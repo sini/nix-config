@@ -51,6 +51,10 @@
     {
       "to": "restapi_object.network_dev",
       "id": "/api/s/default/rest/networkconf/fedc75ff-59de-42f1-b211-67d703ab4d1f"
+    },
+    {
+      "to": "restapi_object.dhcp_option_classless_routes",
+      "id": "/api/s/default/rest/dhcpoption/11332cfd-17f4-4de6-a357-bb1e78980363"
     }
   ]
 }
