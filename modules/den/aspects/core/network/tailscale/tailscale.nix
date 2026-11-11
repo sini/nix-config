@@ -42,6 +42,10 @@ in
           };
         };
 
+        # The set flags apply only when this oneshot runs. Staying active lets a switch
+        # restart it when they change, instead of waiting for tailscaled's next start.
+        systemd.services.tailscaled-set.serviceConfig.RemainAfterExit = true;
+
         systemd.services.tailscaled.serviceConfig = {
           Environment = [ "TS_DEBUG_FIREWALL_MODE=nftables" ];
           # When its TUN device closes under it (networkd flushing its ip rules on
