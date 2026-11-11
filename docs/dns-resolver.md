@@ -1334,16 +1334,23 @@ passes means the test proves nothing.
    path is proven: DHCP after option 121 or L2 announcements, roaming after the
    LB is measured reachable over the tailnet.
 
-   Option 121 is staged in `modules/flake-parts/terranix/unifi.nix`. Phase A
-   defines the option (`rest/dhcpoption`: code 121, `classless-routes`,
-   `hexarray`) and renders its value for `Default` as the local
-   `unifi_network_default_classless_routes`, set on no network. The value is RFC
-   3442's encoding (width, then the destination's significant octets, then the
-   router) of the LB pool via uplink and of the default route via the gateway,
-   which it must carry because a client that honours 121 ignores option 3:
-   `10:0a:0b:0a:0a:0a:01` (`10.11.0.0/16` via `10.10.10.1`) then
-   `00:0a:0a:00:01` (`0.0.0.0/0` via `10.10.0.1`). Phase B sets it on `Default`,
-   in the field `unifi-adopt` shows once the definition exists.
+   Option 121 is in `modules/flake-parts/terranix/unifi.nix`: the definition
+   (`rest/dhcpoption`: code 121, `classless-routes`, `hexarray`) and its value
+   for `Default`, the local `unifi_network_default_classless_routes`. The value
+   is RFC 3442's encoding (width, then the destination's significant octets,
+   then the router) of the LB pool via uplink and of the default route via the
+   gateway, which it must carry because a client that honours 121 ignores option
+   3: `10:0A:0B:0A:0A:0A:01` (`10.11.0.0/16` via `10.10.10.1`) then
+   `00:0A:0A:00:01` (`0.0.0.0/0` via `10.10.0.1`). A network carries a custom
+   option's value in the field `dhcpd_user_option_<definition _id>`, in
+   uppercase colon-separated hex, so `Default`'s full-body `PUT` lays
+   `dhcpd_user_option_<id>` over the live object (phase B). The network page
+   accepted only a definition created in the UI, not the API-created one, so the
+   owner created it there (2026-11-11); the workspace imports it by its code and
+   declares its name. Measured live the same day: a `DHCPDISCOVER` on the prod
+   LAN asking for 121 gets `(10.11.0.0/16:10.10.10.1),(default:10.10.0.1)`
+   alongside DNS `10.10.10.1,10.10.0.1` and router `10.10.0.1`, so option 121 is
+   served.
 
 3. **Phase-2 state sharing.** **Decided: Valkey** (2026-11-11). Blocky's `redis`
    sync against a one-replica Valkey (`blocky-redis`) in namespace `blocky`, the

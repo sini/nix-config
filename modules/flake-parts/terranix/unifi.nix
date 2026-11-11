@@ -604,9 +604,10 @@ let
   # { meta, data = [ object ] }, so the id is data/0/_id, and with that id path
   # read GETs by id (read_search would look the id path up inside each listed
   # object). Destroy DELETEs: a definition is safe to remove. width is omitted;
-  # the controller reads it for integer options only.
-  # shortcut: no read_search, so a definition deleted on the controller stays in
-  #   state until imported again or removed; add a search if that ever matters.
+  # the controller reads it for integer options only, and code is a number, as
+  # the UI writes it. A network sets the option's value in its field
+  # dhcpd_user_option_<this _id>. The provider never drops a definition deleted
+  # on the controller from state; unifi-adopt does, when it imports the live one.
   renderDhcpOption =
     {
       site,
@@ -628,25 +629,25 @@ let
         # The controller adds _id, site_id and attr_* fields.
         ignore_server_additions = true;
         data = builtins.toJSON {
-          code = toString code;
-          inherit name type;
+          inherit code name type;
           signed = false;
         };
       };
-      # Read by unifi-adopt, which imports the one live definition with this name.
-      _meta.dhcpOptions.${res} = name;
+      # Read by unifi-adopt, which imports the one live definition with this code.
+      _meta.dhcpOptions.${res} = code;
     };
 
-  # RFC 3442 classless static routes (DHCP option 121) as colon-separated hex
-  # octets: per route, its prefix width, the destination's significant octets
-  # (ceil(width / 8)), then the router's four. A destination with host bits set
+  # RFC 3442 classless static routes (DHCP option 121) as colon-separated
+  # uppercase hex octets, the form the controller stores: per route, its prefix
+  # width, the destination's significant octets (ceil(width / 8)), then the
+  # router's four. A destination with host bits set
   # is refused. A client honouring 121 ignores option 3, so a list for a
   # network's clients carries the default route too.
   classlessRoutes =
     routes:
     let
       octets = ip: map lib.toInt (lib.splitString "." ip);
-      hex = x: lib.toLower (lib.fixedWidthString 2 "0" (lib.toHexString x));
+      hex = x: lib.fixedWidthString 2 "0" (lib.toHexString x);
       encode =
         { destination, router }:
         let
@@ -955,9 +956,9 @@ in
         inherit dns-resolvers;
         environments = lib.attrValues config.den.environments;
       })
-      # The option-121 experiment (docs/dns-resolver.md §7 Q2), phase A: the
-      # definition alone. Its value for Default is rendered below and set on no
-      # network until unifi-adopt shows the field a network carries it in.
+      # Option 121 (docs/dns-resolver.md §7 Q2): the definition, and its value
+      # for Default, laid over Default's PUT body (renderNetworkDns) in the field
+      # named by the definition's _id.
       (renderDhcpOption {
         inherit (unifi) site;
         code = 121;
@@ -965,6 +966,8 @@ in
         type = "hexarray";
       })
       {
+        locals."unifi_network_${key net.unifiNetwork}_dns"."dhcpd_user_option_\${restapi_object.dhcp_option_classless_routes.id}" =
+          "\${local.unifi_network_${key net.unifiNetwork}_classless_routes}";
         # This environment's network (Default): the cluster's LoadBalancer pool via
         # uplink (the route uplink-dev carries), then the default route via the gateway.
         locals."unifi_network_${key net.unifiNetwork}_classless_routes" = classlessRoutes [
@@ -1129,12 +1132,13 @@ in
       '';
 
       # Each declared DHCP option definition ($meta.dhcpOptions) as an import
-      # block, by the one live definition with its name; none is created here.
+      # block, by the one live definition with its code (its name is declared,
+      # and a plan renames it); none is created here.
       dhcpOptionImports = pkgs.writeText "unifi-dhcp-option-imports.jq" ''
         . as $live
-        | [ ($meta.dhcpOptions // {}) | to_entries[] | .key as $res | .value as $n
-            | [ $live[] | select(.name == $n) ]
-            | if length > 1 then error("unifi-adopt: \(length) live DHCP options named \($n); delete all but one")
+        | [ ($meta.dhcpOptions // {}) | to_entries[] | .key as $res | .value as $c
+            | [ $live[] | select((.code | tostring) == ($c | tostring)) ]
+            | if length > 1 then error("unifi-adopt: \(length) live DHCP options with code \($c); delete all but one")
               elif length == 1 then { to: "restapi_object.\($res)", id: "/api/s/\($site)/rest/dhcpoption/\(.[0]._id)" }
               else empty end ]
       '';
@@ -1159,6 +1163,21 @@ in
       # file is not committed. nix-flake-update and update-pkgs are the provider bumps.
       unifiProvider = pkgs.terraform-providers.ubiquiti-community_unifi;
       restapi = self'.packages.terraform-provider-restapi;
+      tofu = pkgs.opentofu.withPlugins (_: [
+        unifiProvider
+        restapi
+      ]);
+
+      # Each restapi_object import target the state already holds under another
+      # id: the provider never drops an object deleted on the controller, and an
+      # import block whose address is in state is skipped, so the stale entry
+      # would stay and the live object would never be imported.
+      staleImports = pkgs.writeText "unifi-stale-imports.jq" ''
+        ([ $state.values.root_module.resources[]? | select(.mode == "managed") | { (.address): .values.id } ] | add // {}) as $ids
+        | .import[] | select(.to | startswith("restapi_object."))
+        | select($ids[.to] != null and $ids[.to] != (.id | split("/") | last))
+        | "\(.to) \($ids[.to])"
+      '';
 
       mkUnifiCommand =
         name: description: runtimeInputs: text:
@@ -1185,10 +1204,7 @@ in
             };
           }
         ];
-        terraformWrapper.package = pkgs.opentofu.withPlugins (_: [
-          unifiProvider
-          restapi
-        ]);
+        terraformWrapper.package = tofu;
       };
 
       # Fixture: the gateway's own record is dropped, peers group by remote ASN,
@@ -1594,6 +1610,7 @@ in
       # more than four servers. Control: the payload predicate fails on the render
       # without dhcpResolvers, on one that reads dns.resolvers, on an instance with
       # no dns6, and on one from another environment (both render no IPv6 DNS).
+      # The workspace's Default overlay is the same fields plus option 121's value.
       checks.unifi-dhcp-dns-render =
         let
           # dns.resolvers names an instance the render must not pick.
@@ -1723,17 +1740,27 @@ in
             && !(payloadOk noDns6)
             && noDns6.locals.unifi_network_default_dns.dhcpdv6_dns_1 == ""
             && !(payloadOk otherEnv)
-            && otherEnv.locals.unifi_network_default_dns.dhcpdv6_dns_1 == "";
+            && otherEnv.locals.unifi_network_default_dns.dhcpdv6_dns_1 == ""
+            # The workspace's Default overlay: these DNS fields and option 121's
+            # value, keyed by the definition's _id.
+            &&
+              builtins.attrNames workspace == lib.sort lib.lessThan (
+                builtins.attrNames rendered.locals.unifi_network_default_dns ++ [ userOption ]
+              )
+            && workspace.${userOption} == "\${local.unifi_network_default_classless_routes}";
+          workspace = terraformConfiguration.config.locals.unifi_network_default_dns;
+          userOption = "dhcpd_user_option_\${restapi_object.dhcp_option_classless_routes.id}";
         in
         assert lib.assertMsg ok "unifi-dhcp-dns-render:\n${builtins.toJSON rendered}";
         pkgs.writeText "unifi-dhcp-dns-render" (builtins.toJSON rendered);
 
-      # Fixture (docs/dns-resolver.md §7 Q2, option 121 phase A): a definition
-      # renders its POST, id path, by-id read and DELETE, and its adopt meta;
+      # Fixture (docs/dns-resolver.md §7 Q2, option 121): a definition renders
+      # its POST, id path, by-id read and DELETE, and its adopt meta (the code);
       # classlessRoutes encodes RFC 3442's example widths (0, 8, 16, 24, 25,
-      # 32) and refuses host bits. The workspace's Default value is the cluster's
-      # LB pool via uplink, then the default route via the gateway, set on no
-      # network. Control: the same predicate over a /24 pool fails.
+      # 32) in uppercase hex and refuses host bits. The workspace's Default value
+      # is the cluster's LB pool via uplink, then the default route via the
+      # gateway, and Default's PUT carries it. Controls: the same predicate over
+      # a /24 pool, and over the lowercase form, fails.
       checks.unifi-dhcp-option-render =
         let
           rendered = renderDhcpOption {
@@ -1751,7 +1778,8 @@ in
               }
             ];
           live = terraformConfiguration.config.locals.unifi_network_default_classless_routes;
-          defaultOk = v: v == "10:0a:0b:0a:0a:0a:01:00:0a:0a:00:01";
+          defaultOk = v: v == "10:0A:0B:0A:0A:0A:01:00:0A:0A:00:01";
+          inherit (terraformConfiguration.config) locals resource;
           ok =
             rendered == {
               resource.restapi_object.dhcp_option_classless_routes = {
@@ -1762,27 +1790,29 @@ in
                 destroy_path = "/api/s/s/rest/dhcpoption/{id}";
                 ignore_server_additions = true;
                 data = builtins.toJSON {
-                  code = "121";
+                  code = 121;
                   name = "classless-routes";
                   type = "hexarray";
                   signed = false;
                 };
               };
-              _meta.dhcpOptions.dhcp_option_classless_routes = "classless-routes";
+              _meta.dhcpOptions.dhcp_option_classless_routes = 121;
             }
-            && r "0.0.0.0/0" == "00:0a:00:00:01"
-            && r "10.0.0.0/8" == "08:0a:0a:00:00:01"
-            && r "10.17.0.0/16" == "10:0a:11:0a:00:00:01"
-            && r "10.27.129.0/24" == "18:0a:1b:81:0a:00:00:01"
-            && r "10.229.0.128/25" == "19:0a:e5:00:80:0a:00:00:01"
-            && r "10.198.122.47/32" == "20:0a:c6:7a:2f:0a:00:00:01"
+            && r "0.0.0.0/0" == "00:0A:00:00:01"
+            && r "10.0.0.0/8" == "08:0A:0A:00:00:01"
+            && r "10.17.0.0/16" == "10:0A:11:0A:00:00:01"
+            && r "10.27.129.0/24" == "18:0A:1B:81:0A:00:00:01"
+            && r "10.229.0.128/25" == "19:0A:E5:00:80:0A:00:00:01"
+            && r "10.198.122.47/32" == "20:0A:C6:7A:2F:0A:00:00:01"
             && !(builtins.tryEval (r "10.11.0.0/8")).success
             && !(builtins.tryEval (r "10.229.0.64/25")).success
             && defaultOk live
-            # No network's PUT carries it yet (phase B).
-            && !(lib.hasInfix "local.unifi_network_default_classless_routes" (
-              builtins.toJSON terraformConfiguration.config.resource
-            ))
+            && !(defaultOk (lib.toLower live))
+            # Default's overlay carries it, and Default's PUT carries the overlay.
+            && lib.hasInfix "local.unifi_network_default_classless_routes" (
+              builtins.toJSON locals.unifi_network_default_dns
+            )
+            && lib.hasInfix "local.unifi_network_default_dns" resource.restapi_object.network_default.data
             && !(defaultOk (classlessRoutes [
               {
                 destination = "10.11.0.0/24";
@@ -1894,6 +1924,7 @@ in
             [
               pkgs.curl
               pkgs.jq
+              tofu
             ]
             ''
               api=$(jq -r .api_url ${meta})
@@ -1931,6 +1962,15 @@ in
                 ${meta} > ${workdir}/imports.tf.json
               # The flake reads imports.tf.json only once git tracks it.
               git add ${workdir}/imports.tf.json
+              # Drop each stale restapi_object entry, so the plan imports the live object
+              # in its place instead of keeping (or re-creating) the vanished one.
+              ${lib.getExe scripts.init} -input=false >/dev/null
+              stale=$(jq -r --argjson state "$(tofu -chdir=${workdir} show -json)" -f ${staleImports} ${workdir}/imports.tf.json)
+              while read -r res id; do
+                [[ -n $res ]] || continue
+                tofu -chdir=${workdir} state rm "$res" >/dev/null
+                echo "unifi-adopt: dropped $res from state: its id $id is not the live object's"
+              done <<<"$stale"
               echo "unifi-adopt: site $site BGP config $(jq -r '.[0]._id' <<<"$bgp") ($(jq -r '.[0].description' <<<"$bgp"))"
               echo "unifi-adopt: $(jq length <<<"$pfs") port forwards:"
               jq -r '.[] | "  \(.name // "-")\t\(.proto)\twan \(.pfwd_interface // "-"):\(.dst_port // "-")\t-> \(.fwd // "-"):\(.fwd_port // "-")\tenabled=\(.enabled)"' <<<"$pfs"

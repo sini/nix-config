@@ -78,6 +78,20 @@ own. The `PUT` body is the whole live network with those fields laid over it, a
 create is a `PUT` to the live `_id`, and a destroy is a `GET`, so no plan can
 wipe or delete a LAN. `checks.<system>.unifi-dhcp-dns-render` fixes the payload.
 
+`restapi_object.dhcp_option_classless_routes` is the custom DHCP option
+definition for option 121 (`rest/dhcpoption`: code `121`, `classless-routes`,
+`hexarray`), rendered by `renderDhcpOption`. A network sets a custom option's
+value in the field `dhcpd_user_option_<definition _id>`, as uppercase
+colon-separated hex (`10:0A:0B:...`), so `Default`'s overlay carries
+`dhcpd_user_option_${restapi_object.dhcp_option_classless_routes.id}` =
+`local.unifi_network_default_classless_routes` (the LB pool via uplink, then the
+default route via the gateway, encoded from den data by `classlessRoutes`). The
+network page accepted only a definition created in the UI, not the one this
+workspace had created through the API, so the live definition is the UI's: it is
+imported by its code, never by its name, and the declared name replaces the UI's
+in place. `checks.<system>.unifi-dhcp-option-render` fixes the payload and the
+encoding.
+
 The gateway runs the zone-based firewall (since its 6.x firmware migrated the
 legacy rules). Every policy is a `unifi_firewall_policy` naming its zones
 through `data.unifi_firewall_zone`, and records its name and zone pair in
@@ -137,7 +151,13 @@ the passphrase into its own environment, and prints neither.
    configuration, so a live forward that no aspect declares fails the plan until
    it is declared or deleted. It imports each declared network by its `_id`,
    from the one live network with its name. It prints the live forward list and
-   each declared network's DNS, RA and DHCPv6 fields.
+   each declared network's DNS, RA and DHCPv6 fields. It imports each declared
+   DHCP option definition by its code. The restapi provider never drops an
+   object deleted on the controller from state, and an import block whose
+   address is already in state is skipped, so `unifi-adopt` runs `tofu init` and
+   removes from state each `restapi_object` it imports whose state id is not the
+   live `_id` (it prints each one). The plan then imports the live object at
+   that address instead of creating a duplicate.
 2. `unifi-plan` builds the config and runs `tofu init` and `tofu plan`. The
    adoption plan must be `N to import, 0 to add, 0 to change, 0 to destroy`, N
    being the port forwards (`unifi_bgp.prod` is already in the state). A change
