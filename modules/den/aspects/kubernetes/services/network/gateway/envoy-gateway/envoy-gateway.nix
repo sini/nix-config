@@ -397,17 +397,11 @@
               };
             };
 
-            referenceGrants.allow-gateway-to-cert-tls = {
-              metadata.namespace = "certs";
-              spec = {
-                from = [
-                  {
-                    group = "gateway.networking.k8s.io";
-                    kind = "Gateway";
-                    namespace = "gateways";
-                  }
-                ];
-                to =
+            # A ReferenceGrant's spec.to holds at most 16 entries, so the secrets are
+            # chunked; the first chunk keeps the original name.
+            referenceGrants =
+              let
+                secrets =
                   domains
                   |> mapAttrsToList (
                     domain: args: {
@@ -416,8 +410,26 @@
                       name = "${resourceNameFor domain args}-wildcard-tls";
                     }
                   );
-              };
-            };
+                chunk = n: xs: if xs == [ ] then [ ] else [ (lib.take n xs) ] ++ chunk n (lib.drop n xs);
+              in
+              lib.listToAttrs (
+                lib.imap0 (i: to: {
+                  name = if i == 0 then "allow-gateway-to-cert-tls" else "allow-gateway-to-cert-tls-${toString i}";
+                  value = {
+                    metadata.namespace = "certs";
+                    spec = {
+                      from = [
+                        {
+                          group = "gateway.networking.k8s.io";
+                          kind = "Gateway";
+                          namespace = "gateways";
+                        }
+                      ];
+                      inherit to;
+                    };
+                  };
+                }) (chunk 16 secrets)
+              );
 
             ciliumNetworkPolicies = {
               allow-gateway-world-egress = {

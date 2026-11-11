@@ -1,0 +1,14 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: ReferenceGrant
+metadata:
+  name: allow-gateway-to-cert-tls-1
+  namespace: certs
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      namespace: gateways
+  to:
+    - group: ""
+      kind: Secret
+      name: zeroday-run-wildcard-tls
