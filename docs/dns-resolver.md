@@ -513,29 +513,48 @@ test 13 measures a leak. An instance name with no running instance fails
 evaluation. It is not silently dropped.
 
 **(a) LAN DHCP: the terranix `unifi` workspace.** `unifi.nix` renders, for each
-environment that sets `networks.default.unifiNetwork`, a `restapi_object` on
-that `rest/networkconf/<id>`, whose fields are:
+environment that sets `networks.default.unifiNetwork` and names resolvers,
+`restapi_object.network_<name>` on that `rest/networkconf/<id>`. The prod
+workspace writes both networks (`Default`, `dev`): the gateway is one
+controller. The field names are go-unifi's `Network` struct
+(`unifi/network.generated.go`, vendored by the `ubiquiti-community/unifi`
+provider), which has no RA-specific DNS field. The declared fields are:
 
-- `dhcpd_dns_enabled = true`, and `dhcpd_dns_1..n` = `resolversFor` that
-  environment, at most 4. DHCP clients don't fail over the way resolved does:
+- `dhcpd_dns_enabled = true`, and `dhcpd_dns_1..4` = `resolversFor` that
+  environment, padded with `""` (the field's pattern allows it), at most 4. Prod
+  renders `10.10.10.1`, `10.10.0.1`, `""`, `""`, and dev `10.10.10.1`,
+  `10.9.0.1`, `""`, `""`. DHCP clients don't fail over the way resolved does:
   some query every listed server in parallel or rotate through them, so the
   unfiltered gateway can win. Test 13 counts that from a DHCP phone and laptop.
   If either leaks, (a) uses `gateway = false` until phase 2 gives it a second
   filtering instance. The cost (§4) is no DNS for DHCP clients while uplink is
   down;
-- the IPv6 RA and DHCPv6 DNS fields, set so that the router advertises no RDNSS
-  of its own (§1). The exact field names are read from the live object first (§7
-  Q4).
+- `dhcpdv6_dns_auto = false` and `dhcpdv6_dns_1..4 = ""`, so that the router
+  advertises no IPv6 DNS of its own (§1). That the router's RA RDNSS follows
+  these DHCPv6 fields is UNVERIFIED (§7 Q4); test 10 measures it.
 
 Today the networks are only read (`data.restapi_object.unifi_network_*`). Now
 they are written:
 
-- `unifi-adopt` imports each one by its `_id`;
-- `ignore_server_additions = true` keeps drift on the declared fields only, as
-  the NAT rules do;
-- `lifecycle.prevent_destroy = true`, and its removal is a
-  `removed { lifecycle { destroy = false } }` block, because a destroy of this
-  resource would delete the LAN.
+- The `PUT` body is the whole live object, as the data source reads it at plan
+  time, with the declared fields laid over it
+  (`jsonencode(merge(jsondecode(<data source>.api_response), <fields>))`). An
+  unmerged `PUT` therefore can't wipe the network, whatever §7 Q4's answer is.
+  go-unifi's own `updateNetwork` also `PUT`s the whole object.
+- `ignore_server_additions` stays `false`. In restapi 3.0.0, `true` makes Read
+  keep the state's `data` unchanged, which would hide a controller-side change
+  to a declared field. With a full body and `false`, Read refreshes the state to
+  the live object, so the plan shows exactly the declared fields that differ.
+- `unifi-adopt` imports each one by its `_id`. A create (no import) is a `PUT`
+  to the live `_id`, which the body carries, never a `POST`.
+- `lifecycle.prevent_destroy = true`, and `destroy_method = "GET"`, so a destroy
+  of this resource, even after its block is removed, can't delete the LAN. Its
+  removal is still a `removed { lifecycle { destroy = false } }` block.
+- A precondition fails the plan unless the live object carries
+  `dhcpd_dns_enabled` and `dhcpdv6_dns_auto`, so a wrong field name is never
+  added to the controller.
+- The output `unifi_network_dns` shows each declared field's live and declared
+  value, for reading the plan field by field.
 
 `checks.<system>.unifi-dhcp-dns-render` fixes the payload.
 
@@ -1136,7 +1155,15 @@ passes means the test proves nothing.
    out to each pod. Default: Redis.
 4. **UniFi `networkconf` semantics.** Does a partial `PUT` merge? Which fields
    carry RA RDNSS and DHCPv6 DNS, and can RDNSS be off while SLAAC stays on?
-   This is read from the live object (`GET` only) during implementation.
+   This is answered by the owner's `unifi-adopt` run. It prints each declared
+   network's DNS, RA, DHCPv6 and SLAAC fields (`GET` only). Look for:
+   `dhcpd_dns_enabled` and `dhcpd_dns_1..4` (DHCP DNS); `dhcpdv6_dns_auto` and
+   `dhcpdv6_dns_1..4` (DHCPv6 DNS, and RDNSS if no RA-specific DNS field shows
+   up); any `*ra*`/`rdnss` DNS key, which would mean RDNSS has its own field;
+   and `ipv6_ra_enabled`, `ipv6_interface_type` and `dhcpdv6_allow_slaac`
+   (SLAAC). The partial-`PUT` question no longer gates anything, because the
+   body is the full object (§2.4a). Whether RDNSS goes while SLAAC stays is test
+   10's measurement after `unifi-apply`.
 5. **The router's own upstream.** Set the UniFi WAN DNS to Quad9 and Cloudflare
    (still plaintext, but not the ISP) so the fallback leaks less, or leave it?
 6. **CoreDNS forwarding vs `customDNS`** for host-served names (§5). Forwarding
