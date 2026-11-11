@@ -1,7 +1,16 @@
+{ lib, ... }:
+let
+  resolvers = import ../core/network/_resolvers.nix { inherit lib; };
+in
 {
   den.aspects.virtualization.docker = {
     nixos =
-      { pkgs, ... }:
+      {
+        dns-resolvers,
+        environment,
+        pkgs,
+        ...
+      }:
       {
         environment.systemPackages = [
           pkgs.dive
@@ -24,10 +33,8 @@
             logDriver = "journald";
 
             daemon.settings = {
-              dns = [
-                "8.8.8.8"
-                "1.1.1.1"
-              ];
+              # Containers resolve as the host's links do, in plain DNS.
+              dns = resolvers.plainResolversFor environment dns-resolvers;
               dns-opts = [ "ndots:0" ];
               features = {
                 buildkit = true;

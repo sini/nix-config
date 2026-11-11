@@ -30,6 +30,7 @@ let
   hostKeyShare = "/var/lib/microvms/uplink-dev/host-key";
   hostKeyDir = "/etc/ssh/host-key";
   mac = "02:00:00:01:02:01";
+  resolvers = import ../aspects/core/network/_resolvers.nix { inherit lib; };
 in
 {
   den.hosts.x86_64-linux.uplink-dev = {
@@ -79,7 +80,12 @@ in
     ];
 
     nixos =
-      { config, ... }:
+      {
+        config,
+        dns-resolvers,
+        environment,
+        ...
+      }:
       {
         networking.hostName = "uplink-dev";
         # The guest gets an already-instantiated pkgs; its config is set there.
@@ -137,13 +143,12 @@ in
             networkConfig = {
               Address = [ "10.10.11.1/16" ];
               Gateway = "10.10.0.1";
-              DNS = [
-                "1.1.1.1"
-                "8.8.8.8"
-              ];
+              DNS = resolvers.plainResolversFor environment dns-resolvers;
               IPv6AcceptRA = true;
               DHCP = "no";
             };
+            # The list is exactly the environment's: no RDNSS from the router.
+            ipv6AcceptRAConfig.UseDNS = false;
             # The cluster's LoadBalancer pool via uplink, the prod BGP hub, which holds a
             # per-address route to the announcing node. Through the gateway this breaks:
             # the guest shares 10.10.0.0/16 with the nodes, so a node's reply comes back

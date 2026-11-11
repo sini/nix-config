@@ -7,6 +7,7 @@
 let
   # Shared with cortex.nix, which decrypts the guest's key into hostKeyShare.
   inherit (import ./_cortex-cuda-host-key.nix) hostKeyShare hostKeyDir;
+  resolvers = import ../aspects/core/network/_resolvers.nix { inherit lib; };
 in
 {
   den.hosts.x86_64-linux.cortex-cuda = {
@@ -141,6 +142,8 @@ in
     nixos =
       {
         config,
+        dns-resolvers,
+        environment,
         lib,
         pkgs,
         ...
@@ -249,13 +252,12 @@ in
                 "fe80::ff:fe01:101/64"
               ];
               Gateway = "10.9.0.1";
-              DNS = [
-                "1.1.1.1"
-                "8.8.8.8"
-              ];
+              DNS = resolvers.plainResolversFor environment dns-resolvers;
               IPv6AcceptRA = true;
               DHCP = "no";
             };
+            # The list is exactly the environment's: no RDNSS from the router.
+            ipv6AcceptRAConfig.UseDNS = false;
           };
         };
 

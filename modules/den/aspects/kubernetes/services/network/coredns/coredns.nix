@@ -43,13 +43,8 @@
             )
           )
           // cluster.settings.kubernetes.services.network.coredns.staticHosts;
-        defaultNetwork =
-          environment.networks.default or {
-            dnsServers = [
-              "1.1.1.1"
-              "8.8.8.8"
-            ];
-          };
+        # Required for a cluster's environment; no literal fallback list.
+        defaultNetwork = environment.networks.default;
         # The CoreDNS pods as the chart labels them (k8s-app=coredns); only the
         # Service carries k8s-app=kube-dns, so a pod selector on that matches
         # nothing. Both cluster-wide DNS policies below select through this.
