@@ -464,9 +464,10 @@ let
       } ([ (zonesData [ "Internal" ]) ] ++ map policy policies);
 
   # Each environment's controller network (networks.default.unifiNetwork) hands
-  # out resolversFor dns.dhcpResolvers as its DHCP DNS and advertises no IPv6 DNS
-  # of its own (docs/dns-resolver.md §2.4(a)); an environment whose
-  # dns.dhcpResolvers is empty renders none.
+  # out resolversFor dns.dhcpResolvers as its DHCP DNS, and as its DHCPv6 DNS the
+  # IPv6 (dns6, ULA) addresses of those instances in the same environment, the
+  # only LAN that address is on-link for; never its own (docs/dns-resolver.md
+  # §2.4(a)). An environment whose dns.dhcpResolvers is empty renders none.
   # The PUT body is the whole live network (the data source, read at plan time)
   # with these fields laid over it, so it is safe whether or not the controller
   # merges a partial PUT (§7 Q4). With that full body, ignore_server_additions
@@ -511,6 +512,14 @@ let
         e:
         let
           servers = resolvers.resolversFor { list = "dhcpResolvers"; } e dns-resolvers;
+          # servers above has already refused an unknown name.
+          servers6 = lib.concatMap (
+            n:
+            let
+              r = lib.findFirst (r: r.name == n) { } dns-resolvers;
+            in
+            lib.optional (r.environment or null == e.name && r.dns6 or null != null) r.dns6
+          ) e.dns.dhcpResolvers;
         in
         if servers == null then
           null
@@ -522,7 +531,7 @@ let
             dhcpdv6_dns_auto = false;
           }
           // slots "dhcpd_dns" servers
-          // slots "dhcpdv6_dns" [ ];
+          // slots "dhcpdv6_dns" servers6;
       nets = lib.concatMap (
         e:
         let
@@ -1578,11 +1587,13 @@ in
 
       # Fixture (docs/dns-resolver.md §2.4(a)): an environment's network renders the
       # full-body PUT of its live object with these exact DNS fields (Blocky, then
-      # the gateway, padded to four; no IPv6 DNS of its own), its lookup, import
-      # meta and review output; one with no unifiNetwork or no dhcpResolvers renders
-      # none. The render reads dns.dhcpResolvers, never dns.resolvers. Refused: an
-      # unknown instance and more than four servers. Control: the payload predicate
-      # fails on the render without dhcpResolvers, and on one that reads dns.resolvers.
+      # the gateway, padded to four; as IPv6 DNS Blocky's dns6, never the
+      # gateway's own), its lookup, import meta and review output; one with no
+      # unifiNetwork or no dhcpResolvers renders none. The render reads
+      # dns.dhcpResolvers, never dns.resolvers. Refused: an unknown instance and
+      # more than four servers. Control: the payload predicate fails on the render
+      # without dhcpResolvers, on one that reads dns.resolvers, on an instance with
+      # no dns6, and on one from another environment (both render no IPv6 DNS).
       checks.unifi-dhcp-dns-render =
         let
           # dns.resolvers names an instance the render must not pick.
@@ -1602,10 +1613,7 @@ in
                 name = "r0";
                 dns = "10.0.10.0";
               }
-              {
-                name = "r1";
-                dns = "10.0.10.1";
-              }
+              r1
             ];
             environments = [
               (env "t" "Default" [ "r1" ])
@@ -1613,8 +1621,22 @@ in
               (env "w" "lan2" [ ])
             ];
           };
+          r1 = {
+            name = "r1";
+            environment = "t";
+            dns = "10.0.10.1";
+            dns6 = "fd00:0:10::1";
+          };
           render = a: renderNetworkDns (args // a);
           rendered = render { };
+          noDns6 = render {
+            dns-resolvers = [ (removeAttrs r1 [ "dns6" ]) ];
+            environments = [ (env "t" "Default" [ "r1" ]) ];
+          };
+          otherEnv = render {
+            dns-resolvers = [ (r1 // { environment = "x"; }) ];
+            environments = [ (env "t" "Default" [ "r1" ]) ];
+          };
           refused = a: !(builtins.tryEval (builtins.deepSeq (render a) null)).success;
           live = "jsondecode(data.restapi_object.unifi_network_default.api_response)";
           byId = "/api/s/s/rest/networkconf/{id}";
@@ -1628,7 +1650,7 @@ in
                 dhcpd_dns_3 = "";
                 dhcpd_dns_4 = "";
                 dhcpdv6_dns_auto = false;
-                dhcpdv6_dns_1 = "";
+                dhcpdv6_dns_1 = "fd00:0:10::1";
                 dhcpdv6_dns_2 = "";
                 dhcpdv6_dns_3 = "";
                 dhcpdv6_dns_4 = "";
@@ -1697,7 +1719,11 @@ in
             }))
             && !(payloadOk (render {
               environments = [ (env "t" "Default" [ "r0" ]) ];
-            }));
+            }))
+            && !(payloadOk noDns6)
+            && noDns6.locals.unifi_network_default_dns.dhcpdv6_dns_1 == ""
+            && !(payloadOk otherEnv)
+            && otherEnv.locals.unifi_network_default_dns.dhcpdv6_dns_1 == "";
         in
         assert lib.assertMsg ok "unifi-dhcp-dns-render:\n${builtins.toJSON rendered}";
         pkgs.writeText "unifi-dhcp-dns-render" (builtins.toJSON rendered);

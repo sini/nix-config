@@ -532,9 +532,33 @@ provider), which has no RA-specific DNS field. The declared fields are:
   If either leaks, (a) uses `gateway = false` until phase 2 gives it a second
   filtering instance. The cost (§4) is no DNS for DHCP clients while uplink is
   down;
-- `dhcpdv6_dns_auto = false` and `dhcpdv6_dns_1..4 = ""`, so that the router
-  advertises no IPv6 DNS of its own (§1). That the router's RA RDNSS follows
-  these DHCPv6 fields is UNVERIFIED (§7 Q4); test 10 measures it.
+- `dhcpdv6_dns_auto = false`, so that the router advertises no IPv6 DNS of its
+  own (§1), and `dhcpdv6_dns_1..4` = the `dns6` addresses of those instances in
+  the same environment, padded with `""`. Prod renders `<ula>::53`, `""`, `""`,
+  `""`; dev renders four `""`. With auto off and every slot empty, the UniFi UI
+  refuses to save any change to the network, so a network wants at least one.
+  That the router's RA RDNSS follows these DHCPv6 fields is UNVERIFIED (§7 Q4);
+  test 10 measures it.
+- **The ULA.** uplink's global IPv6 addresses come from the ISP-delegated
+  prefix, which can change, so Blocky's IPv6 address is in a ULA:
+  `networks.default.ipv6_cidr`, `fd` + the first 40 bits of
+  `sha256("<domain>/prod")` (RFC 4193 §3.2's global ID, from a stable seed),
+  subnet 0, a /64. uplink declares `<ula>::53/64` (host networking data). The
+  networking aspect gives an interface address inside `ipv6_cidr` an `[Address]`
+  section with `DuplicateAddressDetection=none` (a tentative address refuses
+  `bind()`, and Blocky binds at boot), and sends prefix-only RAs on that link:
+  `RouterLifetimeSec=0` (never a default router, RFC 4861 §4.2), `[IPv6Prefix]`
+  on-link with `AddressAutoconfiguration=false`, no RDNSS or domains, and M and
+  O set as the gateway's are. `IPv6AcceptRA=true` is explicit, so networkd keeps
+  reading the gateway's RAs (networkd disables them by default on a link that
+  sends its own). Clients add an on-link route and keep their own source
+  address: no client setting is needed, unlike a Route Information Option (Linux
+  ignores RIOs at `accept_ra_rt_info_max_plen = 0`, the default). go-unifi's
+  `Network` has no field to advertise an extra prefix (`ipv6_aliases` is an
+  address on the gateway, which would route the query through it). Blocky
+  listens on `[<ula>::53]:53`; port 53 is already open for both families. Dev's
+  LAN has no host in its ULA, so it gets no IPv6 DNS; it would need an instance
+  there.
 
 Today the networks are only read (`data.restapi_object.unifi_network_*`). Now
 they are written:
@@ -1212,6 +1236,14 @@ passes means the test proves nothing.
   the `host`/`remote-node` ingress rule admits (§2.7). While the cluster is
   starting, they fall back to uplink, then the gateway. This is ordered by the
   list, not by luck.
+- **The IPv6 path depends on uplink's RA.** A client reaches `<ula>::53` on-link
+  only while it holds uplink's prefix (valid 30 days, refreshed by each RA and
+  by Router Solicitation replies). Apple's stack detaches a prefix whose
+  advertising routers are all unreachable (xnu `pfxlist_onlink_check`), so while
+  uplink is down, IPv6 DNS times out and clients fall to the IPv4 list. Android
+  does no DHCPv6, so it gets IPv6 DNS only from the gateway's RA RDNSS (§7 Q4).
+  A switch with RA guard would drop uplink's RAs. Windows' handling of a
+  lifetime-0 RA's on-link prefix follows RFC 4861 §4.2 and is UNVERIFIED here.
 - **Experimental surfaces:** none. Blocky 0.35.0 is a stable release, and every
   key used is in its configuration reference, `downloads.cachePath` included.
   `blocky validate` fails the build on a key the version doesn't know.
