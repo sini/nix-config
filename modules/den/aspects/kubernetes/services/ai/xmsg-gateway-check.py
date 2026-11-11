@@ -360,15 +360,32 @@ check(
     script,
 )
 
-# 5a. The backup: python on the data volume only, after install and before every
-# migration of the real store. Its script is run against fixture stores, so its
-# condition (a backup only if a migration will run) is behaviour, not text.
+# 5a. The backup: python on the data volume and the gateway image, after install and
+# before every migration of the real store. The decision is the gateway's
+# migrations-pending (serving.md "Inspect pending migrations": exit 0 none pending, 10
+# pending, anything else an error). Its script is run against fixture stores with a stub
+# gateway that exits as told, so the decision is behaviour, not text: each fixture's
+# shape contradicts the stub's exit, so a copy of the done-rules decides wrongly.
 bc = next((c for c in inits if c["name"] == "store-backup"), {})
+bmounts = {m["mountPath"]: m for m in bc.get("volumeMounts", [])}
+image_vol = volumes.get(bmounts.get("/nix", {}).get("name"), {})
+bin_dir = next(
+    (
+        p
+        for p, m in bmounts.items()
+        if m.get("subPath") == "bin" and m["name"] == image_vol.get("name")
+    ),
+    None,
+)
 check(
-    "backup is python on the data volume only",
+    "backup is python on the data volume and the gateway image",
     bc.get("command", [])[:3] == ["python3", "-I", "-c"]
-    and set(mounts(bc).values()) == {"data"},
-    bc.get("command", [])[:3],
+    and set(mounts(bc).values()) == {"data", image_vol.get("name")}
+    and image_vol.get("image", {}).get("reference") == gw.get("image")
+    and bmounts.get("/nix", {}).get("subPath") == "nix"
+    and all(m.get("readOnly") for m in bmounts.values() if m["name"] != "data")
+    and bin_dir is not None,
+    (bc.get("command", [])[:3], bmounts),
 )
 check(
     "backup runs after install, before the real store's migrations",
@@ -377,6 +394,19 @@ check(
     < names.index("store-backup")
     < min(names.index(f"store-{m}") for m in MIGRATIONS if f"store-{m}" in names),
     names,
+)
+# The done-rules' inputs: none may reach the decision again.
+script_text = " ".join(bc.get("command", []))
+check(
+    "backup decision is migrations-pending, no probe copy",
+    f'"{bin_dir}/xmsg-mcp-gateway", "--state", "{store}", "migrations-pending"'
+    in script_text
+    and not re.search(
+        r"user_version|sqlite_master|table_info|recovery_until|outbound_retire|0x584d47",
+        script_text,
+        re.IGNORECASE,
+    ),
+    script_text,
 )
 
 RETIREMENT_TABLES = (
@@ -388,7 +418,7 @@ RETIREMENT_TABLES = (
 
 
 def make_store(path, app, version, retired):
-    """A fixture store with the markers migration_applied reads."""
+    """A fixture store with the markers the gateway's migration_applied reads."""
     db = sqlite3.connect(path)
     db.execute(f"PRAGMA application_id = {app}")
     db.execute(f"PRAGMA user_version = {version}")
@@ -403,10 +433,11 @@ def make_store(path, app, version, retired):
     db.close()
 
 
-def run_backup(store_shape, sealed=False):
-    """Run the backup script with the data directory moved under a temp dir. sealed
-    makes the data directory unwritable, so no backup can be made there.
-    Returns (exit code, [(partial, group/other mode bits, marker, rows)])."""
+def run_backup(store_shape, exit_code, sealed=False):
+    """Run the backup script with the data directory moved under a temp dir and a stub
+    gateway exiting exit_code (printing one pending command on 10). sealed makes the
+    data directory unwritable, so no backup can be made there.
+    Returns (exit code, stub argv, [(partial, group/other mode bits, marker, rows)])."""
     cmd = bc.get("command", [])
     data = posixpath.dirname(posixpath.dirname(store))
     with tempfile.TemporaryDirectory() as tmp:
@@ -414,13 +445,30 @@ def run_backup(store_shape, sealed=False):
         os.makedirs(root + posixpath.dirname(store).removeprefix(data))
         if store_shape:
             make_store(root + store.removeprefix(data), *store_shape)
-        script = cmd[3].replace(data, root) if len(cmd) > 3 else ""
+        stub, argv_file = tmp + "/gateway", tmp + "/argv"
+        with open(stub, "w") as f:
+            f.write(
+                f"#!{sys.executable} -I\nimport json, sys\n"
+                f"json.dump(sys.argv[1:], open({argv_file!r}, 'w'))\n"
+                f"print('migrate-custody-summaries' if {exit_code} == 10 else '', end='')\n"
+                f"sys.exit({exit_code})\n"
+            )
+        os.chmod(stub, 0o755)
+        script = (
+            cmd[3].replace(f"{bin_dir}/xmsg-mcp-gateway", stub).replace(data, root)
+            if len(cmd) > 3
+            else ""
+        )
         if sealed:
             os.chmod(root, 0o555)
         code = subprocess.run(
             [sys.executable, "-I", "-c", script], capture_output=True, check=False
         ).returncode
         os.chmod(root, 0o755)
+        argv = None
+        if os.path.exists(argv_file):
+            with open(argv_file) as f:
+                argv = [a.replace(root, data) for a in json.load(f)]
         backups = []
         for dirpath, _, files in os.walk(root):
             for f in files:
@@ -436,45 +484,43 @@ def run_backup(store_shape, sealed=False):
                         )
                     )
                     b.close()
-        return code, backups
+        return code, argv, backups
 
 
 ROWS = [("fixture",)]
-if store and len(bc.get("command", [])) > 3:
-    code, backups = run_backup((SUMMARY, 4, True))
+MIGRATED, UNMIGRATED = (SUMMARY, 4, True), (RETIREMENT, 4, True)
+if store and bin_dir and len(bc.get("command", [])) > 3:
+    code, argv, backups = run_backup(UNMIGRATED, 0)
     check(
-        "backup, fully migrated store: no backup",
+        "backup, exit 0: no backup",
         (code, backups) == (0, []),
         (code, backups),
     )
-    # Each store lacking exactly the named migration (and, for legacy, all of them).
-    for label, shape in (
-        ("custody", (LEGACY, 1, False)),
-        ("outbound", (SUMMARY, 2, False)),
-        ("retirement", (SUMMARY, 4, False)),
-        ("custody-summaries", (RETIREMENT, 4, True)),
-        ("events", (SUMMARY, 3, True)),
-    ):
-        code, backups = run_backup(shape)
+    check(
+        "backup runs migrations-pending on the real store",
+        argv == ["--state", store, "migrations-pending"],
+        argv,
+    )
+    code, _, backups = run_backup(MIGRATED, 10)
+    check(
+        "backup, exit 10: one owner-private backup",
+        (code, backups) == (0, [(False, 0, SUMMARY, ROWS)]),
+        (code, backups),
+    )
+    # 1 is the gateway's error exit (missing, corrupt, unsupported); 2 a usage error.
+    for unknown in (1, 2, 3, 11, 137):
+        code, _, backups = run_backup(MIGRATED, unknown)
         check(
-            f"backup, {label} needed: one owner-private backup",
-            (code, backups) == (0, [(False, 0, shape[0], ROWS)]),
-            (code, backups),
+            "backup, any other exit: refuses, no backup",
+            code != 0 and backups == [],
+            (unknown, code, backups),
         )
-    code, backups = run_backup((RETIREMENT, 4, True), sealed=True)
+    code, _, backups = run_backup(UNMIGRATED, 10, sealed=True)
     check(
         "backup, backup impossible: refuses",
         code != 0 and all(p for p, *_ in backups),
         (code, backups),
     )
-    code, backups = run_backup((0x1234, 4, True))
-    check(
-        "backup, unknown store: refuses, no backup",
-        code != 0 and backups == [],
-        (code, backups),
-    )
-    code, backups = run_backup(None)
-    check("backup, no store: refuses", code != 0, (code, backups))
 
 # 5b. The outbound policy, applied to the real store after install: every hub's sessions
 # for send and reply, in the gateway's field order. No enablement flag, so apply keeps

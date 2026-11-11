@@ -39,12 +39,16 @@
 # otherwise prints `already migrated` and exits 0 without writing; unknown markers,
 # unsupported schemas and partial migrations still fail (serving.md). Retirement and
 # custody summaries are one-way (older images refuse their application_id), so
-# `store-backup` (the pinned python image, for its sqlite3 module) first reads the real
-# store, read-only, by the gateway's own migration_applied rules (grants.rs). Only when
-# at least one migration will run does it take an online backup (the sqlite3 backup
-# API, never cp) to backups/grants.db.pre-migrate-<UTC time>; an already-migrated
-# store, a fresh one included, is never backed up. Rolling back to an older image
-# means restoring that backup.
+# `store-backup` (the pinned python image, for its sqlite3 module) first asks the
+# gateway itself: it runs the gateway's `migrations-pending` on the real store (serving.md
+# "Inspect pending migrations": one read-only snapshot, exit 0 none pending, 10 pending,
+# 1 a missing, corrupt or unsupported store). The gateway binary comes from an image
+# volume of the gateway image (its /nix at /nix, so the binary's own loader resolves,
+# and its /bin), because a nonzero exit fails an initContainer: a gateway-image step
+# could not report exit 10 and let the chain go on. Only on exit 10 does it take an
+# online backup (the sqlite3 backup API, never cp) to
+# backups/grants.db.pre-migrate-<UTC time>; on 0, a fresh store included, none. Any
+# other exit fails the pod. Rolling back to an older image means restoring that backup.
 #
 # Outbound policy (outbound.md, `apply`): `store-apply`, the last step, then applies
 # policy.json, the grant's send and reply targets (every hub's sessions), to the real
@@ -95,6 +99,9 @@ let
   grantStore = "${stateDir}/grants.db";
   stagedStore = "${stagingDir}/grants.db";
   backupsDir = "${dataDir}/backups";
+  # The gateway image's /bin, mounted in store-backup (its symlink resolves into /nix).
+  gatewayBinDir = "/opt/xmsg-mcp-gateway/bin";
+  gatewayBin = "${gatewayBinDir}/xmsg-mcp-gateway";
   eventsKey = "${keysDir}/events.key";
   lookupSecret = "${keysDir}/lookup-secret";
 
@@ -506,33 +513,20 @@ in
           rm -rf ${stagingDir}
         '';
 
-        # Reads the real store read-only and decides each migration by the gateway's
-        # migration_applied (grants.rs: the markers, schema versions 2-4, the four
-        # retirement tables and recovery_until). Only if one will run does it back the
-        # store up (the sqlite3 backup API, never cp) and verify the copy. Validity is
-        # the gateway's to refuse; an unknown marker fails here, before any backup.
+        # The decision is the gateway's migrations-pending; only exit 10 backs the store
+        # up (the sqlite3 backup API, never cp), and the copy is verified. Any exit but
+        # 0 and 10 fails here, before any backup.
         backupScript = ''
-          import os, sqlite3, sys, time
-          LEGACY, RETIREMENT, SUMMARY = 0x584d4757, 0x584d4752, 0x584d4753
-          CUSTODY, OUTBOUND, EVENTS = 2, 3, 4
+          import os, sqlite3, subprocess, sys, time
           os.umask(0o077)
+          r = subprocess.run(["${gatewayBin}", "--state", "${grantStore}", "migrations-pending"], stdout=subprocess.PIPE, text=True)
+          if r.returncode == 0:
+              print("${grantStore}: no migration pending, no backup")
+              sys.exit(0)
+          if r.returncode != 10:
+              sys.exit("${grantStore}: migrations-pending exited " + str(r.returncode))
           src = sqlite3.connect("file:${grantStore}?mode=ro", uri=True)
           app = src.execute("PRAGMA application_id").fetchone()[0]
-          version = src.execute("PRAGMA user_version").fetchone()[0]
-          if app not in (LEGACY, RETIREMENT, SUMMARY):
-              sys.exit("${grantStore}: unrecognized application_id " + hex(app))
-          tables = src.execute("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name IN ('outbound_retirement_schema', 'outbound_request_fences', 'outbound_retired', 'outbound_retirement_clock')").fetchone()[0]
-          recovery = src.execute("SELECT COUNT(*) FROM pragma_table_info('outbound_reservations') WHERE name = 'recovery_until'").fetchone()[0]
-          needed = [m for m, n in (
-              ("custody", version < CUSTODY),
-              ("outbound", version < OUTBOUND),
-              ("retirement", not (tables == 4 and recovery == 1)),
-              ("custody-summaries", app != SUMMARY),
-              ("events", version != EVENTS),
-          ) if n]
-          if not needed:
-              print("${grantStore}: every migration applied, no backup")
-              sys.exit(0)
           os.makedirs("${backupsDir}", mode=0o700, exist_ok=True)
           out = "${backupsDir}/grants.db.pre-migrate-" + time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
           dst = sqlite3.connect(out + ".partial")
@@ -545,7 +539,7 @@ in
           fd = os.open("${backupsDir}", os.O_RDONLY)
           os.fsync(fd)
           os.close(fd)
-          print("${grantStore}: backed up to " + out + " before " + ", ".join(needed))
+          print("${grantStore}: backed up to " + out + " before " + ", ".join(r.stdout.split()))
         '';
 
         tunnelContainer = {
@@ -751,7 +745,11 @@ in
                               backupScript
                             ];
                             securityContext = hardened;
-                            volumeMounts = [ dataMount ];
+                            volumeMounts = [
+                              dataMount
+                              (roMount "gateway-image" "/nix" // { subPath = "nix"; })
+                              (roMount "gateway-image" gatewayBinDir // { subPath = "bin"; })
+                            ];
                           }
                         ]
                         ++ migrations "store" grantStore
@@ -845,6 +843,11 @@ in
                           {
                             name = "data";
                             persistentVolumeClaim.claimName = name;
+                          }
+                          # The gateway image itself, for store-backup's migrations-pending.
+                          {
+                            name = "gateway-image";
+                            image.reference = gatewayImage;
                           }
                           {
                             name = "tls";

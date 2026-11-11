@@ -153,14 +153,24 @@ let
     "no scratch copy" =
       rewrite "store-migrate-custody-summaries" "args" "/state/grants.db"
         "/staging/custody-summaries-scratch.db";
-    # A backup on every start, not only when a migration will run.
-    "backup, fully migrated store: no backup" =
-      rewrite "store-backup" "command" "if not needed:"
-        "if False:";
-    # Never a backup, so a needed migration runs unprotected.
-    "backup, retirement needed: one owner-private backup" =
-      rewrite "store-backup" "command" "if not needed:"
-        "if True:";
+    # A backup on exit 0 too, so every start backs up.
+    "backup, exit 0: no backup" =
+      inits:
+      rewrite "store-backup" "command" "if r.returncode == 0:" "if False:" (
+        rewrite "store-backup" "command" "if r.returncode != 10:" "if r.returncode not in (0, 10):" inits
+      );
+    # No backup on exit 10, so a pending migration runs unprotected.
+    "backup, exit 10: one owner-private backup" =
+      rewrite "store-backup" "command" "if r.returncode == 0:"
+        "if r.returncode in (0, 10):";
+    # An error exit (a missing or corrupt store) taken for "nothing pending".
+    "backup, any other exit: refuses, no backup" =
+      rewrite "store-backup" "command" "if r.returncode == 0:"
+        "if r.returncode != 10:";
+    # The done-rules copied back in as the decision.
+    "backup decision is migrations-pending, no probe copy" =
+      rewrite "store-backup" "command" "if r.returncode == 0:"
+        ''if sqlite3.connect("file:/var/lib/xmsg-mcp-gateway/state/grants.db?mode=ro", uri=True).execute("PRAGMA user_version").fetchone()[0] == 4:'';
     # A failed backup taken for success.
     "backup, backup impossible: refuses" =
       rewrite "store-backup" "command" "os.makedirs("
