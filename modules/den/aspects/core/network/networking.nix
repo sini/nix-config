@@ -10,9 +10,11 @@ in
   den.aspects.core.network.networking = {
     nixos =
       {
+        config,
         dns-resolvers,
         environment,
         host,
+        pkgs,
         ...
       }:
       let
@@ -40,6 +42,13 @@ in
             resolvers.resolversFor { } environment dns-resolvers
           else
             null;
+
+        # The first resolver's own tailnet name (hostsfile.nix's tsName): Blocky
+        # answers it through quad-100 on the same host.
+        failback = import ./_failback.nix {
+          inherit pkgs;
+          systemd = config.systemd.package;
+        } "${lib.head environment.dns.resolvers}.ts.${environment.domain}";
 
         mkNameValue = name: value: { inherit name value; };
 
@@ -403,6 +412,9 @@ in
         };
 
         systemd.services."systemd-networkd-persistent-storage".enable = false;
+
+        systemd.services.dns-failback = lib.mkIf (lanResolvers != null) failback.service;
+        systemd.timers.dns-failback = lib.mkIf (lanResolvers != null) failback.timer;
 
         systemd.network = {
           enable = true;

@@ -5,6 +5,9 @@
 #                RDNSS, and tailscale takes --accept-dns=false; blade (roaming)
 #                keeps the DoT upstreams and MagicDNS. Controls: the same
 #                predicates over dns.resolvers = [ ] and over blade fail.
+#                The failback timer (§2.4) is on exactly those hosts, not on
+#                blade, and probes a peer's pinned tailnet name (control: a
+#                name no host has).
 #                test 11 (eval part): every host collects dns-resolvers, by design.
 #   dns-d10      test 7: the hard-coded resolver grep matches nothing in
 #                modules/den. Controls: it matches the five removed sites, and
@@ -66,8 +69,14 @@ let
     (net f).networkConfig.DNS == expected f.env
     && ((net f).networkConfig.DNSOverTLS or false) == false
     && ((net f).ipv6AcceptRAConfig.UseDNS or true) == false
+    && ((net f).dhcpV6Config.UseDNS or true) == false
     && f.cfg.services.resolved.settings.Resolve.FallbackDNS == expected f.env;
   leftMagicDns = cfg: lib.elem "--accept-dns=false" cfg.services.tailscale.extraSetFlags;
+  hasFailback = cfg: cfg.systemd.timers ? dns-failback;
+  # The probe is a fleet tailnet name: the client pins it as a peer's tsName.
+  probeOf = cfg: cfg.systemd.services.dns-failback.environment.DNS_FAILBACK_PROBE;
+  tsNames = cfg: lib.concatMap (k: k.hostNames) (lib.attrValues cfg.services.openssh.knownHosts);
+  probesTsName = name: cfg: lib.elem name (tsNames cfg);
 
   blade = nixosConfigurations.blade.config;
   bladeLink = blade.systemd.network.networks.wlp0s20f3.networkConfig;
@@ -86,7 +95,18 @@ let
   clientChecks =
     lib.mapAttrs' (n: f: lib.nameValuePair "${n}OnResolver" (onResolver f)) families
     // lib.mapAttrs' (n: f: lib.nameValuePair "${n}LeftMagicDns" (leftMagicDns f.cfg)) families
+    // lib.mapAttrs' (n: f: lib.nameValuePair "${n}HasFailback" (hasFailback f.cfg)) families
+    // lib.mapAttrs' (n: f: lib.nameValuePair "${n}ProbesTsName" (probesTsName (probeOf f.cfg) f.cfg)) (
+      removeAttrs families [ "uplink" ]
+    )
     // {
+      # The timer is on exactly the hosts that leave MagicDNS; blade is the control.
+      failbackIffLeftMagicDns = lib.all (c: hasFailback c == leftMagicDns c) (
+        [ blade ] ++ map (f: f.cfg) (lib.attrValues families)
+      );
+      bladeNoFailback = !(hasFailback blade);
+      probeControlFails =
+        !(probesTsName "gone.ts.${environments.dev.domain}" nixosConfigurations.cortex.config);
       bladeKeepsUpstreams =
         bladeLink.DNS == environments.dev.networks.default.dnsServers && bladeLink.DNSOverTLS;
       bladeKeepsMagicDns = !(leftMagicDns blade);
