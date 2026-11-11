@@ -1,6 +1,9 @@
 # Tailscale mesh — joins the headscale control plane. Auth key is provisioned
 # by the secrets concern (secrets.nix); the daemon runs in nftables mode.
-{ lib, ... }:
+{ den, lib, ... }:
+let
+  resolvers = import ../_resolvers.nix { inherit lib; };
+in
 {
   den.aspects.core.network.tailscale = {
     nixos =
@@ -13,6 +16,7 @@
       let
         rekeyFile = host.secretPath + "/tailscale-preauthkey.age";
         secretExists = builtins.pathExists rekeyFile;
+        leavesMagicDns = resolvers.leavesMagicDns den.aspects.core.network.manager environment host;
       in
       lib.mkIf secretExists {
         services.tailscale = {
@@ -23,6 +27,10 @@
             "--login-server=https://${environment.getDomainFor "headscale"}"
           ];
           extraDaemonFlags = [ "--no-logs-no-support" ];
+          # Owner Q13: servers and guests leave MagicDNS for the LAN resolver, which
+          # maps ts.<domain> to quad-100 (docs/dns-resolver.md §2.4b); roaming hosts
+          # keep it. `set`, not `up`: up flags apply only at first login.
+          extraSetFlags = lib.optional leavesMagicDns "--accept-dns=false";
         };
 
         networking = {

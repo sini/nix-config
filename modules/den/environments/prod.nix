@@ -30,6 +30,8 @@
       denylists = [ "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/pro.txt" ];
       allowlist = [ ];
     };
+    # Clients resolve through these instances, then the gateway (core/network/_resolvers.nix).
+    dns.resolvers = [ "uplink" ];
 
     services = {
       argocd.domain = "argocd.zeroday.run";

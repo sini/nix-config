@@ -7,6 +7,7 @@ let
     41641
   ];
   portList = lib.concatMapStringsSep "," toString udpPorts;
+  resolvers = import ../../core/network/_resolvers.nix { inherit lib; };
 in
 {
   den.aspects.services.networking.headscale = {
@@ -15,6 +16,7 @@ in
     nixos =
       {
         config,
+        dns-resolvers,
         exit-nodes,
         environment,
         host,
@@ -60,12 +62,16 @@ in
                 magic_dns = true;
                 base_domain = "ts.${environment.domain}";
                 override_local_dns = true;
-                nameservers.global = [
-                  "1.1.1.1"
-                  "1.0.0.1"
-                  "2606:4700:4700::1111"
-                  "2606:4700:4700::1001"
-                ];
+                # Roaming devices (docs/dns-resolver.md §2.4c): the filtering
+                # resolvers without the gateway (private, so tailscaled would race
+                # it at once, and unreachable off the LAN), then the environment's
+                # upstreams, which tailscaled upgrades to DoH, so off-LAN clients
+                # and an uplink outage keep DNS.
+                nameservers.global =
+                  lib.optionals (environment.dns.resolvers != [ ]) (
+                    resolvers.resolversFor { gateway = false; } environment dns-resolvers
+                  )
+                  ++ resolvers.plainUpstreams environment;
               };
 
               oidc = {

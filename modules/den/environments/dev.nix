@@ -12,6 +12,10 @@
     # The fleet's one xmsg federation CA (.secrets/xmsg-ca); prod names it the same.
     xmsg.caName = "json64.dev xmsg";
 
+    # Clients resolve through prod's instance on uplink, then the gateway
+    # (core/network/_resolvers.nix, docs/dns-resolver.md).
+    dns.resolvers = [ "uplink" ];
+
     certificates.issuers = {
       "json64-dev" = {
         ageKeyFile = "${self}/.secrets/env/dev/cloudflare-api-key.age";

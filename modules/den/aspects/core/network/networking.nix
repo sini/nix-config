@@ -3,10 +3,18 @@
   lib,
   ...
 }:
+let
+  resolvers = import ./_resolvers.nix { inherit lib; };
+in
 {
   den.aspects.core.network.networking = {
     nixos =
-      { environment, host, ... }:
+      {
+        dns-resolvers,
+        environment,
+        host,
+        ...
+      }:
       let
         inherit (lib)
           attrNames
@@ -23,6 +31,15 @@
           ;
 
         netCfg = host.networking;
+
+        # A non-roaming host's links use the environment's filtering resolvers, then
+        # the gateway, in plain DNS (docs/dns-resolver.md §2.4b); null keeps the
+        # environment's DoT upstreams.
+        lanResolvers =
+          if resolvers.leavesMagicDns den.aspects.core.network.manager environment host then
+            resolvers.resolversFor { } environment dns-resolvers
+          else
+            null;
 
         mkNameValue = name: value: { inherit name value; };
 
@@ -77,8 +94,13 @@
               IPv6AcceptRA = true;
               IPv6PrivacyExtensions = if ifCfg.privacyExtensions != null then ifCfg.privacyExtensions else "yes";
               LinkLocalAddressing = effectiveLinkLocal ifCfg;
-              DNS = (environment.networks.default or { }).dnsServers or [ ];
-              DNSOverTLS = true;
+              DNS =
+                if lanResolvers != null then
+                  lanResolvers
+                else
+                  (environment.networks.default or { }).dnsServers or [ ];
+              # Blocky and the gateway speak no DoT, and resolved's DoT mode is per link.
+              DNSOverTLS = lanResolvers == null;
               # No per-link DNSSEC: it would override services.resolved.dnssec.
               # The upstreams validate; resolved's own validation fails CNAME
               # chains into unsigned zones ("failed-auxiliary", e.g. the
@@ -87,13 +109,18 @@
             # Drop SLAAC address autoconf when an interface opts out (DHCPv6/
             # static-only addressing → one deterministic GUA); RA is still used
             # for the on-link prefix + default route.
-            ipv6AcceptRAConfig = optionalAttrs (ifCfg.acceptRAAutonomousPrefix or null != null) {
-              UseAutonomousPrefix = ifCfg.acceptRAAutonomousPrefix;
-            };
+            # With resolvers, the list is exactly the environment's: no RDNSS or
+            # DHCPv6 servers from the router.
+            ipv6AcceptRAConfig =
+              optionalAttrs (ifCfg.acceptRAAutonomousPrefix or null != null) {
+                UseAutonomousPrefix = ifCfg.acceptRAAutonomousPrefix;
+              }
+              // optionalAttrs (lanResolvers != null) { UseDNS = false; };
             dhcpV6Config = {
               UseDelegatedPrefix = true;
               PrefixDelegationHint = "::/64";
-            };
+            }
+            // optionalAttrs (lanResolvers != null) { UseDNS = false; };
             routes =
               let
                 defaultNet = environment.networks.default or { };
@@ -367,6 +394,12 @@
             allowPing = true;
             logRefusedConnections = false;
           };
+        };
+
+        # resolved's compiled-in fallback (Google among it) applies only when no link
+        # has DNS; make it the same list.
+        services.resolved.settings.Resolve = lib.mkIf (lanResolvers != null) {
+          FallbackDNS = lanResolvers;
         };
 
         systemd.services."systemd-networkd-persistent-storage".enable = false;
