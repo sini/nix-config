@@ -43,6 +43,14 @@
     {
       "to": "restapi_object.axon_https_ingress_masq_dev",
       "id": "/v2/api/site/default/nat/9af1a9e8-ea4e-4025-97ff-9214f04598ea"
+    },
+    {
+      "to": "restapi_object.network_default",
+      "id": "/api/s/default/rest/networkconf/6a334622-87d4-41aa-b3ad-7df62eafa3ac"
+    },
+    {
+      "to": "restapi_object.network_dev",
+      "id": "/api/s/default/rest/networkconf/fedc75ff-59de-42f1-b211-67d703ab4d1f"
     }
   ]
 }
