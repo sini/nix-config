@@ -10,6 +10,7 @@ let
   resolvers = import ../aspects/core/network/_resolvers.nix { inherit lib; };
   plan = import ../schema/_address-plan.nix { inherit lib; };
   lanIp = "10.9.2.2";
+  mac = "02:00:00:01:01:01";
 in
 {
   den.hosts.x86_64-linux.cortex-cuda = {
@@ -34,7 +35,11 @@ in
     # passthrough device IDs derive from it).
     facts = ./. + "/../../../hosts/cortex/facter.json";
 
-    networking.interfaces.vm-cuda.ipv4 = [ "${lanIp}/16" ];
+    networking.interfaces.vm-cuda = {
+      ipv4 = [ "${lanIp}/16" ];
+      # The tap's guest-side address (microvm.interfaces below): its DHCP reservation's key.
+      inherit mac;
+    };
 
     # B2: passthrough intent on the ENTITY (the host-side GPU overlay reads
     # vm.microvm.passthrough).
@@ -179,7 +184,7 @@ in
             {
               id = "vm-cuda";
               type = "tap";
-              mac = "02:00:00:01:01:01";
+              inherit mac;
             }
           ];
 
@@ -247,7 +252,7 @@ in
         systemd.network = {
           enable = true;
           networks."20-lan" = {
-            matchConfig.MACAddress = "02:00:00:01:01:01";
+            matchConfig.MACAddress = mac;
             networkConfig = {
               Address = [
                 "${lanIp}/16"

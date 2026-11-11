@@ -14,6 +14,8 @@
         # prefix, no DHCPv6 lease, no rotating privacy temps), so the node sources
         # from, and Cilium masquerades pods to, the same warm address.
         privacyExtensions = "no";
+        # The NIC's own address (ip link, 2026-11-11): the key of its DHCP reservation.
+        mac = "58:47:ca:78:85:85";
       };
       enp199s0f5 = { };
       enp199s0f6 = { };

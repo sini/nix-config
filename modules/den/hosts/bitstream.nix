@@ -17,6 +17,9 @@
       };
       interfaces.bond0 = {
         ipv4 = [ "10.9.1.1/16" ];
+        # The address networkd generated for bond0, read live 2026-11-11 and pinned
+        # (the bond's MACAddress=), so a reinstall cannot change the reservation's key.
+        mac = "e2:3a:b3:99:7c:4b";
       };
     };
 

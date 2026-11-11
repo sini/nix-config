@@ -54,7 +54,11 @@ in
     users.sini = { };
 
     # On the prod LAN beside the other static servers, through uplink's br0.
-    networking.interfaces.vm-dev.ipv4 = [ "${lanIp}/16" ];
+    networking.interfaces.vm-dev = {
+      ipv4 = [ "${lanIp}/16" ];
+      # The tap's guest-side address (microvm.interfaces below): its DHCP reservation's key.
+      inherit mac;
+    };
 
     microvm.scratchVolumes = {
       "/nix/.rw-store" = 262144; # 256 GiB ceiling, sparse

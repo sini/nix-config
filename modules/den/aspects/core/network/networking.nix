@@ -285,6 +285,7 @@ in
             netCfg.interfaces.${bondName} or {
               ipv4 = [ ];
               ipv6 = [ ];
+              mac = null;
             };
         }) (netCfg.bonds or { });
 
@@ -342,9 +343,14 @@ in
           map (
             bond:
             mkNameValue bond.name {
+              # A declared MAC pins the bond's address; without one networkd derives
+              # it from the machine id, which a reinstall regenerates.
               netdevConfig = {
                 Name = bond.name;
                 Kind = "bond";
+              }
+              // optionalAttrs (bond.ifCfg.mac or null != null) {
+                MACAddress = bond.ifCfg.mac;
               };
               bondConfig = {
                 Mode = bond.mode;

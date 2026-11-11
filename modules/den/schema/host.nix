@@ -53,13 +53,14 @@ let
         type = types.nullOr types.str;
         default = null;
         description = ''
-          Hardware MAC address of this interface. Only consumed when the
-          interface is enslaved to a bridge: the bridge adopts it so the host's
-          L2 identity is unchanged by bridging (netboot and the running system
-          present the same address to the router). A bridge NEVER inherits a
-          port's MAC on its own, so leaving this null makes the bridge fall back
-          to networkd's machine-id-derived address -- stable across boots, but
-          not the one the NIC uses at netboot.
+          MAC address of this interface. The interface holding a host's IPv4 on its
+          environment's controller network must set it: it keys the host's DHCP
+          reservation (docs/address-plan.md §2.3). A bridge adopts its port's, so
+          the host's L2 identity is unchanged by bridging (netboot and the running
+          system present the same address to the router); a bridge NEVER inherits
+          a port's MAC on its own, and with null falls back to networkd's
+          machine-id-derived address. A bond is pinned to its own (MACAddress=).
+          Elsewhere it is the NIC's address, declared, not set.
         '';
       };
       linkLocal = mkOption {
