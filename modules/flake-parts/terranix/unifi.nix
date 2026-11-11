@@ -12,6 +12,7 @@
 #   nix build .#checks.<system>.unifi-gateway-policy-render
 #   nix build .#checks.<system>.unifi-network-policy-render
 #   nix build .#checks.<system>.unifi-dhcp-dns-render
+#   nix build .#checks.<system>.unifi-dhcp-option-render
 #   unifi-adopt / unifi-plan / unifi-apply (devshell)
 {
   den,
@@ -589,6 +590,83 @@ let
         _meta.networks = lib.listToAttrs (map ({ n, ... }: lib.nameValuePair "network_${key n}" n) nets);
       };
 
+  # A custom DHCP option definition (rest/dhcpoption, go-unifi's DHCPOption),
+  # which a network then sets a value for. The v1 API answers a POST with
+  # { meta, data = [ object ] }, so the id is data/0/_id, and with that id path
+  # read GETs by id (read_search would look the id path up inside each listed
+  # object). Destroy DELETEs: a definition is safe to remove. width is omitted;
+  # the controller reads it for integer options only.
+  # shortcut: no read_search, so a definition deleted on the controller stays in
+  #   state until imported again or removed; add a search if that ever matters.
+  renderDhcpOption =
+    {
+      site,
+      code,
+      name,
+      type,
+    }:
+    let
+      path = "/api/s/${site}/rest/dhcpoption";
+      res = "dhcp_option_${key name}";
+    in
+    {
+      resource.restapi_object.${res} = {
+        inherit path;
+        id_attribute = "data/0/_id";
+        read_path = "${path}/{id}";
+        update_path = "${path}/{id}";
+        destroy_path = "${path}/{id}";
+        # The controller adds _id, site_id and attr_* fields.
+        ignore_server_additions = true;
+        data = builtins.toJSON {
+          code = toString code;
+          inherit name type;
+          signed = false;
+        };
+      };
+      # Read by unifi-adopt, which imports the one live definition with this name.
+      _meta.dhcpOptions.${res} = name;
+    };
+
+  # RFC 3442 classless static routes (DHCP option 121) as colon-separated hex
+  # octets: per route, its prefix width, the destination's significant octets
+  # (ceil(width / 8)), then the router's four. A destination with host bits set
+  # is refused. A client honouring 121 ignores option 3, so a list for a
+  # network's clients carries the default route too.
+  classlessRoutes =
+    routes:
+    let
+      octets = ip: map lib.toInt (lib.splitString "." ip);
+      hex = x: lib.toLower (lib.fixedWidthString 2 "0" (lib.toHexString x));
+      encode =
+        { destination, router }:
+        let
+          parts = lib.splitString "/" destination;
+          addr = octets (lib.head parts);
+          width = lib.toInt (lib.last parts);
+          # Each octet's step at its share of the width (8 bits: 1, 0 bits: 256).
+          step =
+            i:
+            lib.elemAt [
+              256
+              128
+              64
+              32
+              16
+              8
+              4
+              2
+              1
+            ] (lib.min 8 (lib.max 0 (width - 8 * i)));
+          masked = lib.imap0 (i: o: o - lib.mod o (step i)) addr;
+        in
+        if masked != addr then
+          throw "unifi: classless route ${destination} has host bits set"
+        else
+          [ width ] ++ lib.take ((width + 7) / 8) addr ++ octets router;
+    in
+    lib.concatMapStringsSep ":" hex (lib.concatMap encode routes);
+
   # The gateway's raw FRR bgpd config: one peer group per remote ASN, one
   # neighbor per bgp-peers record. Raw, not the provider's structured peers:
   # its template forces ebgp-requires-policy, redistribute connected,
@@ -868,6 +946,33 @@ in
         inherit dns-resolvers;
         environments = lib.attrValues config.den.environments;
       })
+      # The option-121 experiment (docs/dns-resolver.md §7 Q2), phase A: the
+      # definition alone. Its value for Default is rendered below and set on no
+      # network until unifi-adopt shows the field a network carries it in.
+      (renderDhcpOption {
+        inherit (unifi) site;
+        code = 121;
+        name = "classless-routes";
+        type = "hexarray";
+      })
+      {
+        # This environment's network (Default): the cluster's LoadBalancer pool via
+        # uplink (the route uplink-dev carries), then the default route via the gateway.
+        locals."unifi_network_${key net.unifiNetwork}_classless_routes" = classlessRoutes [
+          {
+            destination = config.den.clusters.axon.networks.kubernetes-loadbalancers.cidr;
+            router = lib.head (
+              lib.splitString "/" (
+                lib.head config.den.hosts.x86_64-linux.uplink.networking.interfaces.enp4s0.ipv4
+              )
+            );
+          }
+          {
+            destination = "0.0.0.0/0";
+            router = net.gatewayIp;
+          }
+        ];
+      }
       {
         terraform = {
           # Versions are the provider packages' (terraformWrapper below), never stated here.
@@ -1011,6 +1116,17 @@ in
             | [ $live[] | select(.description == $d) ]
             | if length > 1 then error("unifi-adopt: \(length) live NAT rules described \($d); delete all but one")
               elif length == 1 then { to: "restapi_object.\($res)", id: "/v2/api/site/\($site)/nat/\(.[0]._id)" }
+              else empty end ]
+      '';
+
+      # Each declared DHCP option definition ($meta.dhcpOptions) as an import
+      # block, by the one live definition with its name; none is created here.
+      dhcpOptionImports = pkgs.writeText "unifi-dhcp-option-imports.jq" ''
+        . as $live
+        | [ ($meta.dhcpOptions // {}) | to_entries[] | .key as $res | .value as $n
+            | [ $live[] | select(.name == $n) ]
+            | if length > 1 then error("unifi-adopt: \(length) live DHCP options named \($n); delete all but one")
+              elif length == 1 then { to: "restapi_object.\($res)", id: "/api/s/\($site)/rest/dhcpoption/\(.[0]._id)" }
               else empty end ]
       '';
 
@@ -1586,6 +1702,75 @@ in
         assert lib.assertMsg ok "unifi-dhcp-dns-render:\n${builtins.toJSON rendered}";
         pkgs.writeText "unifi-dhcp-dns-render" (builtins.toJSON rendered);
 
+      # Fixture (docs/dns-resolver.md §7 Q2, option 121 phase A): a definition
+      # renders its POST, id path, by-id read and DELETE, and its adopt meta;
+      # classlessRoutes encodes RFC 3442's example widths (0, 8, 16, 24, 25,
+      # 32) and refuses host bits. The workspace's Default value is the cluster's
+      # LB pool via uplink, then the default route via the gateway, set on no
+      # network. Control: the same predicate over a /24 pool fails.
+      checks.unifi-dhcp-option-render =
+        let
+          rendered = renderDhcpOption {
+            site = "s";
+            code = 121;
+            name = "classless-routes";
+            type = "hexarray";
+          };
+          r =
+            destination:
+            classlessRoutes [
+              {
+                inherit destination;
+                router = "10.0.0.1";
+              }
+            ];
+          live = terraformConfiguration.config.locals.unifi_network_default_classless_routes;
+          defaultOk = v: v == "10:0a:0b:0a:0a:0a:01:00:0a:0a:00:01";
+          ok =
+            rendered == {
+              resource.restapi_object.dhcp_option_classless_routes = {
+                path = "/api/s/s/rest/dhcpoption";
+                id_attribute = "data/0/_id";
+                read_path = "/api/s/s/rest/dhcpoption/{id}";
+                update_path = "/api/s/s/rest/dhcpoption/{id}";
+                destroy_path = "/api/s/s/rest/dhcpoption/{id}";
+                ignore_server_additions = true;
+                data = builtins.toJSON {
+                  code = "121";
+                  name = "classless-routes";
+                  type = "hexarray";
+                  signed = false;
+                };
+              };
+              _meta.dhcpOptions.dhcp_option_classless_routes = "classless-routes";
+            }
+            && r "0.0.0.0/0" == "00:0a:00:00:01"
+            && r "10.0.0.0/8" == "08:0a:0a:00:00:01"
+            && r "10.17.0.0/16" == "10:0a:11:0a:00:00:01"
+            && r "10.27.129.0/24" == "18:0a:1b:81:0a:00:00:01"
+            && r "10.229.0.128/25" == "19:0a:e5:00:80:0a:00:00:01"
+            && r "10.198.122.47/32" == "20:0a:c6:7a:2f:0a:00:00:01"
+            && !(builtins.tryEval (r "10.11.0.0/8")).success
+            && !(builtins.tryEval (r "10.229.0.64/25")).success
+            && defaultOk live
+            # No network's PUT carries it yet (phase B).
+            && !(lib.hasInfix "local.unifi_network_default_classless_routes" (
+              builtins.toJSON terraformConfiguration.config.resource
+            ))
+            && !(defaultOk (classlessRoutes [
+              {
+                destination = "10.11.0.0/24";
+                router = "10.10.10.1";
+              }
+              {
+                destination = "0.0.0.0/0";
+                router = "10.10.0.1";
+              }
+            ]));
+        in
+        assert lib.assertMsg ok "unifi-dhcp-option-render:\n${builtins.toJSON rendered}\n${live}";
+        pkgs.writeText "unifi-dhcp-option-render" (builtins.toJSON rendered);
+
       # Fixture: a policy renders one Internal -> Internal zone policy and one
       # address group per source environment from its cluster's node addresses,
       # drops the legacy rule of that name from state, a same-environment source
@@ -1707,13 +1892,16 @@ in
               netconf=$(curl -fksS -H @<(printf 'X-Api-Key: %s\n' "$UNIFI_API_KEY") \
                 "$api/proxy/network/api/s/$site/rest/networkconf" | jq .data)
               net=$(jq --arg site "$site" --argjson meta "$(< ${meta})" -f ${networkImports} <<<"$netconf")
+              dhcpopts=$(curl -fksS -H @<(printf 'X-Api-Key: %s\n' "$UNIFI_API_KEY") \
+                "$api/proxy/network/api/s/$site/rest/dhcpoption" | jq .data)
+              dhcpopt=$(jq --arg site "$site" --argjson meta "$(< ${meta})" -f ${dhcpOptionImports} <<<"$dhcpopts")
               # unifi_bgp is a per-site singleton; its import id is the site name.
               # A port forward imports by its controller _id. Its config is the
               # declared one (port-forwards); a live forward with none fails the plan.
               # A zone policy imports by its _id, a custom NAT rule by its path.
               jq --arg site "$site" --argjson pf "$(jq -f ${portForwardImports} <<<"$pfs")" \
-                --argjson pol "$pol" --argjson nat "$nat" --argjson net "$net" \
-                '{ import: ([ { to: .bgp, id: $site } ] + $pf + $pol + $nat + $net) }' \
+                --argjson pol "$pol" --argjson nat "$nat" --argjson net "$net" --argjson dhcpopt "$dhcpopt" \
+                '{ import: ([ { to: .bgp, id: $site } ] + $pf + $pol + $nat + $net + $dhcpopt) }' \
                 ${meta} > ${workdir}/imports.tf.json
               # The flake reads imports.tf.json only once git tracks it.
               git add ${workdir}/imports.tf.json
@@ -1728,6 +1916,20 @@ in
                 | .[] | select(.name as $n | $names | index($n))
                 | "  \(.name) (\(._id))", (to_entries[]
                   | select(.key | test("dns|ipv6|_ra|rdnss|slaac|dhcpdv6|radvd"; "i"))
+                  | "    \(.key) = \(.value | tojson)")' <<<"$netconf"
+              # The option-121 experiment (§7 Q2): every custom DHCP option definition,
+              # then each declared network's DHCP-option fields (dhcpd_*, or keys naming
+              # a declared definition or its code), which reveal where a value lives.
+              echo "unifi-adopt: $(jq length <<<"$dhcpopts") DHCP option definitions (rest/dhcpoption):"
+              jq -r '.[] | "  \(.name)\tcode=\(.code)\ttype=\(.type)\twidth=\(.width // "-")\tsigned=\(.signed)\t\(._id)"' <<<"$dhcpopts"
+              echo "unifi-adopt: networks' DHCP option fields:"
+              jq -r --argjson meta "$(< ${meta})" --argjson opts "$dhcpopts" '
+                ($meta.networks // {} | to_entries | map(.value)) as $names
+                | ([ $opts[] | .name, .code, ._id ] | map(tostring | ascii_downcase)) as $needles
+                | .[] | select(.name as $n | $names | index($n))
+                | "  \(.name) (\(._id))", (to_entries[]
+                  | select(.key | ascii_downcase | . as $k
+                      | (test("^dhcpd_") and (test("dns") | not)) or any($needles[]; . as $s | $k | contains($s)))
                   | "    \(.key) = \(.value | tojson)")' <<<"$netconf"
               echo "unifi-adopt: wrote ${workdir}/imports.tf.json"
             '';
