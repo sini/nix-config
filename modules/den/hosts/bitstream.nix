@@ -17,10 +17,9 @@
       };
       interfaces.bond0 = {
         ipv4 = [ "10.9.1.1/16" ];
-        # enp1s0's hardware MAC (down, unmanaged), the key of bitstream's existing
-        # UniFi client record; pinned as the bond's MACAddress= so a reinstall
-        # cannot change it. eno1, the bond's slave, is 84:47:09:40:d5:f5.
-        mac = "84:47:09:40:d5:f4";
+        # The address networkd generated for bond0, read live 2026-11-11 and pinned
+        # (the bond's MACAddress=), so a reinstall cannot change the reservation's key.
+        mac = "e2:3a:b3:99:7c:4b";
       };
     };
 
