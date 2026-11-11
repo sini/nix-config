@@ -81,6 +81,18 @@
       "id": "/api/s/default/rest/user/0ef55f8e-72e7-4fdc-a33e-f4e818a07233"
     },
     {
+      "to": "restapi_object.client_release_28_16_a8_59_29_8b",
+      "id": "/api/s/default/rest/user/2fa637a1-f4b3-4b25-8f2b-4c4734d7230e"
+    },
+    {
+      "to": "restapi_object.client_release_84_47_09_40_d5_f4",
+      "id": "/api/s/default/rest/user/d0ab432b-457f-465d-acdb-1b64492ed099"
+    },
+    {
+      "to": "restapi_object.client_release_b4_ae_2b_cc_ae_40",
+      "id": "/api/s/default/rest/user/c64aac59-cbee-4d92-b43b-b0f3e55392ea"
+    },
+    {
       "to": "restapi_object.client_uplink",
       "id": "/api/s/default/rest/user/0a73aac9-3691-44da-a4dd-9c7534516e16"
     },
