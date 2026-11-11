@@ -7,7 +7,7 @@ data:
       isDefault: true
       jsonData:
         httpMethod: POST
-        timeInterval: 30s
+        timeInterval: 60s
       name: Prometheus
       type: prometheus
       uid: prometheus

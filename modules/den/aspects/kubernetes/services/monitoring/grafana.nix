@@ -721,9 +721,10 @@
                     url = "http://kube-prometheus-stack-prometheus.monitoring:9090";
                     isDefault = true;
                     jsonData = {
-                      # min step = the kps scrape interval (the host instance
-                      # uses 5s to match its own scraper)
-                      timeInterval = "30s";
+                      # min step = the slowest scraper feeding it: hosts arrive
+                      # through Alloy at its default 60s (kps scrapes at 30s), and a
+                      # 30s step gives rate() windows that hold a single sample.
+                      timeInterval = "60s";
                       httpMethod = "POST";
                     };
                   }
