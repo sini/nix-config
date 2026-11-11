@@ -44,6 +44,8 @@
         cidr = "10.9.0.0/16";
         ipv6_cidr = "fd64:1:1::/64";
         description = "Default network for infrastructure hosts";
+        # The controller's network: its DHCP and IPv6 DNS follow dns.resolvers (docs/dns-resolver.md §2.4(a)).
+        unifiNetwork = "dev";
         gatewayIp = "10.9.0.1";
         gatewayIpV6 = "fe80::962a:6fff:fef2:cf4d";
         # Validating DNS-over-TLS resolvers from two operators, in resolved's

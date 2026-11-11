@@ -70,6 +70,14 @@ as networkconf ids, so the rules look them up by the controller's network names
 the plan before anything is written. `axon-https-ingress` is nat;
 `checks.<system>.unifi-nat-render` fixes the payloads.
 
+`restapi_object.network_<name>` is each environment's controller network
+(`networks.default.unifiNetwork`: prod `Default`, dev `dev`), rendered by
+`renderNetworkDns` from `dns.resolvers` (docs/dns-resolver.md §2.4(a)): DHCP DNS
+is the resolvers then the gateway, and the network advertises no IPv6 DNS of its
+own. The `PUT` body is the whole live network with those fields laid over it, a
+create is a `PUT` to the live `_id`, and a destroy is a `GET`, so no plan can
+wipe or delete a LAN. `checks.<system>.unifi-dhcp-dns-render` fixes the payload.
+
 The gateway runs the zone-based firewall (since its 6.x firmware migrated the
 legacy rules). Every policy is a `unifi_firewall_policy` naming its zones
 through `data.unifi_firewall_zone`, and records its name and zone pair in
@@ -121,13 +129,15 @@ You need the YubiKey. Each command decrypts the API key
 `X-Api-Key` by both providers, to the restapi one as `TF_VAR_unifi_api_key`) and
 the passphrase into its own environment, and prints neither.
 
-1. `unifi-adopt` reads the site's BGP configuration and its port forwards
-   (`rest/portforward`), with `GET`s only. It only imports: it writes
-   `infra/unifi/imports.tf.json`, which imports `unifi_bgp.prod` by its site
-   name and each live port forward by its `_id`, and stages it (the flake reads
-   only tracked files). It writes no configuration, so a live forward that no
-   aspect declares fails the plan until it is declared or deleted. It prints the
-   live forward list.
+1. `unifi-adopt` reads the site's BGP configuration, its port forwards
+   (`rest/portforward`) and its networks (`rest/networkconf`), with `GET`s only.
+   It only imports: it writes `infra/unifi/imports.tf.json`, which imports
+   `unifi_bgp.prod` by its site name and each live port forward by its `_id`,
+   and stages it (the flake reads only tracked files). It writes no
+   configuration, so a live forward that no aspect declares fails the plan until
+   it is declared or deleted. It imports each declared network by its `_id`,
+   from the one live network with its name. It prints the live forward list and
+   each declared network's DNS, RA and DHCPv6 fields.
 2. `unifi-plan` builds the config and runs `tofu init` and `tofu plan`. The
    adoption plan must be `N to import, 0 to add, 0 to change, 0 to destroy`, N
    being the port forwards (`unifi_bgp.prod` is already in the state). A change

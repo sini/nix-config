@@ -11,6 +11,7 @@
 #   nix build .#checks.<system>.unifi-nat-render
 #   nix build .#checks.<system>.unifi-gateway-policy-render
 #   nix build .#checks.<system>.unifi-network-policy-render
+#   nix build .#checks.<system>.unifi-dhcp-dns-render
 #   unifi-adopt / unifi-plan / unifi-apply (devshell)
 {
   den,
@@ -21,6 +22,7 @@
 let
   inherit (lib) mkOption types;
   inherit (den.lib.policy) pipe;
+  resolvers = import ../../den/aspects/core/network/_resolvers.nix { inherit lib; };
 
   # ponytail: one environment owns the gateway; key configs by env if a second controller appears.
   unifiEnv = "prod";
@@ -460,6 +462,132 @@ let
             );
       } ([ (zonesData [ "Internal" ]) ] ++ map policy policies);
 
+  # Each environment's controller network (networks.default.unifiNetwork) hands
+  # out resolversFor as its DHCP DNS and advertises no IPv6 DNS of its own
+  # (docs/dns-resolver.md §2.4(a)); an environment with no dns.resolvers renders none.
+  # The PUT body is the whole live network (the data source, read at plan time)
+  # with these fields laid over it, so it is safe whether or not the controller
+  # merges a partial PUT (§7 Q4). With that full body, ignore_server_additions
+  # stays false: restapi's Read then refreshes the state from the live object, so
+  # the plan shows exactly the declared fields that differ from it.
+  #   create: PUT to the live _id (the body carries it), never a POST
+  #   destroy: a GET, so dropping the resource from state can never delete a LAN
+  # A precondition refuses the plan unless the live object carries the DHCP and
+  # DHCPv6 DNS switches, so a wrong field name is never invented on the controller.
+  # Output unifi_network_dns shows each declared field's live and declared value.
+  renderNetworkDns =
+    {
+      site,
+      environments,
+      dns-resolvers,
+    }:
+    let
+      path = "/api/s/${site}/rest/networkconf";
+      netKey = n: "unifi_network_${key n}";
+      live = n: "jsondecode(data.restapi_object.${netKey n}.api_response)";
+      required = [
+        "dhcpd_dns_enabled"
+        "dhcpdv6_dns_auto"
+      ];
+      slots =
+        prefix: values:
+        lib.genAttrs' (lib.range 1 4) (
+          i:
+          lib.nameValuePair "${prefix}_${toString i}" (
+            lib.elemAt (
+              values
+              ++ [
+                ""
+                ""
+                ""
+                ""
+              ]
+            ) (i - 1)
+          )
+        );
+      fieldsOf =
+        e:
+        let
+          servers = resolvers.resolversFor { } e dns-resolvers;
+        in
+        if servers == null then
+          null
+        else if lib.length servers > 4 then
+          throw "unifi: environment ${e.name} has ${toString (lib.length servers)} DHCP DNS servers; the controller takes 4"
+        else
+          {
+            dhcpd_dns_enabled = true;
+            dhcpdv6_dns_auto = false;
+          }
+          // slots "dhcpd_dns" servers
+          // slots "dhcpdv6_dns" [ ];
+      nets = lib.concatMap (
+        e:
+        let
+          n = e.networks.default.unifiNetwork or null;
+          fields = if n == null then null else fieldsOf e;
+        in
+        lib.optional (fields != null) { inherit n fields; }
+      ) environments;
+      byId = "${path}/{id}";
+    in
+    if nets == [ ] then
+      { }
+    else
+      {
+        data.restapi_object = lib.listToAttrs (
+          map (
+            { n, ... }:
+            lib.nameValuePair (netKey n) {
+              inherit path;
+              results_key = "data";
+              search_key = "name";
+              search_value = n;
+              results_contains_object = true;
+            }
+          ) nets
+        );
+        locals = lib.listToAttrs (map ({ n, fields }: lib.nameValuePair "${netKey n}_dns" fields) nets);
+        resource.restapi_object = lib.listToAttrs (
+          map (
+            { n, ... }:
+            lib.nameValuePair "network_${key n}" {
+              inherit path;
+              create_method = "PUT";
+              create_path = byId;
+              # A GET by id answers { meta, data = [ … ] }; read searches the list.
+              read_path = byId;
+              read_search = {
+                results_key = "data";
+                search_key = "_id";
+                search_value = "{id}";
+              };
+              update_path = byId;
+              destroy_method = "GET";
+              destroy_path = byId;
+              data = "\${jsonencode(merge(${live n}, local.${netKey n}_dns))}";
+              lifecycle = {
+                prevent_destroy = true;
+                precondition = [
+                  {
+                    condition = "\${alltrue([for k in ${builtins.toJSON required} : contains(keys(${live n}), k)])}";
+                    error_message = "unifi: network ${n} lacks one of ${lib.concatStringsSep ", " required}; read unifi-adopt's field list (docs/dns-resolver.md §7 Q4)";
+                  }
+                ];
+              };
+            }
+          ) nets
+        );
+        output.unifi_network_dns.value = lib.listToAttrs (
+          map (
+            { n, ... }:
+            lib.nameValuePair n "\${{ for k, v in local.${netKey n}_dns : k => { live = try(${live n}[k], null), declared = v } }}"
+          ) nets
+        );
+        # Read by unifi-adopt, which imports each network by the one live network with its name.
+        _meta.networks = lib.listToAttrs (map ({ n, ... }: lib.nameValuePair "network_${key n}" n) nets);
+      };
+
   # The gateway's raw FRR bgpd config: one peer group per remote ASN, one
   # neighbor per bgp-peers record. Raw, not the provider's structured peers:
   # its template forces ebgp-requires-policy, redistribute connected,
@@ -685,8 +813,19 @@ in
       ])
     ];
 
+  # The resolver instances, for the networks' DHCP DNS (renderNetworkDns). Every
+  # environment's network is written from the one workspace, so all records come;
+  # resolversFor picks by name. A collectAll predicate matches one entity kind.
+  den.policies.env-collect-dns-resolvers =
+    { environment, ... }:
+    lib.optionals (environment.unifi != null) [
+      (pipe.from "dns-resolvers" [ (pipe.collectAll ({ host, ... }: true)) ])
+      (pipe.from "dns-resolvers" [ (pipe.collectAll ({ cluster, ... }: true)) ])
+    ];
+
   den.schema.environment.includes = [
     den.policies.env-collect-bgp-peers
+    den.policies.env-collect-dns-resolvers
     den.policies.env-collect-port-forwards
     den.policies.env-collect-gateway-policies
     den.aspects.unifi-gateway
@@ -700,6 +839,7 @@ in
       port-forwards ? [ ],
       gateway-policies ? [ ],
       k3s-nodes ? [ ],
+      dns-resolvers ? [ ],
       ...
     }:
     let
@@ -720,6 +860,12 @@ in
       (renderNetworkPolicies {
         inherit (unifi) site;
         policies = unifi.networkPolicies;
+      })
+      # Every environment's network lives on this one controller.
+      (renderNetworkDns {
+        inherit (unifi) site;
+        inherit dns-resolvers;
+        environments = lib.attrValues config.den.environments;
       })
       {
         terraform = {
@@ -844,6 +990,16 @@ in
             | if length > 1 then error("unifi-adopt: \(length) live policies named \($p.name) from \($p.source) to \($p.destination); delete all but one")
               elif length == 1 then { to: "unifi_firewall_policy.\($res)", id: .[0]._id }
               else empty end ]
+      '';
+
+      # Each declared network ($meta.networks) as an import block, by the one live
+      # networkconf with its name; restapi_object imports by its full path.
+      networkImports = pkgs.writeText "unifi-network-imports.jq" ''
+        . as $live
+        | [ ($meta.networks // {}) | to_entries[] | .key as $res | .value as $n
+            | [ $live[] | select(.name == $n) ]
+            | if length != 1 then error("unifi-adopt: \(length) live networks named \($n); expected one")
+              else { to: "restapi_object.\($res)", id: "/api/s/\($site)/rest/networkconf/\(.[0]._id)" } end ]
       '';
 
       # Each declared custom NAT rule ($meta.nat) as an import block, by the one
@@ -1303,6 +1459,121 @@ in
         assert lib.assertMsg ok "unifi-network-policy-render:\n${builtins.toJSON rendered}";
         pkgs.writeText "unifi-network-policy-render" (builtins.toJSON rendered);
 
+      # Fixture (docs/dns-resolver.md §2.4(a)): an environment's network renders the
+      # full-body PUT of its live object with these exact DNS fields (Blocky, then
+      # the gateway, padded to four; no IPv6 DNS of its own), its lookup, import
+      # meta and review output; one with no unifiNetwork or no resolvers renders
+      # none. Refused: an unknown instance and more than four servers. Control: the
+      # payload predicate fails on the render without resolvers.
+      checks.unifi-dhcp-dns-render =
+        let
+          env = name: unifiNetwork: resolverNames: {
+            inherit name;
+            dns.resolvers = resolverNames;
+            networks.default = {
+              inherit unifiNetwork;
+              gatewayIp = "10.0.0.1";
+            };
+          };
+          args = {
+            site = "s";
+            dns-resolvers = [
+              {
+                name = "r1";
+                dns = "10.0.10.1";
+              }
+            ];
+            environments = [
+              (env "t" "Default" [ "r1" ])
+              (env "u" null [ "r1" ])
+              (env "w" "lan2" [ ])
+            ];
+          };
+          render = a: renderNetworkDns (args // a);
+          rendered = render { };
+          refused = a: !(builtins.tryEval (builtins.deepSeq (render a) null)).success;
+          live = "jsondecode(data.restapi_object.unifi_network_default.api_response)";
+          byId = "/api/s/s/rest/networkconf/{id}";
+          payloadOk =
+            r:
+            (r.locals or { }) == {
+              unifi_network_default_dns = {
+                dhcpd_dns_enabled = true;
+                dhcpd_dns_1 = "10.0.10.1";
+                dhcpd_dns_2 = "10.0.0.1";
+                dhcpd_dns_3 = "";
+                dhcpd_dns_4 = "";
+                dhcpdv6_dns_auto = false;
+                dhcpdv6_dns_1 = "";
+                dhcpdv6_dns_2 = "";
+                dhcpdv6_dns_3 = "";
+                dhcpdv6_dns_4 = "";
+              };
+            };
+          ok =
+            payloadOk rendered
+            &&
+              rendered.resource.restapi_object == {
+                network_default = {
+                  path = "/api/s/s/rest/networkconf";
+                  create_method = "PUT";
+                  create_path = byId;
+                  read_path = byId;
+                  read_search = {
+                    results_key = "data";
+                    search_key = "_id";
+                    search_value = "{id}";
+                  };
+                  update_path = byId;
+                  destroy_method = "GET";
+                  destroy_path = byId;
+                  data = "\${jsonencode(merge(${live}, local.unifi_network_default_dns))}";
+                  lifecycle = {
+                    prevent_destroy = true;
+                    precondition = [
+                      {
+                        condition = "\${alltrue([for k in [\"dhcpd_dns_enabled\",\"dhcpdv6_dns_auto\"] : contains(keys(${live}), k)])}";
+                        error_message = "unifi: network Default lacks one of dhcpd_dns_enabled, dhcpdv6_dns_auto; read unifi-adopt's field list (docs/dns-resolver.md §7 Q4)";
+                      }
+                    ];
+                  };
+                };
+              }
+            &&
+              rendered.data.restapi_object == {
+                unifi_network_default = {
+                  path = "/api/s/s/rest/networkconf";
+                  results_key = "data";
+                  search_key = "name";
+                  search_value = "Default";
+                  results_contains_object = true;
+                };
+              }
+            && rendered._meta.networks == { network_default = "Default"; }
+            && builtins.attrNames rendered.output.unifi_network_dns.value == [ "Default" ]
+            && refused { environments = [ (env "t" "Default" [ "gone" ]) ]; }
+            && refused {
+              dns-resolvers = map (i: {
+                name = "r${toString i}";
+                dns = "10.0.10.${toString i}";
+              }) (lib.range 1 4);
+              environments = [
+                (env "t" "Default" [
+                  "r1"
+                  "r2"
+                  "r3"
+                  "r4"
+                ])
+              ];
+            }
+            # Control: the same payload predicate over an environment with no resolvers.
+            && !(payloadOk (render {
+              environments = [ (env "t" "Default" [ ]) ];
+            }));
+        in
+        assert lib.assertMsg ok "unifi-dhcp-dns-render:\n${builtins.toJSON rendered}";
+        pkgs.writeText "unifi-dhcp-dns-render" (builtins.toJSON rendered);
+
       # Fixture: a policy renders one Internal -> Internal zone policy and one
       # address group per source environment from its cluster's node addresses,
       # drops the legacy rule of that name from state, a same-environment source
@@ -1421,19 +1692,31 @@ in
               nat=$(curl -fksS -H @<(printf 'X-Api-Key: %s\n' "$UNIFI_API_KEY") \
                 "$api/proxy/network/v2/api/site/$site/nat" \
                 | jq --arg site "$site" --argjson meta "$(< ${meta})" -f ${natImports})
+              netconf=$(curl -fksS -H @<(printf 'X-Api-Key: %s\n' "$UNIFI_API_KEY") \
+                "$api/proxy/network/api/s/$site/rest/networkconf" | jq .data)
+              net=$(jq --arg site "$site" --argjson meta "$(< ${meta})" -f ${networkImports} <<<"$netconf")
               # unifi_bgp is a per-site singleton; its import id is the site name.
               # A port forward imports by its controller _id. Its config is the
               # declared one (port-forwards); a live forward with none fails the plan.
               # A zone policy imports by its _id, a custom NAT rule by its path.
               jq --arg site "$site" --argjson pf "$(jq -f ${portForwardImports} <<<"$pfs")" \
-                --argjson pol "$pol" --argjson nat "$nat" \
-                '{ import: ([ { to: .bgp, id: $site } ] + $pf + $pol + $nat) }' \
+                --argjson pol "$pol" --argjson nat "$nat" --argjson net "$net" \
+                '{ import: ([ { to: .bgp, id: $site } ] + $pf + $pol + $nat + $net) }' \
                 ${meta} > ${workdir}/imports.tf.json
               # The flake reads imports.tf.json only once git tracks it.
               git add ${workdir}/imports.tf.json
               echo "unifi-adopt: site $site BGP config $(jq -r '.[0]._id' <<<"$bgp") ($(jq -r '.[0].description' <<<"$bgp"))"
               echo "unifi-adopt: $(jq length <<<"$pfs") port forwards:"
               jq -r '.[] | "  \(.name // "-")\t\(.proto)\twan \(.pfwd_interface // "-"):\(.dst_port // "-")\t-> \(.fwd // "-"):\(.fwd_port // "-")\tenabled=\(.enabled)"' <<<"$pfs"
+              # The DNS-related fields of each declared network, as the controller
+              # holds them: which carry DHCP DNS, RA RDNSS and DHCPv6 DNS (§7 Q4).
+              echo "unifi-adopt: networks' DNS, RA and DHCPv6 fields (docs/dns-resolver.md §7 Q4):"
+              jq -r --argjson meta "$(< ${meta})" '
+                ($meta.networks // {} | to_entries | map(.value)) as $names
+                | .[] | select(.name as $n | $names | index($n))
+                | "  \(.name) (\(._id))", (to_entries[]
+                  | select(.key | test("dns|ipv6|_ra|rdnss|slaac|dhcpdv6|radvd"; "i"))
+                  | "    \(.key) = \(.value | tojson)")' <<<"$netconf"
               echo "unifi-adopt: wrote ${workdir}/imports.tf.json"
             '';
       };

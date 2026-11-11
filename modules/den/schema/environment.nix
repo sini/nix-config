@@ -101,6 +101,16 @@ let
         description = "DNS server IPs for this network";
       };
 
+      unifiNetwork = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = ''
+          The UniFi controller's name (networkconf `name`) for this network. The
+          unifi workspace writes its DHCP and IPv6 DNS from dns.resolvers
+          (docs/dns-resolver.md §2.4(a)). null = the controller's DNS settings stay unmanaged.
+        '';
+      };
+
       assignments = mkOption {
         type = types.attrsOf types.str;
         default = { };

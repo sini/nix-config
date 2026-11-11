@@ -106,6 +106,8 @@
         cidr = "10.10.0.0/16";
         ipv6_cidr = "fe80::/64";
         description = "Default network for infrastructure hosts";
+        # The controller's network: its DHCP and IPv6 DNS follow dns.resolvers (docs/dns-resolver.md §2.4(a)).
+        unifiNetwork = "Default";
         gatewayIp = "10.10.0.1";
         gatewayAsn = 65999;
         gatewayIpV6 = "fe80::962a:6fff:fef2:cf4d";
