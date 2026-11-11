@@ -3,6 +3,7 @@
   den.aspects.roles.dev = {
     includes = with den.aspects; [
       hardware.adb
+      applications.dev.ai.tools.agent-quota
       applications.dev.ai.tools.beads
       applications.dev.ai.tools.calldiff
       applications.dev.ai.tools.ccstatusline
