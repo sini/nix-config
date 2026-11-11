@@ -1,10 +1,11 @@
 # The address plan: the /56, host tokens and DHCP reservations
 
-Status: **draft v0.1** (2026-11-11), design only, for owner review. It is
-written against `main` at `9f7d4f02`. Stage 1 covers three things: DHCP
-reservations from den, stable IPv6 host parts, and a convention for slicing the
-/56. Stage 2, public IPv6 for individual services, is out of scope. §4 lists
-only what it needs from this plan.
+Status: **decided v0.2** (2026-11-11). The owner ruled on every open question
+(§6), and stage 1 is built from this text. It was written against `main` at
+`9f7d4f02`. Stage 1 covers four things: DHCP reservations from den, stable IPv6
+host parts, a convention for slicing the /56, and the cluster's ULA moved into
+the site's. Stage 2, public IPv6 for individual services, is out of scope. §4
+lists only what it needs from this plan.
 
 ## 1. Problem
 
@@ -31,8 +32,8 @@ bitstream's static address comes from a prefix the site no longer holds. It has
 been in den since 2025-09 (`docs/ipv6-prefix-translation.md` names it
 "current"). So the delegated /56 has most likely changed at least once (`…4a00`
 → `…b600`, within the same /48). That is an inference from den's history, not a
-measurement. How often it changes is unmeasured (§6 Q1). Nothing in den may
-therefore hold the delegated prefix.
+measurement. How often it changes is unmeasured, and stays so: the prefix is not
+logged (§6). Nothing in den may therefore hold the delegated prefix.
 
 **The ULAs disagree.** prod's `networks.default.ipv6_cidr` is RFC 4193:
 `fd3d:f136:2e4e::/64`, `fd` plus 40 bits of sha256("json64.dev/prod")
@@ -65,24 +66,25 @@ digits, and each digit means one thing:
 
 ```
 s = E·16 + P        /64 = <delegated /56>:<s as two hex digits>::/64
-E  environment   = den.environments.<e>.id − 1   (prod 0, dev 1; 2–e future envs; f infra)
-P  purpose       = 0 LAN · 1 cluster LB services · 2 cluster pods (if ever routed) · 3–f reserved
+E  environment   = den.environments.<e>.ipv6Nibble, declared   (prod 0, dev 1; 2–e future envs; f infra)
+P  purpose       = 0 LAN · 1 cluster LB services · 2 cluster (pods, services, fabric) · 3–f reserved
 ```
 
 | Slice | prod (E=0)   | dev (E=1)    | Use                                        |
 | ----- | ------------ | ------------ | ------------------------------------------ |
 | P=0   | `…b600::/64` | `…b610::/64` | the environment's LAN (`networks.default`) |
 | P=1   | `…b601::/64` | `…b611::/64` | stage 2: LoadBalancer addresses            |
-| P=2   | `…b602::/64` | `…b612::/64` | pods, only if pod IPv6 is ever routed      |
+| P=2   | `…b602::/64` | `…b612::/64` | the cluster's slice; only its ULA is used  |
 | E=f   | `…b6f0::/60` |              | gateway-side transit and infra             |
 
 Why the environment is the high nibble: each environment is then one /60
 (`…b600::/60` prod, `…b610::/60` dev). That is the unit that firewall policy,
 `unifi.networkPolicies` and any later per-env delegation address. The reverse
 layout (purpose high) keeps today's ids, but it scatters an environment over
-sixteen /64s. Deriving `E` from the `id` den already has makes it a rule, not a
-list. A new environment gets its slice from its id, and an id above 15 is an
-evaluation error.
+sixteen /64s. `E` is declared per environment (`ipv6Nibble`, an integer 0–15),
+not derived from its `id`: the id is Cilium's cluster id and a counter, the
+nibble an address. A nibble above 15 is an evaluation error (the option's type),
+and two environments on one nibble fail the `address-plan-slices` check.
 
 **Mapping today:** `Default` 00 → (prod, LAN), no change. `dev` 01 decodes as
 (prod, LB), so it **moves to 10**. On `dev`, the unifi workspace sets
@@ -90,9 +92,10 @@ evaluation error.
 `network.generated.go`: `^$|[a-fA-F0-9]{1,4}`). On `Default`, it pins `"0"` the
 same way, so no future network auto-takes it. Both fields go into the existing
 `renderNetworkDns` body (`fieldsOf`), which already PUTs the live network with
-declared fields laid over it, plus `required`'s precondition. The move renumbers
-dev's GUAs once. Nothing in den pins one (bitstream's `4a00` address is removed,
-§2.2).
+declared fields laid over it. `ipv6_pd_auto_prefixid_enabled` joins `required`'s
+precondition. `ipv6_pd_prefixid` does not, since a network on auto may not carry
+it. The move renumbers dev's GUAs once. Nothing in den pins one (bitstream's
+`4a00` address is removed, §2.2).
 
 **ULA, the same slicing:** one site /48, `fd3d:f136:2e4e::/48`, prod's existing
 global ID, kept so Blocky's `::53` does not move. Subnet `00ss` mirrors the GUA
@@ -101,8 +104,22 @@ exactly. dev LAN becomes `fd3d:f136:2e4e:10::/64`, replacing `fd64:1:1::/64`,
 and cortex's `fd64:0:1::5` is dropped. Each environment's
 `networks.default.ipv6_cidr` is computed from the site /48 and `s`, so it is no
 longer written by hand. Swap the /56 for `fd3d:f136:2e4e:0000::/56` and a GUA
-becomes its ULA. The rest of the /48 (`01xx`–`ffxx`) is reserved. The cluster's
-`fdfd:cafe::/48` is left as it is (§6 Q4).
+becomes its ULA. The rest of the /48 (`01xx`–`ffxx`) is reserved.
+
+**The cluster's ULA moves into the site's** (§6 Q4). `fdfd:cafe::/48` is
+replaced by the cluster environment's P=2 /64, `fd3d:f136:2e4e:2::/64` for
+prod's axon. Its three uses keep their old selectors, shifted one group right:
+
+| Use              | Was                      | Becomes                       |
+| ---------------- | ------------------------ | ----------------------------- |
+| pods             | `fdfd:cafe:0:1::/96`     | `fd3d:f136:2e4e:2:1::/96`     |
+| services         | `fdfd:cafe:0:8001::/112` | `fd3d:f136:2e4e:2:8001::/112` |
+| fabric loopbacks | `fdfd:cafe:0:ff::N/128`  | `fd3d:f136:2e4e:2:ff::N/128`  |
+
+The pod pool stays a /96 with /112 per node: kube-controller-manager refuses a
+node mask more than 16 bits longer than the cluster CIDR, so a /64 pool cannot
+carry /112 nodes. No workload depends on pod IPv6 today, and the addresses are
+provisional.
 
 ### 2.2 Host tokens: the IPv4, octet for octet
 
@@ -134,21 +151,20 @@ aspect writes two things from it:
   address is their one global source and Cilium's masquerade source stays warm,
   as their DHCPv6-only setting intended.
 - ULA: a static `Address = <env ULA /64>:<token>/64`. The router announces no
-  ULA, so SLAAC cannot form it. Today `ipv6On` turns every ULA address into an
-  RA-sending link (`IPv6SendRA`). The build splits the two: token ULAs are plain
-  addresses, and only a designated advertiser (uplink, for Blocky) sends the
-  prefix RA.
+  ULA, so SLAAC cannot form it. `ipv6On` used to turn every declared ULA address
+  into an RA-sending link (`IPv6SendRA`). The two are now split: token ULAs are
+  plain addresses, and a link sends the prefix RA only when its interface
+  declares `advertiseUla` (uplink's `enp4s0`, for Blocky's `::53`).
 
 **DHCPv6 vs SLAAC on Default.** `Default` sets M and O (DHCPv6 assignment
 `::2`–`::7d1`, SLAAC allowed). networkd starts a DHCPv6 client whenever an RA
 carries M (`[IPv6AcceptRA] DHCPv6Client=` defaults to true), whatever `DHCP=`
-says. That is why uplink holds `::271` and axon-01 `::67f`. Proposed: **den
-hosts stop taking DHCPv6 addresses** (`DHCPv6Client = false` on token links).
-The token is the one stable GUA, the router's lease is a second address den did
-not choose, and the axons' reason for DHCPv6 (one deterministic GUA) is met by
-the token. `Default` keeps M for non-den clients, and uplink's RA shortcut,
-which mirrors M, is unchanged. Making `Default` SLAAC-only is a separate choice
-(§6 Q3).
+says. That is why uplink holds `::271` and axon-01 `::67f`. Decided: **den hosts
+stop taking DHCPv6 addresses** (`DHCPv6Client = false` on token links). The
+token is the one stable GUA, the router's lease is a second address den did not
+choose, and the axons' reason for DHCPv6 (one deterministic GUA) is met by the
+token. `Default` keeps M and keeps serving DHCPv6 to ordinary clients, and
+uplink's RA shortcut, which mirrors M, is unchanged.
 
 **Guests.** uplink-dev and cortex-cuda write their own `20-lan` unit
 (`hosts/uplink-dev.nix`, `hosts/cortex-cuda.nix`), not the aspect's. They take
@@ -200,14 +216,15 @@ must fail or read non-zero, so an empty render cannot pass.
 
 1. **`address-plan-slices`.** Every (environment, purpose) /64, GUA template and
    ULA, is inside its /56, and no two overlap. Each environment's /60 contains
-   only its own slices. Control: a fixture with two environments on one `id`,
-   and one with `id = 17`, must each throw (`builtins.tryEval`). The real fleet
+   only its own slices. Control: a fixture with two environments on one nibble,
+   and one with nibble 16, must each throw (`builtins.tryEval`). The real fleet
    must yield exactly 2 × 3 named slices.
-2. **`address-plan-tokens`.** Per LAN, tokens are pairwise distinct, every token
-   has a non-zero first group, which keeps it out of the zero-headed DHCPv6
-   pool. Control: a fixture with a duplicate IPv4 throws. Token counts equal the
-   hosts with an IPv4 on that LAN: prod 5 (uplink, axon-01..03, uplink-dev), dev
-   3 (cortex, cortex-cuda, bitstream).
+2. **`address-plan-tokens`.** Tokens are pairwise distinct across the site, and
+   every token has a non-zero first group, which keeps it out of the zero-headed
+   DHCPv6 pool. Control: a fixture with a duplicate IPv4 throws. Token counts
+   equal the hosts with an IPv4 on that LAN: prod 5 (uplink, axon-01..03,
+   uplink-dev), dev 3 (cortex, cortex-cuda, bitstream). The rendered units carry
+   them, and exactly one LAN link (uplink's `br0`) sends RAs.
 3. **`unifi-reservation-render`.** For every rendered client, `fixed_ip` equals
    `addressOn` for its host, and the client count equals the token count above.
    Control: a fixture host with an IPv4 and `mac = null` throws.
@@ -231,12 +248,13 @@ must fail or read non-zero, so an empty render cannot pass.
   the prefix can change. If UniFi policies cannot express that, they are
   re-rendered from the live prefix on every apply.
 - AAAA records hold prefix-dependent addresses, so their publication tracks the
-  live prefix (§6 Q1). Internal names can use the ULA, which does not move.
+  live prefix. Internal names can use the ULA, which does not move.
 
 ## 5. Risks
 
 - **Prefix rotation** renumbers every GUA at once. Tokens keep the IIDs, and
-  stage 1 publishes no GUA anywhere, but long-lived connections drop.
+  stage 1 publishes no GUA anywhere, but long-lived connections drop. Its
+  frequency is not logged (§6 Q1).
 - **dev renumber** (01 → 10) changes cortex, cortex-cuda and bitstream's GUAs
   once. Anything outside den that pinned one breaks. None was found in den.
 - **Axons regain SLAAC.** The Cilium masquerade source changes from
@@ -245,17 +263,21 @@ must fail or read non-zero, so an empty render cannot pass.
   The apply order is then clear-then-set, in two applies.
 - **Managed `name`** overwrites a name set by hand in the UI. This is intended,
   and the first plan shows each overwrite.
+- **The cluster's ULA move** renumbers pod and service IPv6 and the fabric
+  loopbacks. It is the last stage-1 commit, held until the owner deploys it.
 
-## 6. Open questions
+## 6. Decisions (owner, 2026-11-11)
 
-1. **Prefix stability.** How often does the /56 rotate? Proposed: log the
-   delegated prefix daily (one read of the WAN's PD from the controller) for a
-   few weeks before stage 2 relies on any GUA. Stage 1 does not depend on the
-   answer.
-2. **The nibble convention.** Environment high (one /60 per environment, dev
-   moves 01 → 10) or purpose high (no move, environments scattered)? And is
-   `E = id − 1` right, or does an environment declare its nibble explicitly?
-3. **DHCPv6.** Do den hosts drop DHCPv6 addresses (proposed), and does `Default`
-   go SLAAC-only for every client (M off, uplink's RA shortcut flips with it)?
-4. **ULA reach.** Should token ULAs land on hosts in stage 1 (proposed), and
-   should the cluster's `fdfd:cafe::/48` later fold into the site /48 under P=2?
+1. **Prefix stability: not logged.** The proposal to log the delegated prefix is
+   rejected. The rule stands that den never stores the delegated prefix.
+2. **The nibble convention: environment high.** Each environment owns a /60. The
+   nibble is declared per environment (`ipv6Nibble`: prod 0, dev 1), not derived
+   from its id. dev renumbers from `01` to `10`, and `Default` is pinned to `0`
+   (§2.1).
+3. **DHCPv6: den hosts drop it.** Their LAN links set `DHCPv6Client = false` and
+   use SLAAC plus the token. `Default` keeps serving DHCPv6 to ordinary clients
+   (§2.2).
+4. **ULA reach: yes, in stage 1.** Hosts carry token ULAs. The cluster's
+   `fdfd:cafe::/48` moves into the site /48 under P=2, per environment (§2.1).
+   The IPv6 config is provisional and no pod depends on IPv6, so its addresses
+   can be reassigned.
