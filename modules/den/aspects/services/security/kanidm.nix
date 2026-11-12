@@ -777,6 +777,23 @@ in
               originUrl = [ "${gwSettings.origin}/introspection-only" ];
               originLanding = gwSettings.origin;
             };
+            # The gateway authorization server's upstream login (xmsg-design
+            # gateway-authorization-server.md rev 8): public, PKCE S256 (kanidm's
+            # default). Its own access group, never xmsg-gateway.access.
+            # shortcut: the localhost redirect is for the P2 measurement only; remove it
+            # and enableLocalhostRedirects when that measurement is done.
+            xmsg-gateway-login = {
+              displayName = "xmsg gateway upstream login";
+              public = true;
+              enableLocalhostRedirects = true;
+              preferShortUsername = true;
+              originUrl = [
+                "${gwSettings.origin}/oauth/callback"
+                "http://localhost:18550/callback"
+              ];
+              originLanding = gwSettings.origin;
+              scopeMaps."xmsg-gateway-login.access" = [ "openid" ];
+            };
           };
         gwSettings =
           let
@@ -862,8 +879,18 @@ in
                 # All groups provisioned to kanidm
                 groups = mapAttrs (_: g: { inherit (g) members; }) groups;
 
-                # Users with oauth-grant or user-role groups provisioned as persons
-                persons = mapAttrs (username: user: {
+                # Users with oauth-grant or user-role groups provisioned as persons, and
+                # the gateway liveness measurement's test person (no POSIX, no den user).
+                # shortcut: the test person exists for xmsg-ng1.50's P1/P2 measurement;
+                # remove it, and its membership, when that measurement is done.
+                persons = {
+                  xmsg-gateway-liveness-test = {
+                    displayName = "xmsg gateway liveness test";
+                    mailAddresses = [ "xmsg-gateway-liveness-test@${environment.email.domain}" ];
+                    groups = [ "xmsg-gateway-login.access" ];
+                  };
+                }
+                // mapAttrs (username: user: {
                   # kanidm rejects an empty displayname (InvalidAttributeSyntax),
                   # so fall back to the username when none is set.
                   displayName = if user.identity.displayName != "" then user.identity.displayName else username;
