@@ -880,9 +880,16 @@ in
                 groups = mapAttrs (_: g: { inherit (g) members; }) groups;
 
                 # Users with oauth-grant or user-role groups provisioned as persons, and
-                # the gateway liveness measurement's test person (no POSIX, no den user).
-                # shortcut: the test person exists for xmsg-ng1.50's P1/P2 measurement;
-                # remove it, and its membership, when that measurement is done.
+                # one placeholder that is not a person:
+                # xmsg-gateway-liveness-test is the xmsg gateway authorization server's
+                # PERMANENT visibility canary (owner-approved 2026-11-11). No den user, no
+                # POSIX, and never a human's login. kanidm-xmsg-gateway-liveness plants its
+                # validity window (2000-01-01 to 2099-12-31). The gateway's liveness reader
+                # must see those dates; seeing them null means read access was lost, and
+                # the gateway fails closed. Do not delete it while the gateway runs.
+                # shortcut: its xmsg-gateway-login.access membership is for the P1/P2
+                # login-and-consent measurement only; remove it (and the credential set
+                # for that login) when the measurement is done.
                 persons = {
                   xmsg-gateway-liveness-test = {
                     displayName = "xmsg gateway liveness test";
@@ -1004,6 +1011,64 @@ in
                     --readwrite -o json -D idm_admin | jq -er .result > "$token.new"
                   mv "$token.new" "$token"
                 fi
+              '';
+            };
+            wantedBy = [ "multi-user.target" ];
+          };
+
+          # The xmsg gateway authorization server's liveness reader (xmsg-design
+          # gateway-authorization-server.md rev 8, xmsg-ng1.50 P1/P2). Provisioning has
+          # no service accounts, API tokens or account validity, so each start
+          # re-asserts them as idm_admin:
+          # - xmsg-gateway-liveness, the reader, in the builtin idm_people_pii_read
+          #   (IDM_ACP_PEOPLE_READ_V1: class, name, spn, uuid, displayname, memberof,
+          #   account_expire, account_valid_from over every person; owner-approved
+          #   2026-11-11, trading the all-persons scope against an unsupported custom ACP);
+          # - xmsg-gateway-liveness-hidden, the control, in no reader or admin group;
+          # - the canary's planted validity window (the persons block).
+          # Each read-only token is minted once into a root-only state file and never
+          # replaced; delete the file to rotate. No token leaves this host from here.
+          systemd.services.kanidm-xmsg-gateway-liveness = {
+            description = "Assert the xmsg gateway liveness service accounts and canary";
+            after = [ "kanidm.service" ];
+            requires = [ "kanidm.service" ];
+            path = [
+              config.services.kanidm.package
+              pkgs.jq
+            ];
+            serviceConfig = {
+              Type = "oneshot";
+              RemainAfterExit = true;
+              StateDirectory = "kanidm-xmsg-gateway-liveness";
+              StateDirectoryMode = "0700";
+              ExecStart = pkgs.writeShellScript "kanidm-xmsg-gateway-liveness" ''
+                set -euo pipefail
+                KANIDM_TOKEN_CACHE_PATH=$(mktemp)
+                export KANIDM_TOKEN_CACHE_PATH
+                trap 'rm -f "$KANIDM_TOKEN_CACHE_PATH"' EXIT
+                KANIDM_PASSWORD=$(< ${config.services.kanidm.provision.idmAdminPasswordFile}) \
+                  kanidm login -D idm_admin
+
+                account() {
+                  kanidm service-account get "$1" -D idm_admin >/dev/null 2>&1 \
+                    || kanidm service-account create "$1" "$2" idm_admin -D idm_admin
+                }
+                account xmsg-gateway-liveness "xmsg gateway liveness reader"
+                account xmsg-gateway-liveness-hidden "xmsg gateway liveness control (no read grants)"
+                kanidm group add-members idm_people_pii_read xmsg-gateway-liveness -D idm_admin
+
+                for sa in xmsg-gateway-liveness xmsg-gateway-liveness-hidden; do
+                  token="$STATE_DIRECTORY/$sa.token"
+                  if [[ ! -s $token ]]; then
+                    umask 077
+                    kanidm service-account api-token generate "$sa" "$sa" \
+                      -o json -D idm_admin | jq -er .result > "$token.new"
+                    mv "$token.new" "$token"
+                  fi
+                done
+
+                kanidm person validity begin-from xmsg-gateway-liveness-test 2000-01-01T00:00:00Z -D idm_admin
+                kanidm person validity expire-at xmsg-gateway-liveness-test 2099-12-31T00:00:00Z -D idm_admin
               '';
             };
             wantedBy = [ "multi-user.target" ];
