@@ -314,6 +314,11 @@ in
           genie.experts.trusted
         ];
         guardExe = lib.getExe inputs'.genie-agent.packages.genie-guard;
+        # agent-quota@<owner>.<host>: registered by the `xmsg service exec` runner, so
+        # the trusted executable is xmsg's own.
+        agentQuotaEnabled =
+          host.settings.applications.dev.ai.mcp.xmsg.agentQuotaService.enable
+          && config.home.username == host.system-owner;
 
         me = config.home.username;
         node = (fedOf host).nodes.${me} or null;
@@ -373,6 +378,7 @@ in
             # The bot itself registers on its own node (services/matrix-xmsg.nix).
             svcExe =
               lib.optionalAttrs guardEnabled { genie-guard = guardExe; }
+              // lib.optionalAttrs agentQuotaEnabled { agent-quota = lib.getExe config.programs.xmsg.package; }
               // lib.optionalAttrs tier1Enabled { genie = tier1Exe; }
               // lib.optionalAttrs expertsEnabled (
                 lib.listToAttrs (
@@ -411,36 +417,30 @@ in
             };
         };
 
-        systemd.user.services.agent-quota =
-          lib.mkIf
-            (
-              host.settings.applications.dev.ai.mcp.xmsg.agentQuotaService.enable
-              && config.home.username == host.system-owner
-            )
-            {
-              Unit = {
-                Description = "agent-quota over xmsg (xmsg service exec)";
-                After = [ "xmsg.service" ];
-                Wants = [ "xmsg.service" ];
-              };
-              Service = {
-                ExecStart = lib.escapeShellArgs [
-                  (lib.getExe config.programs.xmsg.package)
-                  "service"
-                  "exec"
-                  "--name"
-                  "agent-quota"
-                  "--"
-                  (lib.getExe pkgs.local.agent-quota)
-                  "--json"
-                ];
-                Restart = "on-failure";
-                RestartSec = 10;
-                NoNewPrivileges = true;
-                UMask = "0077";
-              };
-              Install.WantedBy = [ "default.target" ];
-            };
+        systemd.user.services.agent-quota = lib.mkIf agentQuotaEnabled {
+          Unit = {
+            Description = "agent-quota over xmsg (xmsg service exec)";
+            After = [ "xmsg.service" ];
+            Wants = [ "xmsg.service" ];
+          };
+          Service = {
+            ExecStart = lib.escapeShellArgs [
+              (lib.getExe config.programs.xmsg.package)
+              "service"
+              "exec"
+              "--name"
+              "agent-quota"
+              "--"
+              (lib.getExe pkgs.local.agent-quota)
+              "--json"
+            ];
+            Restart = "on-failure";
+            RestartSec = 10;
+            NoNewPrivileges = true;
+            UMask = "0077";
+          };
+          Install.WantedBy = [ "default.target" ];
+        };
 
         # The api-key file is the hyperqwen home-manager secret, decrypted for the owner.
         systemd.user.services.genie-guard = lib.mkIf guardEnabled {
