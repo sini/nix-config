@@ -874,6 +874,72 @@ let
     in
     lib.concatMapStringsSep ":" hex (lib.concatMap encode routes);
 
+  # Device SSH (site setting mgmt): the declared users' keys and the agenix
+  # password, laid over the live setting as renderNetworkDns lays its fields. The
+  # live body carries the controller's own secrets (x_api_token, x_mgmt_key), so
+  # `data` is sensitive and output unifi_ssh shows the declared non-secret fields.
+  renderSsh =
+    { site, ssh }:
+    let
+      path = "/api/s/${site}/rest/setting";
+      byId = "${path}/mgmt/{id}";
+      live = "jsondecode(data.restapi_object.unifi_setting_mgmt.api_response)";
+      keys = lib.concatMap (
+        u:
+        map (
+          k:
+          let
+            f = lib.splitString " " k.key;
+          in
+          {
+            name = "${u}-${k.tag}";
+            type = lib.elemAt f 0;
+            key = lib.elemAt f 1;
+            comment = lib.concatStringsSep " " (lib.drop 2 f);
+            date = "";
+            fingerprint = "";
+          }
+        ) fleet.users.registry.${u}.identity.sshKeys
+      ) ssh.users;
+      fields = {
+        x_ssh_enabled = true;
+        x_ssh_keys = keys;
+        x_ssh_auth_password_enabled = ssh.passwordAuth;
+      };
+    in
+    if ssh.users == [ ] then
+      { }
+    else
+      {
+        data.restapi_object.unifi_setting_mgmt = {
+          inherit path;
+          results_key = "data";
+          search_key = "key";
+          search_value = "mgmt";
+          results_contains_object = true;
+        };
+        resource.restapi_object.setting_mgmt = {
+          inherit path;
+          create_method = "PUT";
+          create_path = byId;
+          read_path = "${path}/mgmt";
+          read_search = {
+            results_key = "data";
+            search_key = "key";
+            search_value = "mgmt";
+          };
+          update_path = byId;
+          destroy_method = "GET";
+          destroy_path = "${path}/mgmt";
+          data = "\${sensitive(jsonencode(merge(${live}, ${builtins.toJSON fields}, { x_ssh_password = var.unifi_ssh_password })))}";
+          lifecycle.prevent_destroy = true;
+        };
+        output.unifi_ssh.value = {
+          inherit (fields) x_ssh_enabled x_ssh_auth_password_enabled;
+          x_ssh_keys = map (k: k.name) keys;
+        };
+      };
+
   # The gateway's raw FRR bgpd config: one peer group per remote ASN, one
   # neighbor per bgp-peers record. Raw, not the provider's structured peers:
   # its template forces ebgp-requires-policy, redistribute connected,
@@ -977,6 +1043,18 @@ in
                 uploadFileName = mkOption {
                   type = types.str;
                   description = "The file name the controller records for the uploaded configuration";
+                };
+              };
+              ssh = {
+                users = mkOption {
+                  type = types.listOf types.str;
+                  default = [ ];
+                  description = "den users whose sshKeys may log in to the gateway (device SSH, site setting mgmt)";
+                };
+                passwordAuth = mkOption {
+                  type = types.bool;
+                  default = false;
+                  description = "Accept device SSH password logins; the password is the agenix unifi-ssh-password";
                 };
               };
               networkPolicies = mkOption {
@@ -1165,6 +1243,7 @@ in
         inherit dns-resolvers;
         environments = lib.attrValues config.den.environments;
       })
+      (renderSsh { inherit (unifi) site ssh; })
       # Option 121 (docs/dns-resolver.md §7 Q2): the definition, and its value
       # for Default, laid over Default's PUT body (renderNetworkDns) in the field
       # named by the definition's _id.
@@ -1223,6 +1302,12 @@ in
           description = "The UniFi API key for the restapi provider (TF_VAR_unifi_api_key)";
         };
 
+        variable.unifi_ssh_password = {
+          type = "string";
+          sensitive = true;
+          description = "The gateway's device SSH password, agenix unifi-ssh-password (TF_VAR_unifi_ssh_password)";
+        };
+
         variable.state_passphrase = {
           type = "string";
           sensitive = true;
@@ -1278,6 +1363,11 @@ in
     {
       age.secrets.unifi-state-passphrase = {
         rekeyFile = environment.secretPath + "/unifi-state-passphrase.age";
+        intermediary = true;
+        generator.script = "rfc3986-secret";
+      };
+      age.secrets.unifi-ssh-password = {
+        rekeyFile = environment.secretPath + "/unifi-ssh-password.age";
         intermediary = true;
         generator.script = "rfc3986-secret";
       };
@@ -1375,8 +1465,9 @@ in
         [[ -s $identity ]] || { echo "no YubiKey identity found; plug in the YubiKey" >&2; exit 1; }
         UNIFI_API_KEY=$(age -d -i "$identity" .secrets/env/${unifiEnv}/unifi-api-key.age)
         TF_VAR_state_passphrase=$(age -d -i "$identity" .secrets/env/${unifiEnv}/unifi-state-passphrase.age)
+        TF_VAR_unifi_ssh_password=$(age -d -i "$identity" .secrets/env/${unifiEnv}/unifi-ssh-password.age)
         TF_VAR_unifi_api_key=$UNIFI_API_KEY
-        export UNIFI_API_KEY TF_VAR_unifi_api_key TF_VAR_state_passphrase
+        export UNIFI_API_KEY TF_VAR_unifi_api_key TF_VAR_state_passphrase TF_VAR_unifi_ssh_password
       '';
 
       # Providers come from nixpkgs and pkgs/by-name, the only places a provider

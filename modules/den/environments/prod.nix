@@ -110,6 +110,11 @@
         to = "dev";
       }
     ];
+    # Device SSH: key logins; password logins on until key login is verified.
+    unifi.ssh = {
+      users = [ "sini" ];
+      passwordAuth = true;
+    };
     unifi.bgp = {
       description = "edge-prod";
       uploadFileName = "unifi-frr-bgp-prod.conf";
