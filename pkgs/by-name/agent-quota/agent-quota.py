@@ -173,7 +173,8 @@ def codex(now):
         return stamp([row("codex")], UNKNOWN, None)
     newest = max(files, key=os.path.getmtime)
     age_s = int(max(now - os.path.getmtime(newest), 0))
-    source = f"{os.path.basename(newest)} ({age(age_s)} old)"
+    # The source class only: the rollout file name carries the codex session id.
+    source = f"codex rollout rate_limits ({age(age_s)} old)"
     last = None
     acct = UNKNOWN
     with open(newest, encoding="utf-8", errors="replace") as f:

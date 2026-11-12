@@ -3,6 +3,7 @@
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -148,7 +149,7 @@ with tempfile.TemporaryDirectory() as t:
     ], rows
     codex_rows = [r for r in rows if r["agent"] == "codex"]
     assert all(
-        r["source"].startswith("rollout-new.jsonl (") and "old)" in r["source"]
+        r["source"].startswith("codex rollout rate_limits (") and "old)" in r["source"]
         for r in codex_rows
     )
     claude_rows = [r for r in rows if r["agent"] == "claude"]
@@ -227,6 +228,12 @@ with tempfile.TemporaryDirectory() as t:
 # Account hashes. Canary: every fixture we read plants an email and a token next to the
 # ID; neither may surface anywhere, while the ID's hash must (so the fixture IS read).
 EMAIL, TOKEN = "canary@example.invalid", "canary-token-XYZ"
+SESSION = "01a1cbf0-07b6-7751-a7b8-09f832c111d4"
+UUID_RE = re.compile(
+    r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
+)
+# The predicate fires on the shape it guards against.
+assert UUID_RE.search(SESSION)
 
 
 def account_run(codex_id, claude_id, agy_email):
@@ -255,12 +262,20 @@ def account_run(codex_id, claude_id, agy_email):
         rows, _ = run(
             t,
             AGY,
-            {"rollout-c.jsonl": [json.dumps(meta), event(LIMITS)]},
+            # Named as codex names them: the session id is a UUID in the file name.
+            {
+                f"rollout-2026-11-11T10-47-47-{SESSION}.jsonl": [
+                    json.dumps(meta),
+                    event(LIMITS),
+                ]
+            },
             claude,
             log,
         )
-    for canary in (EMAIL, TOKEN, "canary", codex_id, claude_id):
+    for canary in (EMAIL, TOKEN, "canary", codex_id, claude_id, SESSION):
         assert canary not in everything, canary
+    # No UUID-shaped string at all: account ids surface only as their hashes.
+    assert not UUID_RE.search(everything), UUID_RE.search(everything)
     assert agy_email not in everything, agy_email
     return rows
 
