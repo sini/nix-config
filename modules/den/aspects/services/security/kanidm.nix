@@ -1050,11 +1050,16 @@ in
                   kanidm login -D idm_admin
 
                 account() {
-                  kanidm service-account get "$1" -D idm_admin >/dev/null 2>&1 \
-                    || kanidm service-account create "$1" "$2" idm_admins -D idm_admin
+                  if kanidm service-account get "$1" -D idm_admin 2>/dev/null | grep -q '^uuid:'; then
+                    echo "service account $1: present"
+                  else
+                    echo "service account $1: creating"
+                    kanidm service-account create "$1" "$2" idm_admins -D idm_admin
+                  fi
                 }
                 account xmsg-gateway-liveness "xmsg gateway liveness reader"
                 account xmsg-gateway-liveness-hidden "xmsg gateway liveness control (no read grants)"
+                echo "idm_people_pii_read: adding xmsg-gateway-liveness"
                 kanidm group add-members idm_people_pii_read xmsg-gateway-liveness -D idm_admin
 
                 for sa in xmsg-gateway-liveness xmsg-gateway-liveness-hidden; do
@@ -1067,6 +1072,7 @@ in
                   fi
                 done
 
+                echo "canary validity window"
                 kanidm person validity begin-from xmsg-gateway-liveness-test 2000-01-01T00:00:00Z -D idm_admin
                 kanidm person validity expire-at xmsg-gateway-liveness-test 2099-12-31T00:00:00Z -D idm_admin
               '';
