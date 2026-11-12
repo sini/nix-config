@@ -1,11 +1,13 @@
 # The address plan: the /56, host tokens and DHCP reservations
 
-Status: **decided v0.2** (2026-11-11). The owner ruled on every open question
-(§6), and stage 1 is built from this text. It was written against `main` at
-`9f7d4f02`. Stage 1 covers four things: DHCP reservations from den, stable IPv6
-host parts, a convention for slicing the /56, and the cluster's ULA moved into
-the site's. Stage 2, public IPv6 for individual services, is out of scope. §4
-lists only what it needs from this plan.
+Status: **decided v0.3** (2026-11-11). v0.3 revises §2.1 after a measurement:
+the gateway assigns LAN /64s itself, so den's GUA slices move to the /56's top
+half (owner: "it doesn't need to be the same"). The owner ruled on every open
+question (§6), and stage 1 is built from this text. It was written against
+`main` at `9f7d4f02`. Stage 1 covers four things: DHCP reservations from den,
+stable IPv6 host parts, a convention for slicing the /56, and the cluster's ULA
+moved into the site's. Stage 2, public IPv6 for individual services, is out of
+scope. §4 lists only what it needs from this plan.
 
 ## 1. Problem
 
@@ -65,17 +67,25 @@ A /56 leaves an 8-bit subnet id `s`, so there are 256 /64s. The id is two hex
 digits, and each digit means one thing:
 
 ```
-s = E·16 + P        /64 = <delegated /56>:<s as two hex digits>::/64
-E  environment   = den.environments.<e>.ipv6Nibble, declared   (prod 0, dev 1; 2–e future envs; f infra)
+k = E·16 + P        the slice key; ULA subnet 00kk, GUA subnet 80 + k (P ≥ 1 only)
+E  environment   = den.environments.<e>.ipv6Nibble, declared   (prod 0, dev 1; 2–6 future envs; 7 infra)
 P  purpose       = 0 LAN · 1 cluster LB services · 2 cluster (pods, services, fabric) · 3–f reserved
 ```
 
-| Slice | prod (E=0)   | dev (E=1)    | Use                                        |
-| ----- | ------------ | ------------ | ------------------------------------------ |
-| P=0   | `…b600::/64` | `…b610::/64` | the environment's LAN (`networks.default`) |
-| P=1   | `…b601::/64` | `…b611::/64` | stage 2: LoadBalancer addresses            |
-| P=2   | `…b602::/64` | `…b612::/64` | the cluster's slice; only its ULA is used  |
-| E=f   | `…b6f0::/60` |              | gateway-side transit and infra             |
+**The /56's two halves (v0.3).** The gateway hands each LAN a /64 of the
+delegated /56 itself, in interface order, and ignores `ipv6_pd_prefixid`
+(measured 2026-11-11, §5): Default holds `00` and dev `01`. Den does not choose
+a LAN's GUA subnet, so the low half, `00`–`7f`, is the gateway's. Den's own GUA
+slices sit in the high half, at `80 + k`. A LAN added later takes the next low
+subnet and cannot collide with them. The ULA is den's alone, so it keeps `00kk`,
+LAN slices included. E stops at 7, so `80 + k` stays below `100`.
+
+| Slice | prod (E=0)                                    | dev (E=1)                                      | Use                                        |
+| ----- | --------------------------------------------- | ---------------------------------------------- | ------------------------------------------ |
+| P=0   | GUA gateway's (`…b600` today); ULA `…:0::/64` | GUA gateway's (`…b601` today); ULA `…:10::/64` | the environment's LAN (`networks.default`) |
+| P=1   | GUA `…b681::/64`; ULA `…:1::/64`              | GUA `…b691::/64`; ULA `…:11::/64`              | stage 2: LoadBalancer addresses            |
+| P=2   | ULA `…:2::/64`                                | ULA `…:12::/64`                                | the cluster's slice; only its ULA is used  |
+| E=7   | GUA `…b6f0::/60`                              |                                                | gateway-side transit and infra             |
 
 Why the environment is the high nibble: each environment is then one /60
 (`…b600::/60` prod, `…b610::/60` dev). That is the unit that firewall policy,
@@ -83,19 +93,22 @@ Why the environment is the high nibble: each environment is then one /60
 layout (purpose high) keeps today's ids, but it scatters an environment over
 sixteen /64s. `E` is declared per environment (`ipv6Nibble`, an integer 0–15),
 not derived from its `id`: the id is Cilium's cluster id and a counter, the
-nibble an address. A nibble above 15 is an evaluation error (the option's type),
-and two environments on one nibble fail the `address-plan-slices` check.
+nibble an address. A nibble above 7 is an evaluation error (v0.3: `80 + k` must
+stay inside the /56), and two environments on one nibble fail the
+`address-plan-slices` check.
 
-**Mapping today:** `Default` 00 → (prod, LAN), no change. `dev` 01 decodes as
-(prod, LB), so it **moves to 10**. On `dev`, the unifi workspace sets
-`ipv6_pd_auto_prefixid_enabled = false` and `ipv6_pd_prefixid = "10"` (go-unifi
-`network.generated.go`: `^$|[a-fA-F0-9]{1,4}`). On `Default`, it pins `"0"` the
-same way, so no future network auto-takes it. Both fields go into the existing
-`renderNetworkDns` body (`fieldsOf`), which already PUTs the live network with
-declared fields laid over it. `ipv6_pd_auto_prefixid_enabled` joins `required`'s
-precondition. `ipv6_pd_prefixid` does not, since a network on auto may not carry
-it. The move renumbers dev's GUAs once. Nothing in den pins one (bitstream's
-`4a00` address is removed, §2.2).
+**Mapping today (v0.2, superseded):** `Default` 00 → (prod, LAN), no change.
+`dev` 01 decodes as (prod, LB), so it **moves to 10**. v0.3: that move cannot
+happen on this gateway, and is no longer needed, since LAN GUA subnets are not
+den's. The paragraph below records what was built. On `dev`, the unifi workspace
+sets `ipv6_pd_auto_prefixid_enabled = false` and `ipv6_pd_prefixid = "10"`
+(go-unifi `network.generated.go`: `^$|[a-fA-F0-9]{1,4}`). On `Default`, it pins
+`"0"` the same way, so no future network auto-takes it. Both fields go into the
+existing `renderNetworkDns` body (`fieldsOf`), which already PUTs the live
+network with declared fields laid over it. `ipv6_pd_auto_prefixid_enabled` joins
+`required`'s precondition. `ipv6_pd_prefixid` does not, since a network on auto
+may not carry it. The move renumbers dev's GUAs once. Nothing in den pins one
+(bitstream's `4a00` address is removed, §2.2).
 
 **ULA, the same slicing:** one site /48, `fd3d:f136:2e4e::/48`, prod's existing
 global ID, kept so Blocky's `::53` does not move. Subnet `00ss` mirrors the GUA
@@ -268,10 +281,10 @@ must fail or read non-zero, so an empty render cannot pass.
   `dhcp6PDUseFromInterface` and `dhcp6PDUseSize` per LAN, and it hands out the
   /56's /64s in interface order: Default `00`, dev `01`. That held under both
   the `auto` and `manual` setting preference and a forced provision. So dev's
-  move to `10` (§2.1) does not happen, and dev occupies prod's LB slice P=1
-  (`…b601`). Stage 2 must either take its LB slices from /64s no LAN uses, or
-  find another control. The controller fields stay declared; they are inert
-  here.
+  move to `10` (§2.1) does not happen, and dev occupies what v0.2 made prod's LB
+  slice (`…b601`). v0.3 moves den's GUA slices to the /56's high half (§2.1),
+  which no LAN takes. The controller fields are inert here and are removed in
+  the v0.3 implementation (§7).
 - **The cluster's ULA move** renumbers pod and service IPv6 and the fabric
   loopbacks. It is the last stage-1 commit, held until the owner deploys it.
 
@@ -290,3 +303,13 @@ must fail or read non-zero, so an empty render cannot pass.
    `fdfd:cafe::/48` moves into the site /48 under P=2, per environment (§2.1).
    The IPv6 config is provisional and no pod depends on IPv6, so its addresses
    can be reassigned.
+
+## 7. v0.3 implementation (follows this text)
+
+1. `_address-plan.nix`: `guaSubnet k = 0x80 + k` for P ≥ 1, refused for P = 0;
+   the nibble bound drops from 15 to 7. `address-plan-slices` checks that every
+   GUA slice is in `80`–`ff`, with a nibble-8 fixture as its control.
+2. `unifi.nix`: drop `ipv6_pd_auto_prefixid_enabled` and `ipv6_pd_prefixid` from
+   the network overlay and its precondition (inert, §5). The live values stay as
+   they are; nothing reads them.
+3. Nothing renumbers: no LAN moves, and no GUA slice of den's is in use yet.
