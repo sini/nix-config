@@ -112,6 +112,8 @@
     ];
     # Device SSH: key logins; password logins on until key login is verified.
     unifi.ssh = {
+      # The UDM's console host key; owner-confirmed fingerprint SHA256:8CXGv1cP…lFb8K0o.
+      hostKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIB6vaXUMhkqjJnppUOqI2hGoGnsY+/BFr150qFk0Ae1G";
       users = [ "sini" ];
       passwordAuth = true;
     };

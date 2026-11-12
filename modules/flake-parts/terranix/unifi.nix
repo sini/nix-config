@@ -1046,6 +1046,11 @@ in
                 };
               };
               ssh = {
+                hostKey = mkOption {
+                  type = types.nullOr types.str;
+                  default = null;
+                  description = "The gateway's SSH host public key, pinned fleet-wide (core/network/hostsfile)";
+                };
                 users = mkOption {
                   type = types.listOf types.str;
                   default = [ ];

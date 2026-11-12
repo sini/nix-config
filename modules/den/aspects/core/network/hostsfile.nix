@@ -7,6 +7,27 @@
 # LAN addresses are unreachable while roaming), so it only pins known_hosts by the
 # tailnet name that `ssh <host>` resolves to (applications.dev.security.ssh aliases the
 # short name to that tailnet name on darwin).
+{ den, ... }:
+let
+  # shortcut: one UniFi gateway serves every environment, so its key is pinned under
+  # each environment's gatewayIp; key it per controller when a second gateway appears.
+  gatewayKnownHosts =
+    lib:
+    let
+      envs = lib.attrValues den.environments;
+    in
+    lib.listToAttrs (
+      lib.concatMap (
+        e:
+        lib.optional ((e.unifi or null) != null && e.unifi.ssh.hostKey != null) (
+          lib.nameValuePair "unifi-gateway-${e.name}" {
+            hostNames = lib.unique (lib.concatMap (x: lib.toList (x.networks.default.gatewayIp or [ ])) envs);
+            publicKey = e.unifi.ssh.hostKey;
+          }
+        )
+      ) envs
+    );
+in
 {
   den.aspects.core.network.hostsfile = {
     # This host and its microvm guests: a guest is resolved under its parent, so
@@ -80,7 +101,7 @@
       in
       {
         networking.hosts = hosts;
-        services.openssh.knownHosts = knownHosts;
+        services.openssh.knownHosts = knownHosts // gatewayKnownHosts lib;
       };
 
     darwin =
