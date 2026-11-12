@@ -1051,7 +1051,7 @@ in
 
                 account() {
                   kanidm service-account get "$1" -D idm_admin >/dev/null 2>&1 \
-                    || kanidm service-account create "$1" "$2" idm_admin -D idm_admin
+                    || kanidm service-account create "$1" "$2" idm_admins -D idm_admin
                 }
                 account xmsg-gateway-liveness "xmsg gateway liveness reader"
                 account xmsg-gateway-liveness-hidden "xmsg gateway liveness control (no read grants)"
