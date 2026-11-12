@@ -56,7 +56,6 @@
       members = [ "admins" ];
     };
     # The gateway authorization server's upstream login (kanidm.nix xmsg-gateway-login).
-    # The liveness test person joins it from kanidm.nix during measurement.
     "xmsg-gateway-login.access" = {
       labels = [ "oauth-grant" ];
       description = "xmsg gateway upstream login";

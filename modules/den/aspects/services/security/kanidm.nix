@@ -780,17 +780,11 @@ in
             # The gateway authorization server's upstream login (xmsg-design
             # gateway-authorization-server.md rev 8): public, PKCE S256 (kanidm's
             # default). Its own access group, never xmsg-gateway.access.
-            # shortcut: the localhost redirect is for the P2 measurement only; remove it
-            # and enableLocalhostRedirects when that measurement is done.
             xmsg-gateway-login = {
               displayName = "xmsg gateway upstream login";
               public = true;
-              enableLocalhostRedirects = true;
               preferShortUsername = true;
-              originUrl = [
-                "${gwSettings.origin}/oauth/callback"
-                "http://localhost:18550/callback"
-              ];
+              originUrl = [ "${gwSettings.origin}/oauth/callback" ];
               originLanding = gwSettings.origin;
               scopeMaps."xmsg-gateway-login.access" = [ "openid" ];
             };
@@ -887,14 +881,13 @@ in
                 # validity window (2000-01-01 to 2099-12-31). The gateway's liveness reader
                 # must see those dates; seeing them null means read access was lost, and
                 # the gateway fails closed. Do not delete it while the gateway runs.
-                # shortcut: its xmsg-gateway-login.access membership is for the P1/P2
-                # login-and-consent measurement only; remove it (and the credential set
-                # for that login) when the measurement is done.
+                # Its P1/P2 login-and-consent measurement is done (2026-11-12), so it is in
+                # no login group: it only has to be readable.
                 persons = {
                   xmsg-gateway-liveness-test = {
                     displayName = "xmsg gateway liveness test";
                     mailAddresses = [ "xmsg-gateway-liveness-test@${environment.email.domain}" ];
-                    groups = [ "xmsg-gateway-login.access" ];
+                    groups = [ ];
                   };
                 }
                 // mapAttrs (username: user: {
