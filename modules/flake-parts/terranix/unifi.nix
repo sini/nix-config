@@ -552,6 +552,8 @@ let
           // lib.optionalAttrs (e.ipv6Nibble or null != null) {
             ipv6_pd_auto_prefixid_enabled = false;
             ipv6_pd_prefixid = plan.subnetHex (plan.subnetId e.ipv6Nibble plan.purposes.lan);
+            # On "auto" the gateway ignores the pinned prefix id (dev kept 01 while it read 10).
+            ipv6_setting_preference = "manual";
           };
       nets = lib.concatMap (
         e:
