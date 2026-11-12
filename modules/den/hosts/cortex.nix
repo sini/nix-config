@@ -52,6 +52,8 @@ in
 
       # sini@bitstream <-> sini@cortex, authenticated by the xmsg CA (federation plan §6.7).
       applications.dev.ai.mcp.xmsg.federation.nodes.sini = { };
+      # agent-quota@sini.cortex for xmsg-design's quota reader (xmsg-fei.6).
+      applications.dev.ai.mcp.xmsg.agentQuotaService.enable = true;
 
       applications.dev.ai.mcp.hindsight.handoffRepos = [ "Documents/repos/sini/den-ag-design" ];
       applications.dev.security.ssh-agent-mux.siniFork = true;

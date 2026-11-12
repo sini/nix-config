@@ -133,6 +133,17 @@ in
       description = "OpenAI-compatible endpoint genie-guard asks for its verdicts (hyperqwen on cortex-cuda).";
     };
 
+    settings.agentQuotaService.enable = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = ''
+        Serve agent-quota on this host's xmsg as `agent-quota@<owner>.<host>`
+        (`xmsg service exec`): each request runs `agent-quota --json` and replies with
+        its rows. For the system owner only. agent-quota reads no credential file and
+        hashes account ids itself (pkgs/by-name/agent-quota).
+      '';
+    };
+
     settings.federation.nodes = lib.mkOption {
       type = lib.types.attrsOf (
         lib.types.submodule {
@@ -399,6 +410,37 @@ in
               codex.enable = pkgs.stdenv.hostPlatform.isLinux;
             };
         };
+
+        systemd.user.services.agent-quota =
+          lib.mkIf
+            (
+              host.settings.applications.dev.ai.mcp.xmsg.agentQuotaService.enable
+              && config.home.username == host.system-owner
+            )
+            {
+              Unit = {
+                Description = "agent-quota over xmsg (xmsg service exec)";
+                After = [ "xmsg.service" ];
+                Wants = [ "xmsg.service" ];
+              };
+              Service = {
+                ExecStart = lib.escapeShellArgs [
+                  (lib.getExe config.programs.xmsg.package)
+                  "service"
+                  "exec"
+                  "--name"
+                  "agent-quota"
+                  "--"
+                  (lib.getExe pkgs.local.agent-quota)
+                  "--json"
+                ];
+                Restart = "on-failure";
+                RestartSec = 10;
+                NoNewPrivileges = true;
+                UMask = "0077";
+              };
+              Install.WantedBy = [ "default.target" ];
+            };
 
         # The api-key file is the hyperqwen home-manager secret, decrypted for the owner.
         systemd.user.services.genie-guard = lib.mkIf guardEnabled {
