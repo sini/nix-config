@@ -959,10 +959,9 @@ in
                 "${name}-authorize" = route [ (path "PathPrefix" "/oauth/authorize") ];
               };
 
-            # Per client: Cloudflare fronts the name, so envoy's peer is a Cloudflare edge
-            # and the client is CF-Connecting-IP. shortcut: a client reaching the WAN
-            # address directly can set that header itself; trusting it gateway-wide
-            # (ClientTrafficPolicy clientIPDetection) is the upgrade.
+            # Per client address, as envoy-gateway detects it: Cloudflare's forwarded
+            # client when the peer is a Cloudflare edge, else the peer itself
+            # (envoy-gateway.nix clientIPDetection). A forged header changes nothing.
             backendTrafficPolicies."${name}-authorize-rate-limit".spec = {
               targetRefs = [
                 {
@@ -971,24 +970,26 @@ in
                   name = "${name}-authorize";
                 }
               ];
-              rateLimit.local.rules = [
-                {
-                  clientSelectors = [
-                    {
-                      headers = [
-                        {
-                          name = "CF-Connecting-IP";
+              rateLimit.local.rules =
+                map
+                  (value: {
+                    clientSelectors = [
+                      {
+                        sourceCIDR = {
                           type = "Distinct";
-                        }
-                      ];
-                    }
+                          inherit value;
+                        };
+                      }
+                    ];
+                    limit = {
+                      requests = 30;
+                      unit = "Minute";
+                    };
+                  })
+                  [
+                    "0.0.0.0/0"
+                    "::/0"
                   ];
-                  limit = {
-                    requests = 30;
-                    unit = "Minute";
-                  };
-                }
-              ];
             };
 
             # Declaring an ingress rule puts the pod in ingress default-deny: only envoy

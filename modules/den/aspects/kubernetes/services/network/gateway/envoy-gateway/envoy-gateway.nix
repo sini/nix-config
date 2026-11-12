@@ -325,6 +325,17 @@
                 }
               ];
               timeout.http.streamIdleTimeout = "660s";
+              # The client address for logs, rate limits and policy: X-Forwarded-For is
+              # walked right to left only when the peer is a Cloudflare edge, so the
+              # first non-Cloudflare entry is the client. Any other peer (a direct-to-WAN
+              # client, a LAN client on the VIP) is the client itself, whatever headers
+              # it sends. The ranges are Cloudflare's published lists, as data:
+              #   refresh: see cloudflare-ips.json's `source`
+              clientIPDetection.xForwardedFor.trustedCIDRs =
+                let
+                  cf = lib.importJSON ./cloudflare-ips.json;
+                in
+                cf.ipv4 ++ cf.ipv6;
             };
 
             # Envoy Gateway 1.8 installs the OIDC SecurityPolicy oauth2 filter on the

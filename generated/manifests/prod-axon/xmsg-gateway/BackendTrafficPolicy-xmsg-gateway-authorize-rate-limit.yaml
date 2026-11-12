@@ -8,9 +8,16 @@ spec:
     local:
       rules:
         - clientSelectors:
-            - headers:
-                - name: CF-Connecting-IP
-                  type: Distinct
+            - sourceCIDR:
+                type: Distinct
+                value: 0.0.0.0/0
+          limit:
+            requests: 30
+            unit: Minute
+        - clientSelectors:
+            - sourceCIDR:
+                type: Distinct
+                value: ::/0
           limit:
             requests: 30
             unit: Minute
