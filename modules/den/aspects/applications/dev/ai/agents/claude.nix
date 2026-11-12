@@ -501,6 +501,9 @@
                     {
                       type = "command";
                       command = "bash ${config.home.homeDirectory}/.claude/bash-guard.sh";
+                      # A timed-out hook does not block. The probe-evidence check takes ~83 s
+                      # cold in a checkout holding the full probe corpus, past the 60 s default.
+                      timeout = 120;
                     }
                   ];
                 }
