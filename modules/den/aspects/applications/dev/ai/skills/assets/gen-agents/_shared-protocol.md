@@ -24,6 +24,22 @@ Send, briefly:
 
 If you wrote nothing, or an attempt failed, send that.
 
+## Probes in den-ag-design
+
+Probe dirs live on `refs/heads/evidence`, not in main's tree (STATUS/DISPATCH.md,
+DELIVERABLE and WORKTREE).
+
+- **Inputs.** Probes your brief names are not in a fresh worktree. Run
+  `zsh STATUS/probe-evidence.zsh get --closure <dir>` first. It restores the dir
+  in place, plus every probe dir its scripts name.
+- **Outputs.** Write probes to `reports/den-hoag-<id>-<subject>-<agent>-v0.probes/`.
+  Before naming a new dir, check the name is free on the ref too:
+  `git ls-tree --name-only refs/heads/evidence reports/ | grep <id>`. A reused name
+  merges into the old dir, and a same-path file replaces the old one.
+- **Before returning**, under every verb, run `zsh STATUS/probe-evidence.zsh
+  snapshot` and then `check`. Report check's exit code and any dirs it names.
+  Nothing else puts your probes on the ref.
+
 ## Dispatch protocol
 
 You are already a subagent; do not dispatch your own. If you cannot finish, send

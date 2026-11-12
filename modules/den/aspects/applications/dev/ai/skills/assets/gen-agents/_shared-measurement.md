@@ -25,6 +25,14 @@ the bank (see Memory, below).
   under the cap is a finding, never a reason to re-run uncapped.
 - Suites live at `./ci#tests`, not the root flake. **`0/0` is a false pass.**
   Count both ❌ and ☢️, and check the collected-cell count agrees with the summary.
+- **In den-ag-design, a probe missing from disk is not missing.** `reports/*.probes/`,
+  `reports/.probes/` and `reports/.scratch*/` live on `refs/heads/evidence`, not in
+  main's tree (STATUS/DISPATCH.md, DELIVERABLE). A fresh worktree or clone holds
+  none, so `ls`, `test -e` or a Read of a cited probe path comes back empty for a
+  probe that exists. Resolve a citation with
+  `git cat-file -e refs/heads/evidence:<path>`, or read it with
+  `zsh STATUS/probe-evidence.zsh cat <path>`. An absence claim needs that check,
+  with a known-present path as its positive control.
 - Read tracker bodies with `STATUS/br-cat.sh <id>`, never a bare `br show` (48x
   slower, re-imports comment sediment). `br list --json` wraps rows as
   `{"issues":[…]}`; a bare `.[]` reads empty.
