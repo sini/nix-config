@@ -498,6 +498,8 @@ in
               "--key-file"
               eventsKey
             ]
+            # Exact-binding grant uniqueness (docs/auth-profiles.md, gateway 617187e).
+            [ "migrate-profiles" ]
           ];
 
         prepareScript = ''
