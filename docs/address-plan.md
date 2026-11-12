@@ -263,6 +263,15 @@ must fail or read non-zero, so an empty render cannot pass.
   The apply order is then clear-then-set, in two applies.
 - **Managed `name`** overwrites a name set by hand in the UI. This is intended,
   and the first plan shows each overwrite.
+- **The gateway does not honour `ipv6_pd_prefixid`** (measured 2026-11-11, UniFi
+  OS 6.0.17). Its rendered network config (`udapi-net-cfg.json`) carries only
+  `dhcp6PDUseFromInterface` and `dhcp6PDUseSize` per LAN, and it hands out the
+  /56's /64s in interface order: Default `00`, dev `01`. That held under both
+  the `auto` and `manual` setting preference and a forced provision. So dev's
+  move to `10` (§2.1) does not happen, and dev occupies prod's LB slice P=1
+  (`…b601`). Stage 2 must either take its LB slices from /64s no LAN uses, or
+  find another control. The controller fields stay declared; they are inert
+  here.
 - **The cluster's ULA move** renumbers pod and service IPv6 and the fabric
   loopbacks. It is the last stage-1 commit, held until the owner deploys it.
 

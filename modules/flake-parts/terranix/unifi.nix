@@ -551,9 +551,11 @@ let
           }
           // lib.optionalAttrs (e.ipv6Nibble or null != null) {
             ipv6_pd_auto_prefixid_enabled = false;
+            # Inert on this gateway: UniFi OS renders no subnet id (udapi-net-cfg's
+            # dhcp6PDUseFromInterface/dhcp6PDUseSize only) and hands LANs the /56's
+            # /64s in interface order, Default 00 and dev 01, under auto and manual
+            # alike (measured 2026-11-11, docs/address-plan.md §5).
             ipv6_pd_prefixid = plan.subnetHex (plan.subnetId e.ipv6Nibble plan.purposes.lan);
-            # On "auto" the gateway ignores the pinned prefix id (dev kept 01 while it read 10).
-            ipv6_setting_preference = "manual";
           };
       nets = lib.concatMap (
         e:
