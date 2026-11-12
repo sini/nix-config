@@ -1,8 +1,8 @@
 # Public IPv6 for individual services (address plan stage 2)
 
-Status: **draft v0.1** (2026-11-11), for the owner's review. Nothing here is
-built. It builds on `docs/address-plan.md` v0.3, whose §2.1 gives the slices and
-whose §4 lists this stage's constraints.
+Status: **draft v0.2** (2026-11-12). The owner answered §7 (see §8). Nothing
+here is built. It builds on `docs/address-plan.md` v0.3, whose §2.1 gives the
+slices and whose §4 lists this stage's constraints.
 
 ## 1. Summary
 
@@ -177,3 +177,23 @@ The external vantage still has to be chosen (§7 Q3).
 3. **External vantage for the live test:** a phone on cellular IPv6, a public
    probe service, or a cloud VM?
 4. **First Service to opt in**, if any.
+
+## 8. Owner answers (2026-11-12)
+
+1. **The /56 is not promised to be static.** So the prefix is followed at
+   runtime, and arm (b) is out.
+2. **§4.4: arm (a), the in-cluster reconciler.** It is a CronJob of roughly
+   150–250 lines that reads the /56 from a node's own SLAAC address and writes
+   the pool block, the AAAA records and the gateway policies. It carries a
+   Cloudflare token scoped to the json64.dev zone's DNS edit, and a UniFi API
+   key.
+3. **Vantage:** the owner's phone on cellular for the first live test. An
+   external VM is proposed separately (`docs/external-vantage-vm.md`) as the
+   repeatable vantage.
+4. **First Service: envoy-gateway**, today reached through UniFi's IPv4 port
+   forward. A public IPv6 address for it serves the names Cloudflare does not
+   proxy (`s3`, `hs`, `jellyfin`) to IPv6 clients directly. Proxied names
+   already have IPv6 through Cloudflare.
+
+Next: build the address-plan v0.3 steps, then run the live test (§6), then build
+§5's steps 3–5 in order.
