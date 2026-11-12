@@ -1,0 +1,20 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: BackendTrafficPolicy
+metadata:
+  name: xmsg-gateway-authorize-rate-limit
+  namespace: xmsg-gateway
+spec:
+  rateLimit:
+    local:
+      rules:
+        - clientSelectors:
+            - headers:
+                - name: CF-Connecting-IP
+                  type: Distinct
+          limit:
+            requests: 30
+            unit: Minute
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: xmsg-gateway-authorize

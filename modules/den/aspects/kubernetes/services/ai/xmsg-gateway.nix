@@ -8,8 +8,12 @@
 # leaf's agent.sock. A leaf reaches only the nodes in its peers file, and a node delivers
 # only to its own sessions, so every node whose sessions the gateway addresses is a hub.
 #
-# The one inbound path is the MCP listener on loopback, reached through the
-# tunnel-client sidecar (settings.tunnel, off until cutover). No Service, no ingress.
+# Two inbound paths. MCP: the tunnel-client sidecar (settings.tunnel) on loopback.
+# OAuth discovery and the gateway's authorization server: public HTTPS through
+# envoy-gateway, on an HTTPRoute that carries only those paths (everything else,
+# /mcp included, 404s at the edge). The listener binds the pod network for envoy
+# (allow_non_loopback_bind, serving.md "Exposure and request protection"), and a
+# CiliumNetworkPolicy admits only the gateways namespace to it.
 #
 # One uid on every container: the leaf admits register.sock and agent.sock callers by
 # SO_PEERCRED uid, and the gateway's messaging.xmsg.daemon_uid must equal the leaf's.
@@ -84,7 +88,8 @@ let
   lookupClient = "xmsg-gateway-lookup";
   uid = 10001;
   issuer = "xmsg-cluster-ca";
-  listen = "127.0.0.1:8787";
+  port = 8787;
+  listen = "127.0.0.1:${toString port}";
 
   runtimeDir = "/run/user";
   tlsDir = "/etc/xmsg/tls";
@@ -192,6 +197,13 @@ let
 in
 {
   den.aspects.kubernetes.services.ai.xmsg-gateway = {
+    # The public name the HTTPRoute serves (kanidm.nix's xmsgGateway.origin default).
+    served-domains =
+      { cluster, ... }:
+      cluster.servedDomains (
+        lib.optional cluster.settings.kubernetes.services.ai.xmsg-gateway.enable "xmsg-gateway"
+      );
+
     settings = {
       enable = lib.mkOption {
         type = lib.types.bool;
@@ -388,7 +400,8 @@ in
         };
 
         serving = checkBudgets {
-          bind = listen;
+          bind = "0.0.0.0:${toString port}";
+          allow_non_loopback_bind = true;
           grant_store = grantStore;
           request_timeout_ms = timeouts.request;
           allowed_hosts = [
@@ -816,6 +829,12 @@ in
                               "--config"
                               "${configDir}/serving.json"
                             ];
+                            ports = [
+                              {
+                                name = "http";
+                                containerPort = port;
+                              }
+                            ];
                             securityContext = hardened;
                             volumeMounts = [
                               (mount "run" runtimeDir)
@@ -891,6 +910,106 @@ in
                     };
                   };
                 };
+
+            services.${name}.spec = {
+              selector."app.kubernetes.io/name" = name;
+              ports = [
+                {
+                  name = "http";
+                  inherit port;
+                  targetPort = "http";
+                }
+              ];
+            };
+
+            # Only OAuth discovery and the authorization server's endpoints are public;
+            # an unmatched path on this host 404s at envoy.
+            httpRoutes =
+              let
+                route = matches: {
+                  spec = {
+                    hostnames = [ (lib.removePrefix "https://" origin) ];
+                    parentRefs = [
+                      {
+                        name = "default-gateway";
+                        namespace = "gateways";
+                        sectionName = "${cluster.resourceForDomain (lib.removePrefix "https://" origin)}-https";
+                      }
+                    ];
+                    rules = [
+                      {
+                        inherit matches;
+                        backendRefs = [ { inherit name port; } ];
+                      }
+                    ];
+                  };
+                };
+                path = type: value: { path = { inherit type value; }; };
+              in
+              {
+                ${name} = route [
+                  (path "PathPrefix" "/.well-known/oauth-protected-resource")
+                  (path "Exact" "/.well-known/oauth-authorization-server")
+                  (path "PathPrefix" "/oauth")
+                ];
+                # Its own route so the rate limit below covers this path alone; the
+                # longer prefix wins over /oauth.
+                "${name}-authorize" = route [ (path "PathPrefix" "/oauth/authorize") ];
+              };
+
+            # Per client: Cloudflare fronts the name, so envoy's peer is a Cloudflare edge
+            # and the client is CF-Connecting-IP. shortcut: a client reaching the WAN
+            # address directly can set that header itself; trusting it gateway-wide
+            # (ClientTrafficPolicy clientIPDetection) is the upgrade.
+            backendTrafficPolicies."${name}-authorize-rate-limit".spec = {
+              targetRefs = [
+                {
+                  group = "gateway.networking.k8s.io";
+                  kind = "HTTPRoute";
+                  name = "${name}-authorize";
+                }
+              ];
+              rateLimit.local.rules = [
+                {
+                  clientSelectors = [
+                    {
+                      headers = [
+                        {
+                          name = "CF-Connecting-IP";
+                          type = "Distinct";
+                        }
+                      ];
+                    }
+                  ];
+                  limit = {
+                    requests = 30;
+                    unit = "Minute";
+                  };
+                }
+              ];
+            };
+
+            # Declaring an ingress rule puts the pod in ingress default-deny: only envoy
+            # reaches the plaintext listener. The tunnel sidecar connects over loopback.
+            ciliumNetworkPolicies."${name}-ingress".spec = {
+              description = "xmsg-gateway: envoy-gateway only, on ${toString port}.";
+              endpointSelector.matchLabels."app.kubernetes.io/name" = name;
+              ingress = [
+                {
+                  fromEndpoints = [ { matchLabels."k8s:io.kubernetes.pod.namespace" = "gateways"; } ];
+                  toPorts = [
+                    {
+                      ports = [
+                        {
+                          port = toString port;
+                          protocol = "TCP";
+                        }
+                      ];
+                    }
+                  ];
+                }
+              ];
+            };
 
             ciliumClusterwideNetworkPolicies."allow-xmsg-egress-${namespace}-${name}".spec = {
               description = "Allow ${namespace}/${name} to its xmsg hubs' federation ports, kanidm's introspection, and public HTTPS for Events callbacks.";

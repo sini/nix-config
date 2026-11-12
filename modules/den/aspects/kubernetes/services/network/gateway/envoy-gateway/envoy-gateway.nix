@@ -362,6 +362,61 @@
             };
 
             envoyProxies.default-gateway-proxy-config.spec = {
+              # Envoy Gateway's default JSON access log (v1.10 accesslog.go
+              # EnvoyJSONLogFields), except that an /oauth* request logs its path without
+              # the query: authorization codes and state ride there (xmsg-gateway's
+              # authorization server, and the SecurityPolicy OIDC callbacks).
+              telemetry.accessLog.settings =
+                let
+                  oauth = "request.path.startsWith('/oauth')";
+                  path = "%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%";
+                  fields = {
+                    "start_time" = "%START_TIME%";
+                    "method" = "%REQ(:METHOD)%";
+                    "x-envoy-origin-path" = path;
+                    "protocol" = "%PROTOCOL%";
+                    "response_code" = "%RESPONSE_CODE%";
+                    "response_flags" = "%RESPONSE_FLAGS%";
+                    "response_code_details" = "%RESPONSE_CODE_DETAILS%";
+                    "connection_termination_details" = "%CONNECTION_TERMINATION_DETAILS%";
+                    "upstream_transport_failure_reason" = "%UPSTREAM_TRANSPORT_FAILURE_REASON%";
+                    "bytes_received" = "%BYTES_RECEIVED%";
+                    "bytes_sent" = "%BYTES_SENT%";
+                    "duration" = "%DURATION%";
+                    "x-envoy-upstream-service-time" = "%RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)%";
+                    "x-forwarded-for" = "%REQ(X-FORWARDED-FOR)%";
+                    "user-agent" = "%REQ(USER-AGENT)%";
+                    "x-request-id" = "%REQ(X-REQUEST-ID)%";
+                    ":authority" = "%REQ(:AUTHORITY)%";
+                    "upstream_host" = "%UPSTREAM_HOST%";
+                    "upstream_cluster" = "%UPSTREAM_CLUSTER%";
+                    "upstream_local_address" = "%UPSTREAM_LOCAL_ADDRESS%";
+                    "downstream_local_address" = "%DOWNSTREAM_LOCAL_ADDRESS%";
+                    "downstream_remote_address" = "%DOWNSTREAM_REMOTE_ADDRESS%";
+                    "requested_server_name" = "%REQUESTED_SERVER_NAME%";
+                    "route_name" = "%ROUTE_NAME%";
+                  };
+                  setting = match: json: {
+                    matches = [ match ];
+                    format = {
+                      type = "JSON";
+                      inherit json;
+                    };
+                    sinks = [
+                      {
+                        type = "File";
+                        file.path = "/dev/stdout";
+                      }
+                    ];
+                  };
+                in
+                [
+                  (setting "!${oauth}" fields)
+                  (setting oauth (
+                    fields // { "x-envoy-origin-path" = "%REQ_WITHOUT_QUERY(X-ENVOY-ORIGINAL-PATH?:PATH)%"; }
+                  ))
+                ];
+
               provider = {
                 type = "Kubernetes";
                 kubernetes = {

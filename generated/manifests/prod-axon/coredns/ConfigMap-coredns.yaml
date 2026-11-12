@@ -49,6 +49,7 @@ data:
             10.11.0.1 sonarr.json64.dev
             10.11.0.1 torrent.json64.dev
             10.11.0.1 whisparr.json64.dev
+            10.11.0.1 xmsg-gateway.json64.dev
             fallthrough
         }
         forward . 1.1.1.1 2606:4700:4700::1111 1.0.0.1
