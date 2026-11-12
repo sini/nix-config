@@ -130,6 +130,9 @@ let
     submission = 20000;
     dispatch = 16000;
     request = 60000;
+    # The gateway's default, explicit so the attachment budget below checks it
+    # (serving.md: attachment tools refuse <= 11000, the daemon's 10 s pending wait).
+    operation = 15000;
   };
 
   # Enabled, and refused by name until a tunnel image is pinned.
@@ -186,6 +189,13 @@ let
         timeouts.submission <= 25000
         && timeouts.request >= timeouts.verifier + timeouts.storeWait + timeouts.submission;
       msg = "request_timeout_ms must cover verifier.timeout_ms + the 30 s store wait + submission_timeout_ms (<= 25000)";
+    }
+    # File tools (gateway 9cd91bc serving.rs): the read operation's own budget.
+    {
+      ok =
+        timeouts.operation > 11000
+        && timeouts.request >= timeouts.verifier + timeouts.storeWait + timeouts.operation;
+      msg = "xmsg.operation_timeout_ms must be > 11000, and request_timeout_ms must cover verifier.timeout_ms + the 30 s store wait + it";
     }
   ];
   checkBudgets =
@@ -436,6 +446,7 @@ in
               daemon_uid = uid;
               register_socket = "${runtimeDir}/xmsg/register.sock";
               agent_socket = "${runtimeDir}/xmsg/agent.sock";
+              operation_timeout_ms = timeouts.operation;
             };
             manifest = {
               reply_ttl_secs = node-limits.reply-ttl;
@@ -500,6 +511,10 @@ in
             ]
             # Exact-binding grant uniqueness (docs/auth-profiles.md, gateway 617187e).
             [ "migrate-profiles" ]
+            # File references on custody and outbound reservations (serving.md
+            # "Deploying file exchange", gateway 9cd91bc). Writers are stopped: the
+            # Deployment is Recreate, and store-backup runs first.
+            [ "migrate-attachments" ]
           ];
 
         prepareScript = ''
