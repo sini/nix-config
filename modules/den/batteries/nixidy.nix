@@ -168,16 +168,35 @@ in
       # overlay that exposes `local = config.packages`, so reading the
       # perSystem config.flake here would risk the package set referencing
       # itself through that overlay.
+      # `--check-secrets` (with --skip-secrets, for CI): before syncing each env, fail if
+      # any SopsSecret is new or changed against its committed encrypted file, which a
+      # keyless sync would drop or leave stale (_check-secrets.sh).
+      packages.check-secrets = pkgs.writeShellApplication {
+        name = "check-secrets";
+        runtimeInputs = [
+          pkgs.yq-go
+          pkgs.coreutils
+          pkgs.findutils
+        ];
+        text = builtins.readFile ./_check-secrets.sh;
+      };
+
       packages.nixidy-sync = pkgs.writeShellApplication {
         name = "nixidy-sync";
         runtimeInputs = [
           pkgs.git
           pkgs.nix
+          config.packages.check-secrets
         ];
         text = ''
-          if [ "''${1:-}" = "--skip-secrets" ] || [ "''${1:-}" = "-s" ]; then
-            export NIXIDY_SKIP_POST_PROCESS=1
-          fi
+          check=0
+          for arg in "$@"; do
+            case $arg in
+              --skip-secrets | -s) export NIXIDY_SKIP_POST_PROCESS=1 ;;
+              --check-secrets) check=1 ;;
+              *) echo "nixidy-sync: unknown argument $arg" >&2; exit 2 ;;
+            esac
+          done
           root="$(git rev-parse --show-toplevel)" || { echo "nixidy-sync: not in a git repo" >&2; exit 1; }
           cd "$root"
           # Resolve each env's activationPackage AT RUN TIME against the current
@@ -193,6 +212,10 @@ in
               echo "==> Syncing nixidy env: ${env}"
               out="$(nix build --no-link --print-out-paths \
                 ".#nixidyEnvs.${system}.${env}.activationPackage")"
+              if [ "$check" = 1 ]; then
+                dest=$(sed -n 's/^dest="\(.*\)"$/\1/p' "$out"/activate)
+                check-secrets "$out/environment" "$dest"
+              fi
               "$out"/activate
             '') (inputs.self.nixidyEnvs.${system} or { })
           )}
@@ -226,6 +249,45 @@ in
       #   2. mutated plaintext -> hash differs -> re-encrypt with the new hash;
       #   3. target with unreadable/encrypted annotation (yq read -> "") ->
       #      fail-closed re-encrypt.
+      # check-secrets: unchanged passes; a new SopsSecret, a changed one, and an
+      # encrypted file with no source-sha256 stamp each fail and are named.
+      checks.check-secrets =
+        pkgs.runCommand "check-secrets"
+          {
+            nativeBuildInputs = [
+              config.packages.check-secrets
+              pkgs.yq-go
+            ];
+          }
+          ''
+            set -euo pipefail
+            mkdir -p env/app dest/app
+            stamp() { # file -> dest copy carrying the source-sha256 of the file
+              src=$(printf '%s' "$(cat "$1")" | sha256sum | cut -d' ' -f1)
+              yq '.metadata.annotations."secrets.json64.dev/source-sha256" = "'"$src"'"' "$1" > "dest/''${1#env/}"
+            }
+            printf 'kind: SopsSecret\nmetadata:\n  name: a\nspec:\n  v: ref+sops://a\n' > env/app/a.yaml
+            printf 'kind: ConfigMap\nmetadata:\n  name: c\n' > env/app/c.yaml
+            stamp env/app/a.yaml
+            check-secrets env dest || { echo "FAIL: unchanged"; exit 1; }
+
+            printf 'kind: SopsSecret\nmetadata:\n  name: b\nspec:\n  v: ref+sops://b\n' > env/app/b.yaml
+            if check-secrets env dest 2> err; then echo "FAIL: new passed"; exit 1; fi
+            grep -q 'NEW     app/b.yaml' err || { echo "FAIL: new not named"; exit 1; }
+            stamp env/app/b.yaml
+
+            printf 'kind: SopsSecret\nmetadata:\n  name: a\nspec:\n  v: ref+sops://a-renamed\n' > env/app/a.yaml
+            if check-secrets env dest 2> err; then echo "FAIL: changed passed"; exit 1; fi
+            grep -q 'CHANGED app/a.yaml' err || { echo "FAIL: changed not named"; exit 1; }
+            stamp env/app/a.yaml
+
+            yq 'del(.metadata.annotations)' dest/app/b.yaml > dest/app/b.tmp && mv dest/app/b.tmp dest/app/b.yaml
+            if check-secrets env dest 2> err; then echo "FAIL: unstamped passed"; exit 1; fi
+            grep -q 'CHANGED app/b.yaml' err || { echo "FAIL: unstamped not named"; exit 1; }
+            echo "PASS: unchanged, new, changed, unstamped"
+            touch "$out"
+          '';
+
       checks.secret-post-process-idempotency =
         let
           postProcessCommand = import ../aspects/kubernetes/_secret-post-process-command.nix;
@@ -283,8 +345,9 @@ in
 
             # --- Case 1: matching hash -> byte-identical, no re-encrypt --------
             TARGET="$PWD/target.yaml"
+            # The stub vals is identity, so the source and plaintext hashes are equal here.
             printf '%s' "$PLAINTEXT" \
-              | yq '.metadata.annotations."secrets.json64.dev/plaintext-sha256" = "'"$SHA"'"' \
+              | yq '.metadata.annotations."secrets.json64.dev/plaintext-sha256" = "'"$SHA"'" | .metadata.annotations."secrets.json64.dev/source-sha256" = "'"$SHA"'"' \
               > "$TARGET"
             EXPECTED="$(cat "$TARGET")"
             OUT1="$(printf '%s' "$PLAINTEXT" | TARGET_PATH="$TARGET" sh post-process.sh)"
@@ -326,7 +389,20 @@ in
             [ "$OUT3" != "$(cat "$ENC_TARGET")" ] || fail "case3: did not re-encrypt"
             echo "case3 PASS: unreadable annotation -> fail-closed re-encrypt"
 
-            echo "PASS: all 3 cases"
+            # --- Case 4: plaintext matches, source-sha256 missing -> re-encrypt -
+            # (the one-time migration of files encrypted before the source stamp)
+            OLD="$PWD/old.yaml"
+            printf '%s' "$PLAINTEXT" \
+              | yq '.metadata.annotations."secrets.json64.dev/plaintext-sha256" = "'"$SHA"'"' > "$OLD"
+            OUT4="$(printf '%s' "$PLAINTEXT" | TARGET_PATH="$OLD" sh post-process.sh)"
+            case "$OUT4" in
+              SOPS-ENC*) : ;;
+              *) fail "case4: expected re-encrypt to add source-sha256" ;;
+            esac
+            [[ "$OUT4" == *source-sha256* ]] || fail "case4: re-encrypted body missing source-sha256"
+            echo "case4 PASS: missing source stamp -> re-encrypt with it"
+
+            echo "PASS: all 4 cases"
             touch "$out"
           '';
     };
