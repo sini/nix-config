@@ -14,11 +14,16 @@
           map (
             entry:
             lib.nameValuePair entry.hostname {
-              # On darwin the LAN /etc/hosts names don't resolve (no hostsfile
-              # there, and the host roams), so address peers by their tailnet
-              # MagicDNS name, which resolves via the tailscale /etc/resolver
-              # route. NixOS keeps the LAN domain (direct over the local network).
-              hostname = if host.class == "darwin" then entry.tsName else "${entry.hostname}.${entry.domain}";
+              # The LAN name resolves only through /etc/hosts (core/network/hostsfile),
+              # which lists a peer only when it has a declared IPv4. So use the tailnet
+              # MagicDNS name on darwin (no hostsfile there, and it roams) and for any
+              # peer without a fixed address (a DHCP laptop, a roaming Mac); NixOS keeps
+              # the LAN name for the rest (direct over the local network).
+              hostname =
+                if host.class == "darwin" || entry.ipv4 == [ ] then
+                  entry.tsName
+                else
+                  "${entry.hostname}.${entry.domain}";
               forwardAgent = true;
               # The opkssh OIDC cert is delivered via the ssh-agent-mux, not the
               # ssh config: `opkssh-login` loads ~/.ssh/id_ecdsa into the standard
