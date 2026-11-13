@@ -28,17 +28,32 @@ jobs:
         # (a vendored package may need a follow-up `update-pkgs <pkg>` locally
         # to refresh its vendor/cargo hash).
         run: nix run .#update-pkgs -- --no-build
-      - name: Update flake.lock
-        run: nix flake update
       - name: Update container images
-        # Digest bumps for every images/<org>/<name>/default.nix (images/DESIGN.md).
-        # Only changed images are prefetched; the largest is ~1.3 GB compressed.
+        # Digest bumps for every images/<org>/<name>/default.nix (images/DESIGN.md),
+        # against the current lock. Only changed images are prefetched; the largest is
+        # ~1.3 GB compressed.
         run: nix run .#oci-image-updater -- update-all
+      - name: Update flake.lock
+        # One broken input must not sink the charts and images: when the updated lock
+        # no longer evaluates, keep the old lock and say so in the PR.
+        id: lock
+        run: |
+          cp flake.lock "$RUNNER_TEMP/flake.lock"
+          nix flake update
+          if nix eval --raw .#packages.x86_64-linux.nixidy-sync.name > "$RUNNER_TEMP/eval.log" 2>&1; then
+            echo "note=" >> "$GITHUB_OUTPUT"
+          else
+            cp "$RUNNER_TEMP/flake.lock" flake.lock
+            err=$(grep -m1 -E '^ *error: [^…]' "$RUNNER_TEMP/eval.log" | sed 's/^ *//')
+            echo "::warning::flake.lock update skipped: the updated lock does not evaluate: $err"
+            echo "note=**flake.lock not updated:** the updated lock does not evaluate (\`$err\`). Bisect the inputs locally." >> "$GITHUB_OUTPUT"
+          fi
       - name: Re-render Argo manifests
         # Argo deploys generated/manifests/, which embeds chart versions and image
-        # digests; without this a bump merges without reaching the cluster.
-        # --skip-secrets keeps the encrypted targets as committed (no sops key here).
-        run: nix run .#nixidy-sync -- --skip-secrets
+        # digests; without this a bump merges without reaching the cluster. No sops key
+        # here: --check-secrets fails the run if a SopsSecret is new or changed, since
+        # a keyless sync would drop it or leave it stale (run nixidy-sync locally).
+        run: nix run .#nixidy-sync -- --skip-secrets --check-secrets
       - name: Open the update PR
         uses: peter-evans/create-pull-request@v8
         with:
@@ -48,6 +63,8 @@ jobs:
           body: |
             Nightly update: flake inputs, helm charts (helmupdater), custom packages
             (update-pkgs), container images (oci-image-updater), and the re-rendered
-            Argo manifests (nixidy-sync --skip-secrets).
+            Argo manifests (nixidy-sync --skip-secrets --check-secrets).
+
+            ${{ steps.lock.outputs.note }}
           labels: merge-queue
           delete-branch: true
