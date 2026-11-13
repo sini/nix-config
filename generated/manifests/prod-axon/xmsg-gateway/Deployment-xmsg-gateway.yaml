@@ -432,8 +432,23 @@ spec:
             - -I
             - -c
             - |
-              import os, sqlite3, subprocess, sys, time
+              import os, shutil, sqlite3, subprocess, sys, time
               os.umask(0o077)
+              journal = "/var/lib/xmsg-mcp-gateway/state/grants.db-journal"
+              if os.path.exists(journal) and os.path.getsize(journal) > 0:
+                  os.makedirs("/var/lib/xmsg-mcp-gateway/backups", mode=0o700, exist_ok=True)
+                  out = "/var/lib/xmsg-mcp-gateway/backups/grants.db.hot-journal-" + time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+                  shutil.copyfile("/var/lib/xmsg-mcp-gateway/state/grants.db", out)
+                  shutil.copyfile(journal, out + "-journal")
+                  fd = os.open("/var/lib/xmsg-mcp-gateway/backups", os.O_RDONLY)
+                  os.fsync(fd)
+                  os.close(fd)
+                  db = sqlite3.connect("/var/lib/xmsg-mcp-gateway/state/grants.db")
+                  ok = db.execute("PRAGMA quick_check").fetchone()[0] == "ok"
+                  db.close()
+                  if not ok:
+                      sys.exit("/var/lib/xmsg-mcp-gateway/state/grants.db: quick_check failed after rolling back the hot journal; copies at " + out)
+                  print("/var/lib/xmsg-mcp-gateway/state/grants.db: rolled back a hot journal; the database and journal as found are at " + out)
               r = subprocess.run(["/opt/xmsg-mcp-gateway/bin/xmsg-mcp-gateway", "--state", "/var/lib/xmsg-mcp-gateway/state/grants.db", "migrations-pending"], stdout=subprocess.PIPE, text=True)
               if r.returncode == 0:
                   print("/var/lib/xmsg-mcp-gateway/state/grants.db: no migration pending, no backup")

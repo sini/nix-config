@@ -546,9 +546,31 @@ in
         # The decision is the gateway's migrations-pending; only exit 10 backs the store
         # up (the sqlite3 backup API, never cp), and the copy is verified. Any exit but
         # 0 and 10 fails here, before any backup.
+        #
+        # A gateway killed mid-transaction (a node lost with the pod, 2026-11-13) leaves a
+        # hot rollback journal. migrations-pending opens read-only, which cannot roll it
+        # back, so every start would fail "authority store unavailable". So first: the
+        # database and its journal are copied as found (byte copies, the only faithful
+        # record of a hot journal), then one read-write open lets SQLite roll the journal
+        # back to the last committed state, as the gateway's own open would.
         backupScript = ''
-          import os, sqlite3, subprocess, sys, time
+          import os, shutil, sqlite3, subprocess, sys, time
           os.umask(0o077)
+          journal = "${grantStore}-journal"
+          if os.path.exists(journal) and os.path.getsize(journal) > 0:
+              os.makedirs("${backupsDir}", mode=0o700, exist_ok=True)
+              out = "${backupsDir}/grants.db.hot-journal-" + time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+              shutil.copyfile("${grantStore}", out)
+              shutil.copyfile(journal, out + "-journal")
+              fd = os.open("${backupsDir}", os.O_RDONLY)
+              os.fsync(fd)
+              os.close(fd)
+              db = sqlite3.connect("${grantStore}")
+              ok = db.execute("PRAGMA quick_check").fetchone()[0] == "ok"
+              db.close()
+              if not ok:
+                  sys.exit("${grantStore}: quick_check failed after rolling back the hot journal; copies at " + out)
+              print("${grantStore}: rolled back a hot journal; the database and journal as found are at " + out)
           r = subprocess.run(["${gatewayBin}", "--state", "${grantStore}", "migrations-pending"], stdout=subprocess.PIPE, text=True)
           if r.returncode == 0:
               print("${grantStore}: no migration pending, no backup")
