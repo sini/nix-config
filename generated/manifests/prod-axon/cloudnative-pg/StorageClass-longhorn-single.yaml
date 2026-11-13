@@ -2,8 +2,11 @@ allowVolumeExpansion: true
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
   name: longhorn-single
 parameters:
+  dataLocality: best-effort
   numberOfReplicas: "1"
   staleReplicaTimeout: "30"
 provisioner: driver.longhorn.io
