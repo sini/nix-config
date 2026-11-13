@@ -1,7 +1,6 @@
 # An external vantage host
 
-Status: **proposal v0.1** (2026-11-12), for the owner's decision. Nothing is
-ordered or built.
+Status: **accepted v0.2** (2026-11-12). Nothing is ordered or built.
 
 ## 1. Summary
 
@@ -63,3 +62,11 @@ cellular, which is manual and not repeatable.
 Once approved: the owner orders the VM and gives its address. Then the host
 file, the install (`nixos-anywhere`), the tailnet join and the probes land as
 code, and the stage 2 live test runs from it.
+
+## 6. Owner decisions (2026-11-12)
+
+1. Provider: Hetzner Cloud. The owner picks the size and region from current
+   specs.
+2. Environment: a new `edge` environment.
+3. Install: the owner will oversee a redesign of the repo's nixos-anywhere
+   integration first; this host waits on that.
