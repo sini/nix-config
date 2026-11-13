@@ -26,15 +26,13 @@
         inputs'.hermes-agent.homeManagerModules.default
       ];
 
-    # Linux hosts only (classes/home-platform.nix): hermes is here to exercise xmsg,
-    # and its darwin builds are broken upstream (hermes-agent's pnpm-deps hash,
-    # NousResearch/hermes-agent#150713; hermes-one's node-gyp with no xcodebuild).
-    homeLinux =
+    homeManager =
       {
         config,
         host,
         inputs',
         lib,
+        pkgs,
         ...
       }:
       let
@@ -50,6 +48,8 @@
       {
         programs.hermes-agent = {
           enable = true;
+          # The flake's package, with its darwin pnpm-deps fix (pkgs/overlays.nix).
+          package = pkgs.hermes-agent;
           desktop.enable = hasGui;
         };
 
@@ -86,15 +86,25 @@
           };
         };
 
-        home.packages = [
-          inputs'.llm-agents.packages.hermes-hud
-        ]
-        ++ lib.optionals hasGui [
-          inputs'.llm-agents.packages.hermes-one
-        ];
+        home.packages = [ inputs'.llm-agents.packages.hermes-hud ];
 
         programs.git.ignores = [
           "/.hermes/"
+        ];
+      };
+
+    # Linux hosts only (classes/home-platform.nix): llm-agents' hermes-one runs
+    # node-gyp with no xcodebuild/xcrun on darwin ("No Xcode or CLT version detected").
+    homeLinux =
+      {
+        host,
+        inputs',
+        lib,
+        ...
+      }:
+      {
+        home.packages = lib.optionals (host.hasAspect den.aspects.roles.workstation) [
+          inputs'.llm-agents.packages.hermes-one
         ];
       };
 
