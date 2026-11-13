@@ -328,7 +328,7 @@ must fail or read non-zero, so an empty render cannot pass.
    they are; nothing reads them.
 3. Nothing renumbers: no LAN moves, and no GUA slice of den's is in use yet.
 
-## 8. Runbook: the cluster ULA move (commit 7), measured 2026-11-12
+## 8. Runbook: the cluster ULA move (commit 7), measured 2026-11-12, DONE 2026-11-13
 
 Facts, from the k8s 1.36 source and the live cluster (k3s 1.36.5, Cilium
 cluster-pool IPAM, kube-proxy replacement, flannel off):
@@ -369,3 +369,16 @@ Order (each step reversible until 5):
 Read-back: no `fdfd:cafe` in ServiceCIDRs, CiliumNodes, pod IPs or FRR; coredns
 answers over both families; Blocky 3/3; xmsg-gateway Ready, with its next
 store-backup line.
+
+### 8.1 As run (2026-11-12/13)
+
+Steps 1-5 went as written. Step 6 did not: on axon-01 the drain timed out (a
+stacked `/run/netns` mount made every pod teardown fail), the CiliumNode was
+re-allocated under live pods anyway, and single-copy Longhorn volumes faulted
+until axon-01 was rebooted. The other two nodes were done with the CiliumNode
+deleted while the node was down for its kernel reboot, which needs no live
+drain. Two fixes came out of it: `docs/longhorn-single-locality.md` (copies
+follow their pods) and the gateway's hot-journal recovery in its `store-backup`
+init step. End state: all pod IPv6 in `fd3d:f136:2e4e:2:1::/96`, the default
+ServiceCIDR on `fd3d:f136:2e4e:2:8001::/112`, and no `fdfd:cafe` left in pods,
+CiliumNodes, ServiceCIDRs or FRR.
