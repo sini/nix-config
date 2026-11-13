@@ -159,9 +159,13 @@ in
             # Single-replica longhorn class for postgres data volumes. best-effort locality
             # keeps each copy on its pod's node, so CNPG's required anti-affinity also
             # separates the instances' data (docs/longhorn-single-locality.md). Parameters
-            # are immutable, so Argo replaces the class when they change.
+            # are immutable: Argo diffs it client-side (a server-side dry-run apply fails on
+            # them) and deletes and recreates it on a change. Existing PVs are unaffected.
             storageClasses.longhorn-single = {
-              metadata.annotations."argocd.argoproj.io/sync-options" = "Replace=true";
+              metadata.annotations = {
+                "argocd.argoproj.io/sync-options" = "Replace=true,Force=true";
+                "argocd.argoproj.io/compare-options" = "ServerSideDiff=false";
+              };
               provisioner = "driver.longhorn.io";
               reclaimPolicy = "Retain";
               allowVolumeExpansion = true;
