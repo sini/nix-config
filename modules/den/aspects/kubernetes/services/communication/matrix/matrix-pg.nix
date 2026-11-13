@@ -95,6 +95,20 @@
 
               affinity.podAntiAffinityType = "required";
 
+              # Synchronous, durability preferred, as media-pg.nix: a failover loses no committed
+
+              # write, and writes continue unreplicated while the standby is down.
+
+              postgresql.synchronous = {
+
+                method = "any";
+
+                number = 1;
+
+                dataDurability = "preferred";
+
+              };
+
               managed.roles = [
                 {
                   name = "mas";

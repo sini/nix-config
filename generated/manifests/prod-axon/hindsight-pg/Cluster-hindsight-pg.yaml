@@ -22,6 +22,11 @@ spec:
     labels:
       recurring-job-group.longhorn.io/db-local-snap: enabled
   instances: 2
+  postgresql:
+    synchronous:
+      dataDurability: preferred
+      method: any
+      number: 1
   storage:
     size: 10Gi
     storageClass: longhorn-single

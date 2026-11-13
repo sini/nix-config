@@ -19,6 +19,11 @@ spec:
         name: grafana
         passwordSecret:
           name: monitoring-pg-grafana-password
+  postgresql:
+    synchronous:
+      dataDurability: preferred
+      method: any
+      number: 1
   storage:
     size: 5Gi
     storageClass: longhorn-single

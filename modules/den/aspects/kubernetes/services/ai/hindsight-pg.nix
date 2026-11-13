@@ -112,6 +112,20 @@
 
               affinity.podAntiAffinityType = "required";
 
+              # Synchronous, durability preferred, as media-pg.nix: a failover loses no committed
+
+              # write, and writes continue unreplicated while the standby is down.
+
+              postgresql.synchronous = {
+
+                method = "any";
+
+                number = 1;
+
+                dataDurability = "preferred";
+
+              };
+
               # The app database, its owner role, and the extensions hindsight's
               # migrations expect to already exist. postInitApplicationSQL runs
               # as superuser inside the freshly created database, which is the

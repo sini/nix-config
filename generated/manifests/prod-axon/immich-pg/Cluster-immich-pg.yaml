@@ -26,6 +26,10 @@ spec:
   postgresql:
     shared_preload_libraries:
       - vchord.so
+    synchronous:
+      dataDurability: preferred
+      method: any
+      number: 1
   storage:
     size: 10Gi
     storageClass: longhorn-single

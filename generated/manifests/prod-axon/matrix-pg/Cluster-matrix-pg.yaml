@@ -28,6 +28,11 @@ spec:
         name: mas
         passwordSecret:
           name: matrix-pg-mas-password
+  postgresql:
+    synchronous:
+      dataDurability: preferred
+      method: any
+      number: 1
   storage:
     size: 10Gi
     storageClass: longhorn-single
