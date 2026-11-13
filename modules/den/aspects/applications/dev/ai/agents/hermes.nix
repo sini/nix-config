@@ -26,7 +26,10 @@
         inputs'.hermes-agent.homeManagerModules.default
       ];
 
-    homeManager =
+    # Linux hosts only (classes/home-platform.nix): hermes is here to exercise xmsg,
+    # and its darwin builds are broken upstream (hermes-agent's pnpm-deps hash,
+    # NousResearch/hermes-agent#150713; hermes-one's node-gyp with no xcodebuild).
+    homeLinux =
       {
         config,
         host,
