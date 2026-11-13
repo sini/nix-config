@@ -12,6 +12,12 @@ let
     name = "axon";
     environment = "prod";
     domainFor = svc: if svc == "kanidm" then "idm.json64.dev" else "${svc}.json64.dev";
+    # schema/cluster.nix resourceNameOf: the last two labels, hyphenated.
+    resourceForDomain =
+      domain:
+      lib.concatStringsSep "-" (
+        lib.reverseList (lib.take 2 (lib.reverseList (lib.splitString "." domain)))
+      );
     settings.kubernetes.services.ai.xmsg-gateway = {
       enable = true;
       hub = "cortex";

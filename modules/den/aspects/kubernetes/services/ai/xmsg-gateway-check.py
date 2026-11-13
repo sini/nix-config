@@ -1,7 +1,8 @@
 """Property check over xmsg-gateway.nix's manifests (flag forced on): one uid on
 every container, pod hardening, no tunnel sidecar unless enabled, the owner
 configuration and binding, the grant-store initContainers, secret modes, the leaf
-certificate and the egress policy.
+certificate, the egress policy, and the public OAuth ingress (a Service, routes that
+carry only discovery and /oauth, and an ingress policy that admits envoy alone).
 
 Usage: xmsg-gateway-check.py <manifests.json>
   manifests.json: {"off": <render, tunnel off>, "on": <render, tunnel on>}
@@ -54,7 +55,17 @@ MIGRATIONS = [
     "migrate-retirement",
     "migrate-custody-summaries",
     "migrate-events",
+    "migrate-profiles",
+    "migrate-attachments",
 ]
+# The public OAuth ingress (xmsg-gateway.nix): what envoy may route, and from where.
+PUBLIC_PATHS = {
+    ("PathPrefix", "/.well-known/oauth-protected-resource"),
+    ("Exact", "/.well-known/oauth-authorization-server"),
+    ("PathPrefix", "/oauth"),
+    ("PathPrefix", "/oauth/authorize"),
+}
+INGRESS_POLICY = f"{SA}-ingress"
 # The store application_ids (gateway grants.rs).
 LEGACY, RETIREMENT, SUMMARY = 0x584D4757, 0x584D4752, 0x584D4753
 
@@ -77,8 +88,29 @@ with open(sys.argv[1]) as f:
 app = renders["off"]["applications"][SA]
 res = app["resources"]
 check("namespace", app["namespace"] == NS, app.get("namespace"))
+check("no Ingress object", "ingresses" not in res)
+# The Service exposes the listener's one port, and the routes carry only discovery
+# and /oauth: everything else on the host, /mcp included, 404s at envoy.
+svc_ports = [
+    (p.get("port"), p.get("targetPort"))
+    for p in res.get("services", {}).get(SA, {}).get("spec", {}).get("ports", [])
+]
+check("one Service port, the listener's", svc_ports == [(8787, "http")], svc_ports)
+route_paths = {
+    (m["path"]["type"], m["path"]["value"])
+    for r in res.get("httpRoutes", {}).values()
+    for rule in r["spec"]["rules"]
+    for m in rule.get("matches", [])
+}
 check(
-    "no Service or ingress", not ({"services", "ingresses", "httpRoutes"} & res.keys())
+    "routes carry only the public OAuth paths",
+    route_paths == PUBLIC_PATHS,
+    sorted(route_paths),
+)
+check(
+    "no route to /mcp",
+    not any(v.startswith("/mcp") for _, v in route_paths),
+    sorted(route_paths),
 )
 
 dep = res["deployments"][SA]["spec"]
@@ -168,10 +200,17 @@ for field in (
     "events",
 ):
     check(f"serving.json has {field}", field in serving)
+# The listener binds the pod network for envoy, which the gateway refuses without the
+# explicit switch; the ingress policy (section 8) keeps every other peer out.
 check(
-    "bind is loopback",
-    re.fullmatch(r"127\.\d+\.\d+\.\d+:\d+", serving.get("bind", "")) is not None,
+    "bind is the pod network",
+    serving.get("bind") == "0.0.0.0:8787",
     serving.get("bind"),
+)
+check(
+    "non-loopback bind is explicit",
+    serving.get("allow_non_loopback_bind") is True,
+    serving.get("allow_non_loopback_bind"),
 )
 v = serving.get("verifier", {})
 for k, want in VERIFIER.items():
@@ -325,7 +364,8 @@ for c in inits:
     check(f"{c['name']} runs its step", args[2:3] == [step], args)
     if step.startswith("migrate-"):
         check(f"{c['name']} has --if-needed", "--if-needed" in args, args)
-# No scratch copy: the only store paths any step names are the staged and the real.
+# No scratch copy: the only store paths any step names are the staged and the real
+# (and the real store's rollback journal, which store-backup recovers when hot).
 STORE_PATH = re.compile(r"/var/lib/xmsg-mcp-gateway/(?:state|staging)/[\w.-]+")
 used = {
     p
@@ -335,9 +375,9 @@ used = {
 }
 check(
     "no scratch copy",
-    used <= {staged, store}
+    used <= {staged, store, f"{store}-journal"}
     and not any("symlink" in s for c in inits for s in c.get("command", [])),
-    sorted(used - {staged, store}),
+    sorted(used - {staged, store, f"{store}-journal"}),
 )
 for prefix in ("staged", "store"):
     mig = next((c for c in inits if c["name"] == f"{prefix}-migrate-events"), {})
@@ -647,10 +687,39 @@ check(
     leaf.get("targets"),
 )
 
-# 8. Egress.
+# 8. Network policy: one egress policy, and one ingress policy that admits only the
+# envoy-gateway namespace, on the listener port.
+ingress = res.get("ciliumNetworkPolicies", {}).get(INGRESS_POLICY, {}).get("spec", {})
+check(
+    "ingress policy selects the gateway pod",
+    ingress.get("endpointSelector") == {"matchLabels": {"app.kubernetes.io/name": SA}},
+    ingress.get("endpointSelector"),
+)
+ingress_from = [
+    (
+        [e.get("matchLabels") for e in r.get("fromEndpoints", [])],
+        [
+            (p.get("port"), p.get("protocol"))
+            for tp in r.get("toPorts", [])
+            for p in tp.get("ports", [])
+        ],
+        sorted(set(r) - {"fromEndpoints", "toPorts"}),
+    )
+    for r in ingress.get("ingress", [])
+]
+check(
+    "ingress only from envoy-gateway, on the listener",
+    ingress_from == [([{NS_KEY: "gateways"}], [("8787", "TCP")], [])],
+    ingress_from,
+)
+check("ingress policy has no egress", not ingress.get("egress"))
 policies = {
     **res.get("ciliumClusterwideNetworkPolicies", {}),
-    **res.get("ciliumNetworkPolicies", {}),
+    **{
+        k: v
+        for k, v in res.get("ciliumNetworkPolicies", {}).items()
+        if k != INGRESS_POLICY
+    },
 }
 check("one egress policy", len(policies) == 1, sorted(policies))
 for n, p in policies.items():
@@ -692,7 +761,7 @@ check(
 tenv = {e["name"]: e for e in on.get("tunnel-client", {}).get("env", [])}
 check(
     "tunnel targets the loopback listener",
-    tenv.get("MCP_SERVER_URL", {}).get("value") == f"http://{serving.get('bind')}/mcp",
+    tenv.get("MCP_SERVER_URL", {}).get("value") == "http://127.0.0.1:8787/mcp",
     tenv.get("MCP_SERVER_URL"),
 )
 check(
