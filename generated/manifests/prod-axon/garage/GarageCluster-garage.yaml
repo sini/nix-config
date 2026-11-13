@@ -32,6 +32,14 @@ spec:
     region: garage
     rootDomain: .s3.json64.dev
   storage:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                garage.rajsingh.info/cluster: garage
+                garage.rajsingh.info/tier: storage
+            topologyKey: kubernetes.io/hostname
     data:
       size: 50Gi
       storageClassName: longhorn-single

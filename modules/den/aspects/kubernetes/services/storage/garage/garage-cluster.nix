@@ -31,6 +31,17 @@
             zone = "axon";
             storage = {
               replicas = 3;
+              # One storage node per axon: RF=3 replicates across these pods, so three
+              # on one host is one failure domain (docs/longhorn-single-locality.md §2.2).
+              affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution = [
+                {
+                  topologyKey = "kubernetes.io/hostname";
+                  labelSelector.matchLabels = {
+                    "garage.rajsingh.info/cluster" = "garage";
+                    "garage.rajsingh.info/tier" = "storage";
+                  };
+                }
+              ];
               data = {
                 size = "50Gi";
                 storageClassName = dataClass;
