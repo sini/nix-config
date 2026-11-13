@@ -1,6 +1,6 @@
 # Garage operator: admission webhooks back on, then Garage v2.4.1
 
-Status: **draft v0.1** (2026-11-13), for the owner's review. Nothing is built.
+Status: **draft v0.2** (2026-11-13), for the owner's review. Nothing is built.
 
 ## 1. Problem (measured 2026-11-13)
 
@@ -57,10 +57,14 @@ Issuer when `issuerName` is empty.
 2. **Release:** `webhooks.enabled = true` (chart default), cert-manager
    self-signed Issuer in `garage`, `failurePolicy: Fail` (chart default; the
    managed-PVC webhook is always Fail).
-3. **Image:** set `spec.image` in `garage-cluster.nix` explicitly to v2.4.1 by
-   digest, so the version is ours and not a stale default. Done only after step
-   2 is live, as its own rollout: the operator then restarts the storage nodes
-   one at a time (`StorageRolloutReady`, OnDelete StatefulSets).
+3. **Image, under the usual updater:** `oci-image-updater init` the Garage image
+   into `images/dxflrs/garage/default.nix`, and set `spec.image` in
+   `garage-cluster.nix` from it (the repo's image pattern), at v2.4.1 or newer
+   by digest. Today `spec.image` is in no file: v2.3.0 was defaulted onto the
+   live object at creation, so neither oci-image-updater nor Argo ever moves it.
+   After this, Garage bumps arrive with the normal image updates. Done only
+   after step 2 is live, as its own rollout: the operator then restarts the
+   storage nodes one at a time (`StorageRolloutReady`, OnDelete StatefulSets).
 4. **Then the spread:** the anti-affinity from
    `docs/longhorn-single-locality.md` §2.2 (reverted in 6b7e4d61) goes back in,
    rolled out by the same mechanism.
