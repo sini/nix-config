@@ -156,6 +156,15 @@ in
 
               affinity.podAntiAffinityType = "required";
 
+              # A commit waits for the standby, so a failover loses no committed write.
+              # `preferred`: with the standby down, writes continue unreplicated instead
+              # of blocking (two instances: `required` would stall on every standby restart).
+              postgresql.synchronous = {
+                method = "any";
+                number = 1;
+                dataDurability = "preferred";
+              };
+
               managed.roles = map (app: {
                 name = app;
                 login = true;

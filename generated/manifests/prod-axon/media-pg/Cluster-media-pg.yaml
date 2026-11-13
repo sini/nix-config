@@ -43,6 +43,11 @@ spec:
         name: romm
         passwordSecret:
           name: media-pg-romm-password
+  postgresql:
+    synchronous:
+      dataDurability: preferred
+      method: any
+      number: 1
   storage:
     size: 20Gi
     storageClass: longhorn-single
