@@ -1,6 +1,6 @@
 {
   repo = "https://valkey.io/valkey-helm/";
   chart = "valkey";
-  version = "0.12.1";
-  chartHash = "sha256-+Hqgu4CviXY9rw4qvGdCvjZfyhIcix1fq8gqWkEWNDw=";
+  version = "1.0.0";
+  chartHash = "sha256-CwZ2kuRvNi9bWszK/EyoDwfdfor3bEQ+LFoGRVC2Zbc=";
 }

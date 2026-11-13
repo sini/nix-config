@@ -5,10 +5,19 @@ data:
     set -eu
 
     # Default config paths
-    VALKEY_CONFIG=${VALKEY_CONFIG_PATH:-/data/conf/valkey.conf}
+    # The config lives on a memory backed emptyDir, not on the data volume: it
+    # carries the replication credentials in plain text, and CONFIG REWRITE puts
+    # them back on every failover even if this script never wrote them, so the
+    # file itself has to stay off persistent storage.
+    VALKEY_CONFIG=${VALKEY_CONFIG_PATH:-/valkey-conf/valkey.conf}
+    # The config is assembled in a temporary file and moved into place at the
+    # very end, so that an interrupted run can never leave a half written config
+    # behind. The restart logic below reads the previous config to decide the
+    # replication role, and a truncated file would make it read the wrong one.
+    VALKEY_CONFIG_TMP="${VALKEY_CONFIG}.tmp"
 
     LOGFILE="/data/init.log"
-    DATA_DIR="/data/conf"
+    DATA_DIR="$(dirname "$VALKEY_CONFIG")"
 
     # Logging function (outputs to stderr and file)
     log() {
@@ -34,7 +43,19 @@ data:
         return 1
       fi
 
-      echo "$password"
+      # An empty value in the secret would otherwise be hashed into the ACL,
+      # and the hash of an empty password is the same everywhere, so the user
+      # would be open to anyone who can reach the port.
+      if [ -z "$password" ]; then
+        log "ERROR: The password for user $username is empty"
+        return 1
+      fi
+
+      printf '%s' "$password"
+    }
+
+    escape_config_arg() {
+      printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
     }
 
     # Clean old log if requested
@@ -48,7 +69,7 @@ data:
 
     log "Creating configuration in $DATA_DIR..."
     mkdir -p "$DATA_DIR"
-    rm -f "$VALKEY_CONFIG"
+    rm -f "$VALKEY_CONFIG_TMP"
 
 
     # Base valkey.conf
@@ -58,25 +79,20 @@ data:
       echo "protected-mode no"
       echo "bind * -::*"
       echo "dir /data"
-    } >>"$VALKEY_CONFIG"
-    # Create secure directory for ACL file
-    log "Creating /etc/valkey directory for ACL file"
-    mkdir -p /etc/valkey
+      echo "loglevel notice"
+    } >>"$VALKEY_CONFIG_TMP"
+    # The ACL file sits next to valkey.conf, on the same memory backed volume.
+    # It only holds password hashes, but it is still kept to its owner.
+    # File modes cannot keep Valkey from rewriting it (ACL SAVE replaces the
+    # file through a rename in this writable directory): restricting that is
+    # left to the ACL permissions of the users.
+    ACL_FILE="$(dirname "$VALKEY_CONFIG")/users.acl"
+    echo "aclfile $ACL_FILE" >>"$VALKEY_CONFIG_TMP"
 
-    # Set aclfile path in valkey.conf
-    echo "aclfile /etc/valkey/users.acl" >>"$VALKEY_CONFIG"
-
-    # Remove or reset existing ACL file if present (it may be read-only from previous run)
-    log "Preparing ACL file at /etc/valkey/users.acl"
-    if [ -f /etc/valkey/users.acl ]; then
-      log "Removing existing read-only users.acl file"
-      chmod 0600 /etc/valkey/users.acl
-      rm -f /etc/valkey/users.acl
-    fi
-
-    # Create ACL file with secure permissions
-    touch /etc/valkey/users.acl
-    chmod 0600 /etc/valkey/users.acl
+    # A rerun of this init container in the same pod finds the previous file
+    log "Preparing ACL file at $ACL_FILE"
+    rm -f "$ACL_FILE"
+    (umask 077 && : >"$ACL_FILE")
     # Generate ACL entries for each user
     log "Generating ACL entries for users"
 
@@ -84,22 +100,19 @@ data:
     PASSWORD=$(get_user_password "default" "redis-password") || exit 1
 
     # Hash the password and write ACL entry
-    PASSHASH=$(echo -n "$PASSWORD" | sha256sum | cut -f 1 -d " ")
-    echo "user default on #$PASSHASH ~* &* +@all" >> /etc/valkey/users.acl
+    PASSHASH=$(printf '%s' "$PASSWORD" | sha256sum | cut -f 1 -d " ")
+    printf '%s\n' "user default on #$PASSHASH ~* &* +@all" >> "$ACL_FILE"
 
-    # Set final permissions
-    chmod 0400 /etc/valkey/users.acl
-    log "ACL file created with 0400 permissions"
+    log "ACL file created"
 
     # Append extra configs if present
     if [ -f /usr/local/etc/valkey/valkey.conf ]; then
       log "Appending /usr/local/etc/valkey/valkey.conf"
-      cat /usr/local/etc/valkey/valkey.conf >>"$VALKEY_CONFIG"
+      cat /usr/local/etc/valkey/valkey.conf >>"$VALKEY_CONFIG_TMP"
     fi
-    if [ -d /extravalkeyconfigs ]; then
-      log "Appending files in /extravalkeyconfigs/"
-      cat /extravalkeyconfigs/* >>"$VALKEY_CONFIG"
-    fi
+
+    # Publish the finished config atomically.
+    mv "$VALKEY_CONFIG_TMP" "$VALKEY_CONFIG"
 kind: ConfigMap
 metadata:
   labels:

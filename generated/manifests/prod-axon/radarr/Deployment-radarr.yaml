@@ -63,7 +63,7 @@ spec:
             - /etc/alloy/config.alloy
             - --storage.path=/config/.alloy
             - --server.http.listen-addr=127.0.0.1:12345
-          image: docker.io/grafana/alloy@sha256:8ab871206bd2d8f89277f53abffee5f452a293980788d52f85fa183a87a505a4
+          image: docker.io/grafana/alloy@sha256:9acc2529bc1edb7f5b2bd801dd8334ebc80c158e3a9e5526ecd7c9a273d43189
           name: logtail
           securityContext:
             runAsGroup: 65536
@@ -118,7 +118,7 @@ spec:
                   name: media-pg-radarr-password
             - name: TZ
               value: America/Los_Angeles
-          image: linuxserver/radarr@sha256:d3f019e11cbf2ab6d490142916a2a00530ec811d41a684cadb83eb49faaedb34
+          image: linuxserver/radarr@sha256:7a1db4df61ac9224973fb796327a9c94ffb117520985e46beee5aaa51508d38a
           livenessProbe:
             failureThreshold: 3
             httpGet:

@@ -40,7 +40,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.serviceAccountName
-          image: ghcr.io/rajsinghtech/garage-operator:v0.8.3
+          image: ghcr.io/rajsinghtech/garage-operator:v0.9.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:

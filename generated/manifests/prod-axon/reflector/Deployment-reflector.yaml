@@ -28,7 +28,7 @@ spec:
               value: ""
             - name: ES_Ignite__KubernetesClient__SkipTlsVerify
               value: "false"
-          image: docker.io/emberstack/kubernetes-reflector:10.0.71
+          image: docker.io/emberstack/kubernetes-reflector:10.0.77
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 5

@@ -1,8 +1,8 @@
 {
   imageName = "ghcr.io/ggml-org/llama.cpp";
   imageTag = "server-vulkan";
-  imageDigest = "sha256:3be21531a885f5955c6ac02c41a734fa4e40b70697123a9bd5e8d0649e9f6675";
-  imageHash = "sha256-Bx5pMmdJbcJYAYlxAviRRbmX5Gf73FzpleZKtpG7I/0=";
+  imageDigest = "sha256:784bb87c7b22cf8653322f3680f33e1fd013d122d817441d5d2fc6410dee68da";
+  imageHash = "sha256-B2HrQY8KDdPdH2FsqetPuEh1/ax2fk+zGi/GbdFwvvk=";
   arch = "amd64";
   os = "linux";
   pinned = false;
