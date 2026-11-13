@@ -176,7 +176,10 @@ in
           "--advertise-address=${head host.ipv4}"
           "--cluster-cidr=${podNetwork.cidr},${podNetwork.ipv6_cidr}"
           "--service-cidr=${serviceNetwork.cidr},${serviceNetwork.ipv6_cidr}"
-          "--kube-controller-manager-arg=--node-cidr-mask-size-ipv6=112"
+          # Cilium's cluster-pool IPAM allocates pod ranges; Node.spec.podCIDRs is unused.
+          # Node IPAM off, so a Node range outside a changed --cluster-cidr cannot crash
+          # the controller-manager (range_allocator.go; docs/address-plan.md §8).
+          "--kube-controller-manager-arg=--allocate-node-cidrs=false"
           "--kubelet-arg=fail-swap-on=false"
 
           "--write-kubeconfig-mode \"0644\""

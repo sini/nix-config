@@ -327,3 +327,45 @@ must fail or read non-zero, so an empty render cannot pass.
    the network overlay and its precondition (inert, §5). The live values stay as
    they are; nothing reads them.
 3. Nothing renumbers: no LAN moves, and no GUA slice of den's is in use yet.
+
+## 8. Runbook: the cluster ULA move (commit 7), measured 2026-11-12
+
+Facts, from the k8s 1.36 source and the live cluster (k3s 1.36.5, Cilium
+cluster-pool IPAM, kube-proxy replacement, flannel off):
+
+- **Node pod ranges are fatal if they fall outside a changed `--cluster-cidr`.**
+  The node-IPAM range allocator returns an error at start for any Node whose
+  `spec.podCIDRs` is outside the configured range: "This error will keep
+  crashing controller-manager"
+  (`pkg/controller/nodeipam/ipam/range_allocator.go`). In k3s it runs inside the
+  server process. `Node.spec.podCIDRs` is immutable, and Cilium's cluster-pool
+  IPAM never reads it. So the commit also sets
+  `--kube-controller-manager-arg=allocate-node-cidrs=false`: node IPAM stops,
+  and the stale Node ranges stay harmlessly.
+- **A changed `--service-cidr` is not fatal.** The default ServiceCIDR
+  controller only warns (`KubernetesDefaultServiceCIDRInconsistent`) while the
+  `kubernetes` object differs, and it recreates that object from the flags only
+  when it is absent (`pkg/controlplane/controller/defaultservicecidr`).
+- **One Service holds a cluster IPv6 address:** `kube-system/coredns`.
+
+Order (each step reversible until 5):
+
+1. Deploy the axons one at a time, each drained first and then uncordoned. The
+   k3s flags (`allocate-node-cidrs=false`, the new ranges) and the FRR fabric
+   loopbacks change; nothing else.
+2. Apply a transitional ServiceCIDR `transition` =
+   `[172.21.0.0/16, <ula>:8001::/112]`. It covers every IPv4 address in use.
+3. Delete the `kubernetes` ServiceCIDR. Its finalizer holds it while an address
+   inside it is uncovered, which is only coredns's old IPv6.
+4. Recreate `kube-system/coredns` with the same IPv4 (172.21.0.10). Its IPv6
+   comes from `transition`, and step 3 completes. The apiserver recreates
+   `kubernetes` from the new flags.
+5. Delete `transition`. It is covered by the new `kubernetes` object.
+6. Pods: Argo syncs the Cilium change (cluster-pool and native-routing CIDR).
+   Then per node: drain, delete its CiliumNode, restart its Cilium agent (it is
+   re-allocated from the new pool), uncordon. Every pod gets a new IPv6 when it
+   restarts.
+
+Read-back: no `fdfd:cafe` in ServiceCIDRs, CiliumNodes, pod IPs or FRR; coredns
+answers over both families; Blocky 3/3; xmsg-gateway Ready, with its next
+store-backup line.
