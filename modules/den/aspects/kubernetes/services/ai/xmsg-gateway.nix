@@ -104,6 +104,8 @@ let
   grantStore = "${stateDir}/grants.db";
   stagedStore = "${stagingDir}/grants.db";
   backupsDir = "${dataDir}/backups";
+  # store-backup keeps this many pre-migrate copies (xmsg-design, 2026-11-13).
+  keepPreMigrate = 3;
   # The gateway image's /bin, mounted in store-backup (its symlink resolves into /nix).
   gatewayBinDir = "/opt/xmsg-mcp-gateway/bin";
   gatewayBin = "${gatewayBinDir}/xmsg-mcp-gateway";
@@ -592,6 +594,15 @@ in
           os.fsync(fd)
           os.close(fd)
           print("${grantStore}: backed up to " + out + " before " + ", ".join(r.stdout.split()))
+          # A migration left pending on purpose (the AS cutover) backs up on every start:
+          # keep the newest ${toString keepPreMigrate} pre-migrate copies. Only that prefix; hot-journal
+          # copies and the gateway's <db>.recovery/ are never pruned. Names sort by time.
+          olds = sorted(f for f in os.listdir("${backupsDir}") if f.startswith("grants.db.pre-migrate-") and not f.endswith(".partial"))
+          for f in olds[:-${toString keepPreMigrate}]:
+              os.remove(os.path.join("${backupsDir}", f))
+              print("${backupsDir}: pruned " + f)
+          st = os.statvfs("${backupsDir}")
+          print("${backupsDir}: backup " + str(os.path.getsize(out)) + " B; volume free " + str(st.f_bavail * st.f_frsize) + " of " + str(st.f_blocks * st.f_frsize) + " B; kept " + str(min(len(olds), ${toString keepPreMigrate})) + " pre-migrate")
         '';
 
         tunnelContainer = {
