@@ -57,6 +57,9 @@ in
   };
 
   den.aspects.axon-02 = {
+    # The 500 MB ESP holds 5 generations of this host's 84 MB initrd with no room
+    # for a sixth, so a deploy failed "No space left on device" (2026-11-12).
+    nixos.boot.loader.systemd-boot.configurationLimit = 3;
     includes = with den.aspects; [
       roles.default
       core.boot.network-initrd
