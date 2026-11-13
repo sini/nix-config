@@ -29,7 +29,25 @@ jobs:
         # to refresh its vendor/cargo hash).
         run: nix run .#update-pkgs -- --no-build
       - name: Update flake.lock
-        uses: DeterminateSystems/update-flake-lock@v28
+        run: nix flake update
+      - name: Update container images
+        # Digest bumps for every images/<org>/<name>/default.nix (images/DESIGN.md).
+        # Only changed images are prefetched; the largest is ~1.3 GB compressed.
+        run: nix run .#oci-image-updater -- update-all
+      - name: Re-render Argo manifests
+        # Argo deploys generated/manifests/, which embeds chart versions and image
+        # digests; without this a bump merges without reaching the cluster.
+        # --skip-secrets keeps the encrypted targets as committed (no sops key here).
+        run: nix run .#nixidy-sync -- --skip-secrets
+      - name: Open the update PR
+        uses: peter-evans/create-pull-request@v8
         with:
-          pr-labels: |
-            merge-queue
+          branch: update_flake_lock_action
+          title: "chore: update flake.lock + helm + oci-images"
+          commit-message: "chore: update flake.lock + helm + oci-images"
+          body: |
+            Nightly update: flake inputs, helm charts (helmupdater), custom packages
+            (update-pkgs), container images (oci-image-updater), and the re-rendered
+            Argo manifests (nixidy-sync --skip-secrets).
+          labels: merge-queue
+          delete-branch: true
