@@ -1,6 +1,6 @@
 # Single-replica volumes: keep each copy on its pod's node
 
-Status: **draft v0.1** (2026-11-12), for the owner's review. Nothing is built.
+Status: **v0.2** (2026-11-13). §2.1 is built; §2.2 is blocked (§6).
 
 ## 1. Problem
 
@@ -110,3 +110,27 @@ About 65 GB moves in step 2 (the remote copies' used size, of which media-pg is
    reason the drain failed.
 2. The llama-cpp model caches: include them (harmless, 24 GB to move), or leave
    them `disabled`? Recommended: include them, for one rule across the class.
+
+## 6. As built (2026-11-12/13)
+
+- **§2.1, done.** The class has `dataLocality: best-effort` (Argo diffs it
+  client-side and force-replaces it, since its parameters are immutable). All 14
+  attached `longhorn-single` volumes are `best-effort`, and each copy is on its
+  pod's node. Every CNPG cluster's two instances now have their copies on
+  different nodes.
+- **Incident during the moves:** at 07:45:16Z on 2026-11-13, axon-02's Longhorn
+  instance-manager dropped its data connections while it was the source for both
+  media-pg copies (23 GB). Every volume with a copy on axon-02 faulted at once.
+  The single-copy media-pg-2 auto-salvaged, and CNPG failed over to media-pg-1.
+  Replication is asynchronous, so the old primary's last writes may be lost.
+  Lesson: one large move per source node at a time.
+- **§2.2, blocked.** The Garage operator cannot roll out a template change:
+  every GarageNode is `ReconcileFailed` ("managed persistent volume claims
+  require enabled admission webhooks"), and its own `DiscoveryCompatible`
+  condition warns that Garage v2.3.0 with Kubernetes discovery would crash-loop
+  on restart ("Set spec.image to v2.4.1 or newer (or disable spec.discovery)
+  before the next restart"). The anti-affinity was committed and reverted
+  (6b7e4d61). All three storage pods are still on axon-03.
+- **Leftover:** four detached Retain volumes (old copies of hindsight-pg-2,
+  coder-pg-1/2 and two llama-cpp models), with no PVC in use. Owner to decide on
+  deletion.
