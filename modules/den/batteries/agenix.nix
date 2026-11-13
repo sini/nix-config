@@ -112,26 +112,6 @@ let
           )
         ];
 
-      # droid has no system agenix module (see agenixHostAspect note), so the
-      # per-user system identity secret is skipped there.
-      ${host.class} =
-        if host.class == "droid" then
-          (_: { })
-        else
-          _: {
-            age.secrets."user-identity-${user.name}" = {
-              rekeyFile = rootPath + "/.secrets/users/${user.name}/id_agenix.age";
-              owner = user.name;
-              # macOS has no per-user primary group named after the user (it's
-              # `staff`), so `chown <user>:<user>` fails as a unit and agenix
-              # leaves the identity root-owned — unreadable by the user's
-              # home-manager agenix, which then finds "no readable identities".
-              # NixOS does create a same-named group, so keep that there.
-              group = if host.class == "darwin" then "staff" else user.name;
-              mode = "600";
-              generator.script = "age-identity";
-            };
-          };
       homeManager =
         { osConfig, ... }:
         let
@@ -192,8 +172,37 @@ in
     inputs.agenix-rekey-to-sops.flakeModule
   ];
 
+  # The per-user system identity secret lands on the host: an explicit delivery
+  # (den 0.20 `receiver`), since a user's own host-class content stays with the user.
+  # droid has no system agenix module (see agenixHostAspect note), so it is skipped.
+  den.policies.agenix-user-identity =
+    { user, host, ... }:
+    lib.optional (host ? class && host.class != "droid") (
+      den.lib.policy.provide {
+        inherit (host) class;
+        receiver = host;
+        module = {
+          age.secrets."user-identity-${user.name}" = {
+            rekeyFile = rootPath + "/.secrets/users/${user.name}/id_agenix.age";
+            owner = user.name;
+            # macOS has no per-user primary group named after the user (it's
+            # `staff`), so `chown <user>:<user>` fails as a unit and agenix
+            # leaves the identity root-owned — unreadable by the user's
+            # home-manager agenix, which then finds "no readable identities".
+            # NixOS does create a same-named group, so keep that there.
+            group = if host.class == "darwin" then "staff" else user.name;
+            mode = "600";
+            generator.script = "age-identity";
+          };
+        };
+      }
+    );
+
   den.schema.host.includes = [ agenixHostAspect ];
-  den.schema.user.includes = [ agenixUserAspect ];
+  den.schema.user.includes = [
+    agenixUserAspect
+    den.policies.agenix-user-identity
+  ];
   den.schema.cluster.includes = [ agenixClusterAspect ];
 
   perSystem =

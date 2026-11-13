@@ -120,10 +120,10 @@ in
 
   den.aspects.cortex-cuda = {
     includes = with den.aspects; [
-      # The host baseline at the guest's own scope. Without it the guest got it
-      # only from its users' roles.default leaking up (denful/den#694), so
-      # host-scope policies like microvm-guest-unpersist-pinned filtered a pool
-      # nothing read.
+      # The guest's own host baseline. Since den's end state (denful/den#694),
+      # a user's roles.default no longer reaches a host, so this include is the
+      # guest's only baseline, and microvm-guest-unpersist-pinned filters the
+      # pool its impermanence reads.
       roles.default
       roles.inference
       services.ai.hyperqwen

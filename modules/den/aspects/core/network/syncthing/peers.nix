@@ -1,7 +1,6 @@
 # The per-user `peer` aspect: advertise this user's Syncthing device to the
 # same-user mesh and open its sync port. User-scoped (the emit destructures
-# `user`); bundles the device emit + the firewall `nixos` branch the way
-# `agenixUserAspect` bundles `${host.class}` + `homeManager`. Both gate on the
+# `user`); its firewall port reaches the host through den.policies.syncthing-peer-port. Both gate on the
 # committed `.id` sidecar's existence — present iff this user replicates (the
 # `member` collector's secret generator wrote it), the same `pathExists` idiom
 # `userEnrich`/`tailscale` use — so non-replicating users contribute nothing.
@@ -37,23 +36,35 @@ in
         }
       ];
 
-    # Open this user's sync port on the trusted tailnet interface only (never
-    # global). A user-scoped `nixos` branch fans per user and merges into the
-    # host config; gated on the same sidecar so only replicating users open one.
-    nixos =
-      {
-        host,
-        user,
-        config,
-        lib,
-        ...
-      }:
-      lib.mkIf (builtins.pathExists (user.secretPath + "/syncthing-${host.name}.id")) {
-        networking.firewall.interfaces.${config.services.tailscale.interfaceName}.allowedTCPPorts = [
-          (22000 + user.system.syncthingOffset)
-        ];
-      };
   };
 
-  den.schema.user.includes = [ den.aspects.core.network.syncthing.peer ];
+  # Open this user's sync port on the trusted tailnet interface only (never global),
+  # on its host by an explicit delivery (den 0.20 `receiver`). Gated on the same
+  # sidecar, so only replicating users open one.
+  den.policies.syncthing-peer-port =
+    { host, user, ... }:
+    lib.optional
+      (
+        host ? class
+        && host.class == "nixos"
+        && builtins.pathExists (user.secretPath + "/syncthing-${host.name}.id")
+      )
+      (
+        den.lib.policy.provide {
+          class = "nixos";
+          receiver = host;
+          module =
+            { config, ... }:
+            {
+              networking.firewall.interfaces.${config.services.tailscale.interfaceName}.allowedTCPPorts = [
+                (22000 + user.system.syncthingOffset)
+              ];
+            };
+        }
+      );
+
+  den.schema.user.includes = [
+    den.aspects.core.network.syncthing.peer
+    den.policies.syncthing-peer-port
+  ];
 }

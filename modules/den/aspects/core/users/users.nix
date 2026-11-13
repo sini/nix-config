@@ -7,13 +7,15 @@
 #
 # Ported from main:modules/core/users/default.nix
 {
+  den,
   lib,
   self,
   config,
   ...
 }:
 let
-  userEnrich =
+  # The per-user account content for the host, by host class.
+  userEnrichBranches =
     { host, user }:
     let
       inherit (user) userName;
@@ -29,8 +31,6 @@ let
       hasPasswordFile = builtins.pathExists passwordPath;
     in
     {
-      name = "user-enrich/${userName}@${host.name}";
-
       nixos = {
         users.deterministicIds.${userName} = lib.optionalAttrs (uid != null) {
           inherit uid gid;
@@ -75,8 +75,18 @@ let
     };
 in
 {
-  # Wire into user schema includes — fires for every resolved user
-  den.schema.user.includes = [ userEnrich ];
+  # It lands on the host by an explicit delivery (den 0.20 `receiver`): a user's own
+  # host-class content stays with the user. Fires for every resolved user.
+  den.policies.user-enrich =
+    { host, user, ... }:
+    lib.optional (host ? class && (host.class == "nixos" || host.class == "darwin")) (
+      den.lib.policy.provide {
+        inherit (host) class;
+        receiver = host;
+        module = (userEnrichBranches { inherit host user; }).${host.class};
+      }
+    );
+  den.schema.user.includes = [ den.policies.user-enrich ];
 
   # Host-level mutableUsers setting
   den.aspects.core.users = {

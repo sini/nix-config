@@ -146,6 +146,12 @@ in
     ];
   };
 
+  # den's end state for user host-class content (denful/den#694, #750): a user's
+  # own nixos/darwin/os content stays with the user. What crosses to a host is
+  # delivered by name (`den.lib.policy.provide { receiver = host; }`), and a host's
+  # baseline is its own include, never something its users carry in.
+  den.migrations.user-host-content.acknowledged = true;
+
   # Default host includes — aggregator aspects for quirk collection
   den.schema.host.includes = [
     den.aspects.core.network.firewall-collector
