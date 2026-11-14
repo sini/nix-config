@@ -110,6 +110,13 @@
     # applies upstream's fix (PR #150967, open) to lib.nix's fetchPnpmDeps, against
     # hermes' own nixpkgs, so the store matches Linux's byte for byte (same output
     # path). Remove once #150967 merges.
+    #
+    # shortcut: hermes' pinned node (a prebuilt binary from pm/lock.json) reads
+    # /System/Library/OpenSSL/openssl.cnf at startup, which the darwin sandbox
+    # refuses ("OpenSSL configuration error ... Operation not permitted"), so every
+    # pnpm build (tui, web, desktop) dies in buildPhase. lib.nix's pnpmConfigHook,
+    # which all of them carry, also points OPENSSL_CONF at an empty config. Remove
+    # once upstream sets it on darwin.
     homeDarwin =
       {
         host,
@@ -137,6 +144,10 @@
                       '';
                     }
                   );
+                pnpmConfigHook = hpkgs.makeSetupHook {
+                  name = "pnpm-config-hook-darwin-openssl-conf";
+                  propagatedBuildInputs = [ hpkgs.pnpmConfigHook ];
+                } (hpkgs.writeText "openssl-conf.sh" "export OPENSSL_CONF=/dev/null\n");
               }
             );
         };
