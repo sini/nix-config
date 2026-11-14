@@ -82,7 +82,15 @@ let
                   argo = lib.filterAttrs (n: _: isArgo n) attrs;
                   rest = lib.filterAttrs (n: _: !isArgo n) attrs;
                 };
-                la = partition (m.labels or { });
+                # Helm's version-stamped labels change on every chart bump while the
+                # secret does not; left in, each bump would need a keyed re-encrypt.
+                la = partition (
+                  removeAttrs (m.labels or { }) [
+                    "chart"
+                    "helm.sh/chart"
+                    "app.kubernetes.io/version"
+                  ]
+                );
                 an = partition (m.annotations or { });
                 whenSet = lib.optionalAttrs;
               in
