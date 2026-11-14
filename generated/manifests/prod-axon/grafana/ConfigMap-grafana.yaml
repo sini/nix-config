@@ -69,6 +69,8 @@ data:
     logs = /var/log/grafana
     plugins = /var/lib/grafana/plugins
     provisioning = /etc/grafana/provisioning
+    [plugins]
+    preinstall_auto_update = false
     [security]
     cookie_secure = true
     disable_gravatar = true

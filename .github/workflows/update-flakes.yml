@@ -18,7 +18,9 @@ jobs:
             accept-flake-config = true
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
       - name: Update helm charts
-        run: nix run github:nix-community/nixhelm#helmupdater -- update-all --commit
+        # No --commit: the runner has no git identity, so each chart's commit failed
+        # (exit 128). The edits stay in the working tree and land in the PR.
+        run: nix run github:nix-community/nixhelm#helmupdater -- update-all
       - name: Update custom packages
         # Bumps github-sourced pkgs/by-name packages via nix-update; edits stay
         # in the working tree and are folded into the PR by update-flake-lock.

@@ -10,11 +10,9 @@ metadata:
 spec:
   endpoints:
     - honorLabels: true
-      interval: 30s
       path: /metrics
       port: service
       scheme: http
-      scrapeTimeout: 30s
   jobLabel: grafana
   namespaceSelector:
     matchNames:

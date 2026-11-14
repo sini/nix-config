@@ -13,7 +13,7 @@
           namespace = "monitoring";
 
           helm.releases.loki = {
-            chart = charts.grafana.loki;
+            chart = charts.grafana-community.loki;
 
             # The chart gates its ServiceMonitor/PrometheusRule on cluster
             # capabilities, which offline helm template never satisfies —
@@ -81,7 +81,8 @@
 
               # Self-monitoring: ServiceMonitor for loki's own metrics,
               # upstream loki dashboards for the grafana sidecar, and the
-              # chart's PrometheusRule alert/record set.
+              # chart's recording rules and its loki-mixin alerts (separate
+              # switches since chart 18).
               monitoring = {
                 serviceMonitor.enabled = true;
                 dashboards = {
@@ -90,6 +91,7 @@
                   annotations.grafana_folder = "Monitoring";
                 };
                 rules.enabled = true;
+                alerts.enabled = true;
               };
             };
           };

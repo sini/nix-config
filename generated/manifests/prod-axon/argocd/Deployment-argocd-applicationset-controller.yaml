@@ -291,6 +291,9 @@ spec:
       dnsPolicy: ClusterFirst
       nodeSelector:
         kubernetes.io/os: linux
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       serviceAccountName: argocd-applicationset-controller
       terminationGracePeriodSeconds: 30
       volumes:

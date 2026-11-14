@@ -19,7 +19,7 @@ spec:
           targetLabel: job
         - action: replace
           replacement: loki
-          targetLabel: cluster
+          targetLabel: app_instance
       scheme: http
   selector:
     matchExpressions:

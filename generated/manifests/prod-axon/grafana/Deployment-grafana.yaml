@@ -18,7 +18,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 872a3e64a15290e42f99202b0ce06a3bfd594cc0a53f53d4dc91d884bc618aae
+        checksum/config: 00f5e420356c0a2a6a06a43a97bc059cd5f88d1c462af4c6220bbd333ce99481
         checksum/sc-dashboard-provider-config: 81f722b8194d01e4a84ce12a0cbbe9b705b2d9145719c803ac264b4786c64a09
         kubectl.kubernetes.io/default-container: grafana
       labels:
@@ -40,7 +40,7 @@ spec:
               value: monitoring
             - name: FOLDER_ANNOTATION
               value: grafana_folder
-          image: quay.io/kiwigrid/k8s-sidecar:2.5.0
+          image: quay.io/kiwigrid/k8s-sidecar:2.14.3
           imagePullPolicy: IfNotPresent
           name: grafana-sc-dashboard
           securityContext:
@@ -48,6 +48,7 @@ spec:
             capabilities:
               drop:
                 - ALL
+            readOnlyRootFilesystem: true
             seccompProfile:
               type: RuntimeDefault
           volumeMounts:
@@ -93,7 +94,7 @@ spec:
                 secretKeyRef:
                   key: secret-key
                   name: grafana-secret-key
-          image: docker.io/grafana/grafana:12.3.1
+          image: docker.io/grafana/grafana:13.3.0-distroless
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 10
@@ -126,9 +127,12 @@ spec:
               drop:
                 - ALL
             privileged: false
+            readOnlyRootFilesystem: true
             seccompProfile:
               type: RuntimeDefault
           volumeMounts:
+            - mountPath: /tmp
+              name: tmp
             - mountPath: /etc/grafana/grafana.ini
               name: config
               subPath: grafana.ini
@@ -153,6 +157,8 @@ spec:
       serviceAccountName: grafana
       shareProcessNamespace: false
       volumes:
+        - emptyDir: {}
+          name: tmp
         - configMap:
             name: grafana
           name: config

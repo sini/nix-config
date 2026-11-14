@@ -3493,11 +3493,11 @@
         "uv2nix": "uv2nix_2"
       },
       "locked": {
-        "lastModified": 1794112722,
-        "narHash": "sha256-GgloY6lqFEJmC1kvh19QfCQ1NEDbCn7GYzB5z8tSbhY=",
+        "lastModified": 1794272933,
+        "narHash": "sha256-tj9pSys1Nhnf8JO4BZysNiezEwXvfLYps6GtzGB/ESM=",
         "owner": "nix-community",
         "repo": "nixhelm",
-        "rev": "a5adbc48db1d186bf0751471459dd5c1d694980f",
+        "rev": "8eb22a9f0c72e3e2cc487e44512bb1e470a0172b",
         "type": "github"
       },
       "original": {

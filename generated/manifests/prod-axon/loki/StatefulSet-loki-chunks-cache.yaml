@@ -36,7 +36,7 @@ spec:
             - -c 16384
             - -v
             - -u 11211
-          image: memcached:1.6.39-alpine
+          image: docker.io/library/memcached:1.6.45-alpine
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
@@ -68,10 +68,13 @@ spec:
               drop:
                 - ALL
             readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
         - args:
             - --memcached.address=localhost:11211
             - --web.listen-address=0.0.0.0:9150
-          image: prom/memcached-exporter:v0.15.4
+          image: docker.io/prom/memcached-exporter:v0.18.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
@@ -102,6 +105,9 @@ spec:
               drop:
                 - ALL
             readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
       initContainers: []
       nodeSelector: {}
       securityContext:
@@ -109,7 +115,9 @@ spec:
         runAsGroup: 11211
         runAsNonRoot: true
         runAsUser: 11211
-      serviceAccountName: loki
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: loki-memcached
       terminationGracePeriodSeconds: 60
       tolerations: []
       topologySpreadConstraints: []

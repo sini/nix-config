@@ -5,13 +5,9 @@ metadata:
     app.kubernetes.io/component: single-binary
     app.kubernetes.io/instance: loki
     app.kubernetes.io/name: loki
-    app.kubernetes.io/part-of: memberlist
   name: loki
   namespace: monitoring
 spec:
-  persistentVolumeClaimRetentionPolicy:
-    whenDeleted: Delete
-    whenScaled: Delete
   podManagementPolicy: Parallel
   replicas: 1
   revisionHistoryLimit: 10
@@ -24,7 +20,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 774d8096c884bfd5aeadcd46ba1a3ec3f582abb7970ac2177129472daf040948
+        checksum/config: 85ca2a33a5f20bbdae86c973131137d23b5e039ab2d9445e94640a3a801c50be
         kubectl.kubernetes.io/default-container: loki
         storage/size: 50Gi
       labels:
@@ -46,9 +42,26 @@ spec:
       containers:
         - args:
             - -config.file=/etc/loki/config/config.yaml
+            - -config.expand-env=true
+            - -memberlist.advertise-addr=$(POD_IP)
             - -target=all
-          image: docker.io/grafana/loki:3.6.11
+          env:
+            - name: GOGC
+              value: "80"
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          image: docker.io/grafana/loki:3.7.9
           imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 10
+            httpGet:
+              path: /loki/api/v1/status/buildinfo
+              port: http-metrics
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 1
           name: loki
           ports:
             - containerPort: 3100
@@ -69,22 +82,23 @@ spec:
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 1
-          resources: {}
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
               drop:
                 - ALL
             readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
           volumeMounts:
-            - mountPath: /tmp
-              name: tmp
             - mountPath: /etc/loki/config
               name: config
             - mountPath: /etc/loki/runtime-config
               name: runtime-config
             - mountPath: /var/loki
               name: storage
+            - mountPath: /tmp
+              name: temp
             - mountPath: /rules
               name: sc-rules-volume
         - env:
@@ -102,18 +116,44 @@ spec:
               value: "60"
             - name: LOG_LEVEL
               value: INFO
-          image: docker.io/kiwigrid/k8s-sidecar:2.5.0
+            - name: HEALTH_PORT
+              value: "8080"
+          image: docker.io/kiwigrid/k8s-sidecar:2.14.3
           imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: http-sidecar
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 1
           name: loki-sc-rules
+          ports:
+            - containerPort: 8080
+              name: http-sidecar
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: http-sidecar
+            initialDelaySeconds: 3
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
               drop:
                 - ALL
             readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
           volumeMounts:
             - mountPath: /tmp
-              name: tmp
+              name: sc-rules-temp
             - mountPath: /rules
               name: sc-rules-volume
       enableServiceLinks: true
@@ -123,11 +163,13 @@ spec:
         runAsGroup: 10001
         runAsNonRoot: true
         runAsUser: 10001
+        seccompProfile:
+          type: RuntimeDefault
       serviceAccountName: loki
       terminationGracePeriodSeconds: 30
       volumes:
         - emptyDir: {}
-          name: tmp
+          name: temp
         - configMap:
             items:
               - key: config.yaml
@@ -139,6 +181,8 @@ spec:
           name: runtime-config
         - emptyDir: {}
           name: sc-rules-volume
+        - emptyDir: {}
+          name: sc-rules-temp
   updateStrategy:
     rollingUpdate:
       partition: 0

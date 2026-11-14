@@ -646,7 +646,7 @@
           };
 
           helm.releases.grafana = {
-            chart = charts.grafana.grafana;
+            chart = charts.grafana-community.grafana;
 
             values = {
               # State lives in monitoring-pg (see monitoring-pg.nix);

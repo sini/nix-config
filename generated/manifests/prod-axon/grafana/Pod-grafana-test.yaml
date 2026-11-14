@@ -15,16 +15,35 @@ spec:
         - /opt/bats/bin/bats
         - -t
         - /tests/run.sh
-      image: docker.io/bats/bats:v1.4.1
+      image: docker.io/bats/bats:1.14.0
       imagePullPolicy: IfNotPresent
       name: grafana-test
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+        privileged: false
+        readOnlyRootFilesystem: true
+        seccompProfile:
+          type: RuntimeDefault
       volumeMounts:
         - mountPath: /tests
           name: tests
           readOnly: true
+        - mountPath: /tmp
+          name: tmp
   restartPolicy: Never
+  securityContext:
+    runAsGroup: 472
+    runAsNonRoot: true
+    runAsUser: 472
+    seccompProfile:
+      type: RuntimeDefault
   serviceAccountName: grafana-test
   volumes:
     - configMap:
         name: grafana-test
       name: tests
+    - emptyDir: {}
+      name: tmp

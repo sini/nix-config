@@ -422,6 +422,9 @@ spec:
               name: var-files
       nodeSelector:
         kubernetes.io/os: linux
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       serviceAccountName: argocd-repo-server
       terminationGracePeriodSeconds: 30
       volumes:

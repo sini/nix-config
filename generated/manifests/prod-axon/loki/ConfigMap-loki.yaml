@@ -45,6 +45,9 @@ data:
       scheduler_address: ""
     index_gateway:
       mode: simple
+    ingester:
+      wal:
+        flush_on_shutdown: true
     limits_config:
       max_cache_freshness_per_query: 10m
       query_timeout: 300s
@@ -54,8 +57,15 @@ data:
       split_queries_by_interval: 15m
       volume_enabled: true
     memberlist:
+      abort_if_cluster_join_fails: true
+      advertise_port: 7946
+      bind_port: 7946
       join_members:
       - loki-memberlist.monitoring.svc.cluster.local
+      max_join_backoff: 1m
+      max_join_retries: 10
+      min_join_backoff: 1s
+      rejoin_interval: 90s
     pattern_ingester:
       enabled: false
     query_range:
@@ -90,10 +100,18 @@ data:
         schema: v13
         store: tsdb
     server:
+      graceful_shutdown_timeout: 5s
       grpc_listen_port: 9095
+      grpc_server_max_concurrent_streams: 1000
+      grpc_server_max_recv_msg_size: 104857600
+      grpc_server_max_send_msg_size: 104857600
+      grpc_server_min_time_between_pings: 10s
+      grpc_server_ping_without_stream_allowed: true
       http_listen_port: 3100
-      http_server_read_timeout: 600s
-      http_server_write_timeout: 600s
+      http_server_idle_timeout: 30s
+      http_server_read_timeout: 10m0s
+      http_server_write_timeout: 10m0s
+      log_level: info
     storage_config:
       bloom_shipper:
         working_directory: /var/loki/data/bloomshipper
