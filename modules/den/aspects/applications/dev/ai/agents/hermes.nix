@@ -9,7 +9,7 @@
 # edit` refuse to drift away from this file. hermes-hud and hermes-one are
 # third-party companions with no upstream packaging, so those two stay on the
 # numtide llm-agents collection.
-{ den, ... }:
+{ den, inputs, ... }:
 {
   flake-file.inputs.hermes-agent.url = "github:NousResearch/hermes-agent";
 
@@ -32,7 +32,6 @@
         host,
         inputs',
         lib,
-        pkgs,
         ...
       }:
       let
@@ -48,8 +47,6 @@
       {
         programs.hermes-agent = {
           enable = true;
-          # The flake's package, with its darwin pnpm-deps fix (pkgs/overlays.nix).
-          package = pkgs.hermes-agent;
           desktop.enable = hasGui;
         };
 
@@ -106,6 +103,43 @@
         home.packages = lib.optionals (host.hasAspect den.aspects.roles.workstation) [
           inputs'.llm-agents.packages.hermes-one
         ];
+      };
+
+    # shortcut: NousResearch/hermes-agent#150713. On macOS pnpm's clone probe leaves an
+    # empty v11/links in the store, so pnpm-deps misses its one pinned hash. This
+    # applies upstream's fix (PR #150967, open) to lib.nix's fetchPnpmDeps, against
+    # hermes' own nixpkgs, so the store matches Linux's byte for byte (same output
+    # path). Remove once #150967 merges.
+    homeDarwin =
+      {
+        host,
+        inputs',
+        lib,
+        ...
+      }:
+      let
+        hpkgs = inputs.hermes-agent.inputs.nixpkgs.legacyPackages.${host.system};
+      in
+      {
+        programs.hermes-agent.package = inputs'.hermes-agent.packages.default.override {
+          callPackage =
+            fn: args:
+            hpkgs.callPackage fn (
+              args
+              // lib.optionalAttrs (baseNameOf fn == "lib.nix") {
+                fetchPnpmDeps =
+                  a:
+                  hpkgs.fetchPnpmDeps (
+                    a
+                    // {
+                      preFixup = (a.preFixup or "") + ''
+                        rmdir "$storePath/v11/links" 2>/dev/null || true
+                      '';
+                    }
+                  );
+              }
+            );
+        };
       };
 
     persistHome = {
