@@ -168,10 +168,6 @@
       {
         home.packages = [
           pkgs.pi-coding-agent
-          # oh-my-pi (github:can1357/oh-my-pi): a pi fork, as a tool beside pi. Its first
-          # start writes a native addon into ~/.omp, and it contacts external hosts at
-          # every start.
-          inputs'.llm-agents.packages.omp
         ];
 
         # omp writes ~/.omp/agent/config.yml itself (/settings), so only models.yml is
@@ -344,6 +340,26 @@
             };
           };
         };
+      };
+
+    # oh-my-pi (github:can1357/oh-my-pi): a pi fork, as a tool beside pi. Its first start
+    # writes a native addon into ~/.omp, and it contacts external hosts at every start.
+    homeLinux =
+      { inputs', ... }:
+      {
+        home.packages = [ inputs'.llm-agents.packages.omp ];
+      };
+
+    # shortcut: llm-agents' omp fails its installCheck on darwin. `omp --smoke-test` starts
+    # a local server, and the darwin sandbox refuses the bind ("Failed to start server. Is
+    # port 0 in use?") unless the derivation allows local networking, as llm-agents does
+    # for other packages' tests. Remove once llm-agents sets it on omp.
+    homeDarwin =
+      { inputs', ... }:
+      {
+        home.packages = [
+          (inputs'.llm-agents.packages.omp.overrideAttrs { __darwinAllowLocalNetworking = true; })
+        ];
       };
 
     persistHome = {
