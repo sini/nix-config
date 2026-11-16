@@ -96,6 +96,13 @@
           "@admin"
         ];
         allowed-users = [ "*" ];
+        # shortcut: macOS caps a compiled sandbox profile at 64 KiB and Nix lists every
+        # input's closure in it (NixOS/nix#4119), so derivations that aggregate the
+        # user's packages (home-manager-path, user-environment, etc, …) cannot start
+        # sandboxed. Nix 2.34.8 hid this behind a bug (an empty allow form, i.e. no
+        # sandbox) that 2.34.9 fixed. Off on darwin until that is solved; NixOS keeps
+        # relaxed. Tracked in ~/TODO.md.
+        sandbox = lib.mkForce false;
       };
       nix.gc.interval = {
         Hour = 5;
