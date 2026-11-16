@@ -1,8 +1,8 @@
 {
   imageName = "ghcr.io/sini/xmsg";
-  imageTag = "sha-6d6c3b3";
-  imageDigest = "sha256:826dc2936bde6f93f1fa78ba56e0c9672b4d409c0fe5adabf4a501c8674640c3";
-  imageHash = "sha256-jTrEyBe3LfCUX2IgSo4ifiME1blb5DI2BuffFeIbMrA=";
+  imageTag = "sha-8242c85";
+  imageDigest = "sha256:97508cde6e43a87f767ef426db104759f0205aeebefb8eb151548f6255d2227d";
+  imageHash = "sha256-w8Xk+SHBie9uYnCLFGcrfs01lQI1P6kJl19mSeoh6dk=";
   arch = "amd64";
   os = "linux";
   pinned = false;
