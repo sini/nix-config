@@ -154,9 +154,10 @@
             { [ -S "$SOCK" ] && [ -f "$KEY" ]; } && break
             sleep 0.1
           done
-          [ -S "$SOCK" ] && [ -f "$KEY" ] \
-            && SSH_AUTH_SOCK="$SOCK" ${pkgs.openssh}/bin/ssh-add "$KEY" 2>/dev/null
-          exit 0
+          # Fail until the key is in the agent, so launchd retries (KeepAlive below):
+          # agenix's first run at login can outlast the poll.
+          { [ -S "$SOCK" ] && [ -f "$KEY" ]; } || exit 1
+          SSH_AUTH_SOCK="$SOCK" exec ${pkgs.openssh}/bin/ssh-add "$KEY"
         '';
         wrapper = pkgs.writeShellScript "ssh-agent-mux-start" ''
           set -euo pipefail
@@ -221,6 +222,7 @@
           config = {
             ProgramArguments = [ "${signingKeyLoader}" ];
             RunAtLoad = true;
+            KeepAlive.SuccessfulExit = false;
           };
         };
 
