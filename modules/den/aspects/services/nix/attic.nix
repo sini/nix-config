@@ -49,7 +49,10 @@ in
           ];
           requires = [ "atticd.service" ];
           wantedBy = [ "multi-user.target" ];
-          path = [ pkgs.attic-client ];
+          path = [
+            pkgs.attic-client
+            pkgs.curl
+          ];
           serviceConfig = {
             Type = "oneshot";
             RemainAfterExit = true;
@@ -59,6 +62,10 @@ in
             RestartSec = 10;
           };
           script = ''
+            # atticd's unit is active before it listens; a switch that restarts both
+            # would otherwise fail this unit's first run and the activation with it.
+            curl -sf -o /dev/null --retry 30 --retry-delay 1 --retry-all-errors --max-time 5 \
+              ${config.services.atticd.settings.api-endpoint}
             export XDG_CONFIG_HOME=$(mktemp -d)
             token=$(${atticadmFor pkgs config.services.atticd.settings} make-token \
               --sub attic-ci-cache --validity 10m \
