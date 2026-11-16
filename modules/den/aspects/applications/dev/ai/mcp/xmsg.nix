@@ -55,6 +55,46 @@ let
     else
       "${lib.elemAt m 1}.${lib.elemAt m 0}";
   fedOf = host: host.settings.applications.dev.ai.mcp.xmsg.federation;
+
+  # The federation secrets of a host's nodes, the same on NixOS and darwin: the CA
+  # chain (intermediary, only `agenix generate` decrypts it) and each node's leaf.
+  fedSecrets =
+    {
+      config,
+      environment,
+      host,
+    }:
+    let
+      caName =
+        if environment.xmsg.caName == null then
+          throw "xmsg federation: ${host.name} declares a node, so environment ${environment.name} needs xmsg.caName."
+        else
+          environment.xmsg.caName;
+      ca = name: deps: script: {
+        rekeyFile = caDir + "/${name}.age";
+        intermediary = true;
+        generator = {
+          inherit script;
+          dependencies = deps;
+        };
+        settings.cn = "${caName} ${name} CA";
+      };
+      root = config.age.secrets.xmsg-ca-root;
+    in
+    {
+      xmsg-ca-root = ca "root" [ ] "x509-ca-root";
+      xmsg-ca-host-intermediate = ca "host-intermediate" [ root ] "x509-ca-intermediate";
+      xmsg-ca-cluster-intermediate = ca "cluster-intermediate" [ root ] "x509-ca-intermediate";
+    }
+    // lib.mapAttrs' (
+      user: _:
+      lib.nameValuePair (leafName user) (
+        xl.leafSecret {
+          inherit config host user;
+          inherit (environment) domain;
+        }
+      )
+    ) (fedOf host).nodes;
 in
 {
   # A hub admits its leaves' cluster nodes, which live in other environments, so it
@@ -160,6 +200,27 @@ in
       description = "Users on this host that run an xmsg federation node, `<user>.<host>`, each with a CA-signed leaf `xmsg-<user>-fed-ca` in the host's secretPath. Declaring one needs `agenix generate`, `git add` of the .age and .crt files, and `agenix rekey`. Its peers and leaves are derived (policies/xmsg.nix).";
     };
 
+    # darwin hosts run their user's node under launchd (the xmsg home-manager module's
+    # agent). They take the same secrets; no linger (a launchd agent lives with the
+    # login), and no leaf firewall rules (leaf pods hub on the Linux nodes).
+    darwin =
+      {
+        config,
+        environment,
+        host,
+        ...
+      }:
+      let
+        nodes = (fedOf host).nodes;
+      in
+      lib.mkIf (nodes != { }) {
+        assertions = lib.mapAttrsToList (user: _: {
+          assertion = config.users.users ? ${user};
+          message = "xmsg federation: ${host.name} declares a node for ${user}, who has no account here.";
+        }) nodes;
+        age.secrets = fedSecrets { inherit config environment host; };
+      };
+
     nixos =
       {
         config,
@@ -171,21 +232,6 @@ in
       }:
       let
         nodes = (fedOf host).nodes;
-        caName =
-          if environment.xmsg.caName == null then
-            throw "xmsg federation: ${host.name} declares a node, so environment ${environment.name} needs xmsg.caName."
-          else
-            environment.xmsg.caName;
-        ca = name: deps: script: {
-          rekeyFile = caDir + "/${name}.age";
-          intermediary = true;
-          generator = {
-            inherit script;
-            dependencies = deps;
-          };
-          settings.cn = "${caName} ${name} CA";
-        };
-        root = config.age.secrets.xmsg-ca-root;
         self' = user: nodeName host.name user;
         leavesOf = name: lib.filter (l: lib.elem name l.hubs) xmsg-leaves;
         leafRules = lib.concatStrings (
@@ -242,20 +288,7 @@ in
             # No firewall rule for peers: the tailnet interface is trusted
             # (core.network.tailscale), so the ports are reachable over the tailnet and
             # nowhere else, and each CA identity admits only the peers listed.
-            age.secrets = {
-              xmsg-ca-root = ca "root" [ ] "x509-ca-root";
-              xmsg-ca-host-intermediate = ca "host-intermediate" [ root ] "x509-ca-intermediate";
-              xmsg-ca-cluster-intermediate = ca "cluster-intermediate" [ root ] "x509-ca-intermediate";
-            }
-            // lib.mapAttrs' (
-              user: _:
-              lib.nameValuePair (leafName user) (
-                xl.leafSecret {
-                  inherit config host user;
-                  inherit (environment) domain;
-                }
-              )
-            ) nodes;
+            age.secrets = fedSecrets { inherit config environment host; };
 
             # Leaves reach the port over the LAN from their cluster's nodes. The rules are
             # nftables syntax, which the iptables backend ignores, leaving the port closed.
@@ -372,9 +405,8 @@ in
           # Linux runs our own build (pkgs/by-name/xmsg, also the genie tiers' bus); it is
           # Linux-only, so darwin takes the module's default, the input's own package.
           package = lib.mkIf pkgs.stdenv.hostPlatform.isLinux pkgs.local.xmsg;
-          # darwin (patch) runs no `xmsg serve`; its harnesses still get their pieces.
           server = {
-            enable = pkgs.stdenv.hostPlatform.isLinux;
+            enable = true;
             # The bot itself registers on its own node (services/matrix-xmsg.nix).
             svcExe =
               lib.optionalAttrs guardEnabled { genie-guard = guardExe; }

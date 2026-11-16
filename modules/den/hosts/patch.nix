@@ -12,6 +12,9 @@
     settings.applications.dev.ai.mcp.hindsight.handoffRepos = [ "Documents/repos/sini/den-ag-design" ];
     settings.applications.dev.security.ssh-agent-mux.siniFork = true;
     settings.applications.dev.security.opkssh-client.siniFork = true;
+    # sini's xmsg node here, under launchd; its links to sini's other nodes are
+    # derived (policies/xmsg.nix).
+    settings.applications.dev.ai.mcp.xmsg.federation.nodes.sini = { };
   };
 
   den.aspects.patch = {
