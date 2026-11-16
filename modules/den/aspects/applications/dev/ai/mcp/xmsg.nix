@@ -439,14 +439,11 @@ in
                 "pi"
                 "opencode"
                 "hermes"
+                "codex"
               ]
               (_: {
                 enable = true;
-              })
-            # The module asserts codex support on Darwin is pending (HA9-A.codex.darwin).
-            // {
-              codex.enable = pkgs.stdenv.hostPlatform.isLinux;
-            };
+              });
         };
 
         systemd.user.services.agent-quota = lib.mkIf agentQuotaEnabled {
