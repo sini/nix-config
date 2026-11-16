@@ -112,6 +112,13 @@ let
           )
         ];
 
+      # agenix's module sets KeepAlive = { Crashed = false; SuccessfulExit = false; };
+      # to launchd, Crashed = false restarts every non-crash exit, so the job re-decrypts
+      # forever. Retry only on failure (e.g. the system identity not yet present at login).
+      homeDarwin.launchd.agents.activate-agenix.config.KeepAlive = lib.mkForce {
+        SuccessfulExit = false;
+      };
+
       homeManager =
         { osConfig, ... }:
         let
