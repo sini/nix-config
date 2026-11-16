@@ -1,8 +1,8 @@
 {
   imageName = "ghcr.io/sini/xmsg-mcp-gateway";
-  imageTag = "sha-f2daeb8";
-  imageDigest = "sha256:4eeeb369384646181bb00ef2e7b15b8a81c1270098ea2c802999089c4d72a281";
-  imageHash = "sha256-Fqibxl1lykS4AHg/uSzHYRrci5CGCjvgbjUsAqU1hrQ=";
+  imageTag = "sha-17378a4";
+  imageDigest = "sha256:1d8bff16305aa3d23418f8eee756e6177c1b61b1fea1cf2734a433e49fb520da";
+  imageHash = "sha256-nc3MgnrukpvySLhTbh4JqVce2ny61Aca8NopgzGO+KY=";
   arch = "amd64";
   os = "linux";
   pinned = false;
