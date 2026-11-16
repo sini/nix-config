@@ -126,28 +126,26 @@
       };
 
     homeDarwin =
-      {
-        config,
-        pkgs,
-        user,
-        ...
-      }:
-      let
-        enableSshAgent = user.settings.gpg.enableSshAgent or true;
-      in
+      { config, pkgs, ... }:
       {
         services.gpg-agent.pinentry.package = pkgs.pinentry_mac;
 
-        # Darwin equivalent of the socket above: home-manager hangs it off the
-        # launchd agent, again gated on the option we are not setting.
-        launchd.agents.gpg-agent.config = lib.mkIf enableSshAgent {
-          # home-manager sets RunAtLoad = enableSshSupport, which we leave false.
+        # home-manager runs `gpg-agent --supervised` behind launchd Sockets, but
+        # --supervised only speaks systemd's LISTEN_FDS, so the agent exits at once
+        # and every client of the held socket (the mux included) hangs. Launch it as
+        # a plain daemon that binds its own sockets (the ssh one via enable-ssh-support).
+        # gpg-agent forks even with --no-detach, so the launcher exits 0 and the
+        # daemon must outlive the job's process group.
+        launchd.agents.gpg-agent.config = {
+          ProgramArguments = lib.mkForce [
+            "${config.programs.gpg.package}/bin/gpgconf"
+            "--launch"
+            "gpg-agent"
+          ];
+          Sockets = lib.mkForce { };
           RunAtLoad = lib.mkForce true;
-          Sockets.Ssh = {
-            SockType = "stream";
-            SockPathName = "${config.programs.gpg.homedir}/S.gpg-agent.ssh";
-            SockPathMode = 384; # 0600; plists have no octal literals.
-          };
+          AbandonProcessGroup = true;
+          KeepAlive = lib.mkForce { SuccessfulExit = false; };
         };
       };
 
