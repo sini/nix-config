@@ -91,6 +91,19 @@ python3Packages.buildPythonPackage {
       difftastic
       scc
     ])
+  ]
+  # On darwin `headroom proxy` re-execs `sys.executable -m headroom.cli` to apply these
+  # libmalloc settings, which only take effect at process start. Under Nix
+  # sys.executable is the bare interpreter (this wrapper adds the site-packages), so
+  # the re-exec cannot import headroom and exits 1. Set them here instead: the re-exec
+  # is skipped when both are present, and the proxy still gets the tuning.
+  ++ lib.optionals stdenv.hostPlatform.isDarwin [
+    "--set-default"
+    "MallocAggressiveMadvise"
+    "1"
+    "--set-default"
+    "MallocLargeCache"
+    "0"
   ];
 
   meta = {
