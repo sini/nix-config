@@ -22,6 +22,9 @@ rustPlatform.buildRustPackage {
   # the bundled source). nixpkgs' cargo setup hook exports
   # LIBSQLITE3_SYS_USE_PKG_CONFIG=1 in preConfigure; preBuild runs later, so this wins
   # for the build and the check phase alike.
+  # The daemon's /healthz and `xmsg doctor` report this; xmsg's own flake sets it the same way.
+  env.XMSG_BUILD_REVISION = xmsg-src.rev or "unknown";
+
   preBuild = ''
     export LIBSQLITE3_SYS_USE_PKG_CONFIG=0
   '';
