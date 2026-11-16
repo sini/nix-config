@@ -44,8 +44,11 @@ let
     ]) (hosts ++ [ "blade" ])
     ++ [
       {
-        name = "patch: no launchd xmsg agent";
-        ok = !(patch.launchd.agents.xmsg.enable or false);
+        # darwin runs its node under launchd (the xmsg module's agent), not systemd.
+        name = "patch: a launchd xmsg agent runs xmsg serve";
+        ok =
+          (patch.launchd.agents.xmsg.enable or false)
+          && lib.elem "serve" (patch.launchd.agents.xmsg.config.ProgramArguments or [ ]);
       }
       {
         name = "patch: no systemd xmsg unit";
