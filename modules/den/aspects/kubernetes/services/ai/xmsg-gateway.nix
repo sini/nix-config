@@ -611,9 +611,18 @@ in
           # The image's entrypoint is `tunnel-client run`; these follow it. tunnel-client
           # fetches the authorization server's metadata only from trusted origins (measured
           # 2026-11-10: "destination origin is not trusted" for kanidm), and the issuer the
-          # gateway advertises (verifierIssuer) lives on kanidm's origin.
+          # gateway advertises (verifierIssuer) lives on kanidm's origin. The gateway's own
+          # public origin serves the protected-resource metadata discovery starts from
+          # (measured 2026-11-16: "destination origin is not trusted" for it), and harpoon,
+          # the channel OpenAI sends tool calls on, forwards to kanidm's OAuth endpoints only
+          # from an approved origin; without both, harpoon registers no targets and every
+          # tool call is refused as an unsupported channel.
           args = [
             "--mcp.oauth-trusted-origin"
+            "https://${kanidmDomain}"
+            "--mcp.oauth-trusted-origin"
+            origin
+            "--harpoon.oauth-forward-origin"
             "https://${kanidmDomain}"
           ];
           env = [

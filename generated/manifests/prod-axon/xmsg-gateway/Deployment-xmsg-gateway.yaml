@@ -107,6 +107,10 @@ spec:
         - args:
             - --mcp.oauth-trusted-origin
             - https://idm.json64.dev
+            - --mcp.oauth-trusted-origin
+            - https://xmsg-gateway.json64.dev
+            - --harpoon.oauth-forward-origin
+            - https://idm.json64.dev
           env:
             - name: CONTROL_PLANE_TUNNEL_ID
               value: tunnel_6af201ecbe0c8191b130364319b328a2
