@@ -87,11 +87,14 @@ in
 
               compression.type = if zfsEnabled then "none" else "zstd";
 
+              # Coarse chunks: atticd's SQLite runs on one connection, and every chunk
+              # costs a dedup lookup and two inserts on it, so 64 KiB chunks pegged it
+              # under parallel CI pushes and queued every narinfo behind them.
               chunking = {
-                nar-size-threshold = 64 * 1024;
-                min-size = 16 * 1024;
-                avg-size = 64 * 1024;
-                max-size = 256 * 1024;
+                nar-size-threshold = 1024 * 1024;
+                min-size = 256 * 1024;
+                avg-size = 1024 * 1024;
+                max-size = 4 * 1024 * 1024;
               };
 
               garbage-collection = {
