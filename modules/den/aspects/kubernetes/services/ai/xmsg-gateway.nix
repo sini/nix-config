@@ -624,6 +624,11 @@ in
             origin
             "--harpoon.oauth-forward-origin"
             "https://${kanidmDomain}"
+            # harpoon is OpenAI's internal OAuth-discovery session; it fetches the
+            # protected-resource metadata from the gateway's public origin. Tool calls
+            # still arrive on main once discovery completes.
+            "--harpoon.oauth-forward-origin"
+            origin
             # harpoon's MCP target is the gateway on the pod's loopback, plain HTTP; it
             # refuses non-https targets without this ("base URL must use https").
             "--harpoon.allow-plaintext-http"
