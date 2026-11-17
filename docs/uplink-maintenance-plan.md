@@ -177,8 +177,12 @@ while another step's verification is still open.
 
 1. Is cluster-first (with bitstream only as the headscale fallback) the right
    default?
-2. headscale's home: cluster now, or bitstream until the edge VM exists? (after
-   its scoping)
+2. headscale's home: open (owner, 2026-11-16). Agreed against the cluster: it
+   would make remote access to a broken cluster depend on that cluster, it needs
+   public TCP 443 plus UDP 3478 behind extra LBs and port forwards, and it can't
+   replicate. Options are the Hetzner edge VM (removes the single point of
+   failure; needs the VM to exist first) or bitstream for the window (same NixOS
+   module; a temporary single point of failure off the maintained box).
 
 Settled: jellyfin accepts downtime and migrates separately, together with
 Jellyfin 12; uplink-dev is down for the window.
