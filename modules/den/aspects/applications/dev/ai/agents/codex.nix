@@ -20,6 +20,18 @@
         ...
       }:
       let
+        # The nix memory cap (core.users.home-manager-shared); empty where it cannot be
+        # enforced, and then the devshell hook loads uncapped and the brief omits it.
+        nixEvalCap = config.agents.nixEvalCap;
+        capRunner = lib.optionalString (nixEvalCap != [ ]) ''
+          systemd_run=''${CODEX_DENV_SYSTEMD_RUN:-/run/current-system/sw/bin/${lib.head nixEvalCap}}
+        '';
+        capPrefix = lib.optionalString (
+          nixEvalCap != [ ]
+        ) ''"$systemd_run" ${lib.concatStringsSep " " (lib.tail nixEvalCap)} '';
+        capSentence =
+          lib.optionalString (nixEvalCap != [ ])
+            " Run every nix eval, nix build, nix flake check and nix-unit under ${lib.concatStringsSep " " nixEvalCap}, except nix-flake-build host builds.";
         extensionsList = lib.flatten agent-extensions;
         collect = key: lib.foldl' (acc: e: acc // (e.${key} or { })) { } extensionsList;
 
@@ -173,8 +185,7 @@
           ];
           text = ''
             direnv=''${CODEX_DENV_DIRENV:-${lib.getExe pkgs.direnv}}
-            systemd_run=''${CODEX_DENV_SYSTEMD_RUN:-/run/current-system/sw/bin/systemd-run}
-            out_dir=''${CODEX_DENV_DIR:-''${XDG_RUNTIME_DIR:-/tmp}/codex-direnv}
+            ${capRunner}out_dir=''${CODEX_DENV_DIR:-''${XDG_RUNTIME_DIR:-/tmp}/codex-direnv}
             payload=$(cat)
             cmd=$(printf '%s' "$payload" | jq -r '.tool_input.command // empty' 2>/dev/null) || exit 0
             cwd=$(printf '%s' "$payload" | jq -r '.cwd // empty' 2>/dev/null) || exit 0
@@ -200,7 +211,7 @@
             err=$(mktemp)
             trap 'rm -f "$err"' EXIT
             rc=0
-            json=$(cd -- "$cwd" && "$systemd_run" --user --scope -q -p MemoryMax=12G \
+            json=$(cd -- "$cwd" && ${capPrefix}\
               timeout 1700 "$direnv" export json </dev/null 2>"$err") || rc=$?
             if [ "$rc" -ne 0 ]; then
               deny "devshell load failed (rc $rc) for $cwd; command not run. direnv: $(tail -c 1500 "$err")"
@@ -347,7 +358,7 @@
         codexBrief = pkgs.writeShellScript "codex-subagent-brief" ''
           . "$HOME/.claude/gated.sh" 2>/dev/null || exit 0
           gated || exit 0
-          ${lib.getExe pkgs.jq} -nc --arg c "Brief invariants (den-ag-design fleet): Write your report as a file, and end with it as your final message, which codex returns to the orchestrator through wait_agent. Write scratch only under <scratchpad>/<agent-name>-private/. Never pkill -f, killall, or kill on pgrep -f output; kill only a PID captured with \$!. Wait on a \$! PID or a producer-written marker, always under timeout. Run every nix eval, nix build, nix flake check and nix-unit under systemd-run --user --scope -q -p MemoryMax=12G, except nix-flake-build host builds." \
+          ${lib.getExe pkgs.jq} -nc --arg c "Brief invariants (den-ag-design fleet): Write your report as a file, and end with it as your final message, which codex returns to the orchestrator through wait_agent. Write scratch only under <scratchpad>/<agent-name>-private/. Never pkill -f, killall, or kill on pgrep -f output; kill only a PID captured with \$!. Wait on a \$! PID or a producer-written marker, always under timeout.${capSentence}" \
             '{hookSpecificOutput: {hookEventName: "SubagentStart", additionalContext: $c}}'
         '';
         orchestrationHooks = lib.optionalAttrs config.programs.claude-code.enable {

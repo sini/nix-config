@@ -52,6 +52,18 @@
         # Typed in schema/user.nix; `user` carries only what the user defined, so the
         # defaults are restated here, as every user.settings reader does.
         cfg = user.settings.claude or { };
+        # The nix memory cap (core.users.home-manager-shared); empty where it cannot be
+        # enforced, and then its rule, guard clause and brief sentence are left out.
+        nixCap = lib.concatStringsSep " " config.agents.nixEvalCap;
+        capped = config.agents.nixEvalCap != [ ];
+        capGuard = lib.optionalString capped ''
+          if ! printf '%s' "$cmd" | grep -q 'MemoryMax=' \
+            && printf '%s\n' "$cmd" | grep -Eq "''${at}(nix[[:space:]]+(eval|build|flake[[:space:]]+check|develop[[:space:]].*(-c|--command)[[:space:]]+ci)|nix-unit)([[:space:]]|\$)"; then
+            refuse "Refused: run nix eval/build/flake check/nix-unit uncapped. Re-run as:
+          ${nixCap} $cmd
+          (rc 137 under the cap is a finding; never re-run it uncapped.)"
+          fi
+        '';
         extensionsList = lib.flatten agent-extensions;
 
         skillExts = lib.filter (e: e.type or "" == "skill" || e.type or "" == "mcp") extensionsList;
@@ -163,26 +175,6 @@
 
               A positive control that reads 0 has found a broken predicate, not an absence.
             '';
-            nix-eval = ''
-              # Cap every nix evaluation
-
-              Run every `nix eval`, `nix build`, `nix flake check`, nix-unit and
-              `nix develop ./ci --command ci` under a memory cap:
-
-                  systemd-run --user --scope -q -p MemoryMax=12G <command>
-
-              A regression can make any eval runaway, and the host is shared. Exit 137 under the cap
-              is a finding (a possible memory regression): report it with its command and never re-run
-              it uncapped.
-
-              NixOS host builds are exempt: run `nix-flake-build --max-jobs=4 --cores=8 <host>`
-              without the cap. A full host evaluation is legitimately large (three hosts in one
-              process peak near 12 GiB), and the two flags bound the build's concurrency.
-
-              In den-ag-design, heavy runs (suites, census, deps, perf-bench) also go through
-              `STATUS/heavy-lock.zsh <cmd>`, taken once per phase, never per command and never as a
-              private lock.
-            '';
             process-safety = ''
               # Processes: kill and wait by PID
 
@@ -196,6 +188,28 @@
               - A foreground command that hits the tool timeout moves to the background and keeps
                 running. End your own waiters before starting new ones, and when a rebase kills the
                 run they wait on.
+            '';
+          }
+          // lib.optionalAttrs capped {
+            nix-eval = ''
+              # Cap every nix evaluation
+
+              Run every `nix eval`, `nix build`, `nix flake check`, nix-unit and
+              `nix develop ./ci --command ci` under a memory cap:
+
+                  ${nixCap} <command>
+
+              A regression can make any eval runaway, and the host is shared. Exit 137 under the cap
+              is a finding (a possible memory regression): report it with its command and never re-run
+              it uncapped.
+
+              NixOS host builds are exempt: run `nix-flake-build --max-jobs=4 --cores=8 <host>`
+              without the cap. A full host evaluation is legitimately large (three hosts in one
+              process peak near 12 GiB), and the two flags bound the build's concurrency.
+
+              In den-ag-design, heavy runs (suites, census, deps, perf-bench) also go through
+              `STATUS/heavy-lock.zsh <cmd>`, taken once per phase, never per command and never as a
+              private lock.
             '';
           };
 
@@ -1039,13 +1053,7 @@
             if printf '%s' "$cmd" | tr '\n' ' ' | grep -Eq '(while|until)[[:space:]].*pgrep[[:space:]]([^;&|]*[[:space:]])?(-[a-zA-Z]*f|--full)'; then
               refuse "Refused: a pgrep -f wait loop matches its own command line and never ends. Wait on a \$! PID (while kill -0 \$pid) or a marker the producer writes, under timeout."
             fi
-            if ! printf '%s' "$cmd" | grep -q 'MemoryMax=' \
-              && printf '%s\n' "$cmd" | grep -Eq "''${at}(nix[[:space:]]+(eval|build|flake[[:space:]]+check|develop[[:space:]].*(-c|--command)[[:space:]]+ci)|nix-unit)([[:space:]]|\$)"; then
-              refuse "Refused: run nix eval/build/flake check/nix-unit uncapped. Re-run as:
-            systemd-run --user --scope -q -p MemoryMax=12G $cmd
-            (rc 137 under the cap is a finding; never re-run it uncapped.)"
-            fi
-            # Probe-evidence guards for gen-harness repos (den-ag-design's reports/*.probes split). Shortcut:
+            ${capGuard}# Probe-evidence guards for gen-harness repos (den-ag-design's reports/*.probes split). Shortcut:
             # these parse the command string, so a removal inside a script, find -delete or rmtree is unseen.
             unq() { local s=$1; s=''${s#[\"\']}; s=''${s%[\"\']}; s=''${s/#\~/$HOME}; [[ $s = /* ]] || s="$base/$s"; printf '%s' "$s"; }
             # The command's working dir: a leading `cd <dir> &&`, else the payload cwd.
@@ -1125,7 +1133,7 @@
             set -uo pipefail
             . "$HOME/.claude/gated.sh" 2>/dev/null || exit 0
             gated || exit 0
-            jq -nc --arg c "Brief invariants (den-ag-design fleet): Write your report as a file, and deliver it through SubagentHandback if your tools include it, otherwise SendMessage to the orchestrator. Write scratch only under <scratchpad>/<agent-name>-private/. Never pkill -f, killall, or kill on pgrep -f output; kill only a PID captured with \$!. Wait on a \$! PID or a producer-written marker, always under timeout, never pgrep -f from the waiting shell. Take STATUS/heavy-lock.zsh once per heavy phase, never per command. Run every nix eval/build/check under systemd-run --user --scope -q -p MemoryMax=12G; rc 137 under the cap is a finding." \
+            jq -nc --arg c "Brief invariants (den-ag-design fleet): Write your report as a file, and deliver it through SubagentHandback if your tools include it, otherwise SendMessage to the orchestrator. Write scratch only under <scratchpad>/<agent-name>-private/. Never pkill -f, killall, or kill on pgrep -f output; kill only a PID captured with \$!. Wait on a \$! PID or a producer-written marker, always under timeout, never pgrep -f from the waiting shell. Take STATUS/heavy-lock.zsh once per heavy phase, never per command.${lib.optionalString capped " Run every nix eval/build/check under ${nixCap}; rc 137 under the cap is a finding."}" \
               '{hookSpecificOutput: {hookEventName: "SubagentStart", additionalContext: $c}}'
           '';
         };
