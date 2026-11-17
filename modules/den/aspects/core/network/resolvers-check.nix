@@ -30,12 +30,13 @@ let
   # Blocky's own listen address, as uplink renders it, and the cluster's LAN address.
   blocky = lib.head (lib.splitString ":" (lib.head uplink.services.blocky.settings.ports.dns));
   axonDns = config.den.clusters.axon.networks.kubernetes-lan-loadbalancers.assignments.blocky-lan;
-  # prod names the cluster instance first (docs/dns-resolver.md §2.7); dev keeps uplink.
+  # Both environments name the cluster instance first (docs/dns-resolver.md §2.7;
+  # dev since the uplink maintenance plan), then uplink's.
   instances.prod = [
     axonDns
     blocky
   ];
-  instances.dev = [ blocky ];
+  instances.dev = instances.prod;
   expected = env: instances.${env} ++ [ environments.${env}.networks.default.gatewayIp ];
 
   # Each family's LAN link (test 5): host, environment, its config, link name.
