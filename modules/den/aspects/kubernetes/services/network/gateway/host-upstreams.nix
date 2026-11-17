@@ -41,9 +41,32 @@ let
         };
       };
       perHost = us: f: lib.listToAttrs (map (u: lib.nameValuePair (nameOf u) (f u)) us);
+      # A name served by several hosts (replicas) gets one listener and one route
+      # whose backends are all of them: names are grouped by the hosts serving
+      # them, one route per group. A one-host group keeps the host's own name.
+      names = lib.unique (lib.concatMap domainsOf upstreams);
+      routes = lib.foldl' (
+        acc: d:
+        let
+          us = lib.filter (u: lib.elem d (domainsOf u)) upstreams;
+          name =
+            if lib.length us == 1 then nameOf (lib.head us) else lib.concatMapStringsSep "-" (u: u.host) us;
+        in
+        assert lib.assertMsg (lib.length (lib.unique (map (u: u.proxyProtocol) us)) == 1)
+          "gateway-upstream: the hosts serving ${d} (${
+            lib.concatMapStringsSep ", " (u: u.host) us
+          }) disagree on proxyProtocol, which is set per route";
+        acc
+        // {
+          ${name} = {
+            upstreams = us;
+            hostnames = (acc.${name}.hostnames or [ ]) ++ [ d ];
+          };
+        }
+      ) { } names;
     in
     {
-      gateways.default-gateway.spec.listeners = map listenerFor (lib.concatMap domainsOf upstreams);
+      gateways.default-gateway.spec.listeners = map listenerFor names;
 
       backends = perHost upstreams (u: {
         spec.endpoints = [
@@ -55,7 +78,7 @@ let
         ];
       });
 
-      tlsRoutes = perHost upstreams (u: {
+      tlsRoutes = lib.mapAttrs (_: r: {
         spec = {
           # One unsectioned parent: the route attaches to every TLS listener whose
           # hostname it matches (the HTTPS listeners admit only HTTPRoute).
@@ -66,22 +89,20 @@ let
               name = "default-gateway";
             }
           ];
-          hostnames = domainsOf u;
+          inherit (r) hostnames;
           rules = [
             {
-              backendRefs = [
-                {
-                  group = "gateway.envoyproxy.io";
-                  kind = "Backend";
-                  name = nameOf u;
-                  inherit (u) port;
-                  weight = 1;
-                }
-              ];
+              backendRefs = map (u: {
+                group = "gateway.envoyproxy.io";
+                kind = "Backend";
+                name = nameOf u;
+                inherit (u) port;
+                weight = 1;
+              }) r.upstreams;
             }
           ];
         };
-      });
+      }) routes;
 
       # allow-gateway-world-egress admits world:443 only; each upstream's own
       # address:port (e.g. an nginx PROXY listener) is allowed explicitly.
@@ -109,18 +130,18 @@ let
         })
       );
 
-      backendTrafficPolicies = perHost (lib.filter (u: u.proxyProtocol) upstreams) (u: {
+      backendTrafficPolicies = lib.mapAttrs (name: _: {
         spec = {
           targetRefs = [
             {
               group = "gateway.networking.k8s.io";
               kind = "TLSRoute";
-              name = nameOf u;
+              inherit name;
             }
           ];
           proxyProtocol.version = "V2";
         };
-      });
+      }) (lib.filterAttrs (_: r: (lib.head r.upstreams).proxyProtocol) routes);
     };
 in
 {
@@ -192,7 +213,73 @@ in
           }
         ];
       };
+      # Replicas: h and q both serve s.x; h also serves a.x alone.
+      replicated =
+        proxy:
+        render {
+          environment = "e";
+          gateway-upstreams = [
+            (upstream "e" [ ])
+            (
+              upstream "e" [ ]
+              // {
+                host = "q";
+                address = "10.0.0.2";
+                proxyProtocol = proxy;
+              }
+            )
+          ];
+          served-domains = [
+            (
+              served "e"
+              // {
+                domains = [
+                  "a.x"
+                  "s.x"
+                ];
+              }
+            )
+            (
+              served "e"
+              // {
+                host = "q";
+                domains = [ "s.x" ];
+              }
+            )
+          ];
+        };
+      shared = replicated false;
       failures = lib.runTests {
+        testSharedNameOneListener = {
+          expr = map (l: l.hostname) shared.gateways.default-gateway.spec.listeners;
+          expected = [
+            "a.x"
+            "s.x"
+          ];
+        };
+        testSharedNameOneRouteAllBackends = {
+          expr = lib.mapAttrs (_: r: {
+            inherit (r.spec) hostnames;
+            backends = map (b: b.name) (builtins.head r.spec.rules).backendRefs;
+          }) shared.tlsRoutes;
+          expected = {
+            h-nginx = {
+              hostnames = [ "a.x" ];
+              backends = [ "h-nginx" ];
+            };
+            h-q = {
+              hostnames = [ "s.x" ];
+              backends = [
+                "h-nginx"
+                "q-nginx"
+              ];
+            };
+          };
+        };
+        testSharedNameMixedProxyRefused = {
+          expr = (builtins.tryEval (builtins.deepSeq (replicated true).tlsRoutes null)).success;
+          expected = false;
+        };
         testListenersSkipExcluded = {
           expr = map (l: l.hostname) out.gateways.default-gateway.spec.listeners;
           expected = [
