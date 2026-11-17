@@ -1240,12 +1240,9 @@ in
         reservations = reservationsOf config.den.environments (
           lib.concatMap lib.attrValues (lib.attrValues config.den.hosts)
         );
-        # Stale records holding den hosts' fixed IPs; owner-cleared 2026-11-11.
-        releases = [
-          "28:16:a8:59:29:8b" # "ghost" (Microsoft OUI, unseen since 2025-10): 10.9.2.1, cortex's
-          "b4:ae:2b:cc:ae:40" # "shell" (Microsoft OUI, unseen since 2025-11): 10.9.2.2, cortex-cuda's
-          "84:47:09:40:d5:f4" # "bitstream" via enp1s0, down and unbonded since 2026-05: 10.9.1.1
-        ];
+        # Stale client records to release from den hosts' fixed IPs (MACs). The last three
+        # were released and their records deleted on 2026-11-11, so none remain.
+        releases = [ ];
       })
       (renderNetworkDns {
         inherit (unifi) site;
@@ -2265,15 +2262,10 @@ in
             r.resource.restapi_object."client_${relKey}".data or null == relCleared
             && r.resource.restapi_object."client_${relKey}".destroy_data or null == relCleared;
           releaseRefused = ms: !(builtins.tryEval (builtins.deepSeq (withReleases ms) null)).success;
+          # The live workspace releases nothing any more (the last three were cleared
+          # 2026-11-11), so no reservation waits on a release.
+          releaseFree = res: lib.all (h: !(res."client_${h}" ? depends_on));
           workspaceRes = terraformConfiguration.config.resource.restapi_object;
-          workspaceOrdered = lib.all (
-            h:
-            workspaceRes."client_${h}".depends_on or [ ] == [
-              "restapi_object.client_release_28_16_a8_59_29_8b"
-              "restapi_object.client_release_b4_ae_2b_cc_ae_40"
-              "restapi_object.client_release_84_47_09_40_d5_f4"
-            ]
-          );
           live = "jsondecode(data.restapi_object.unifi_client_h1.api_response)";
           byId = "/api/s/s/rest/user/{id}";
           payloadOk =
@@ -2396,7 +2388,7 @@ in
             && !(rendered.resource.restapi_object.client_h1 ? depends_on)
             && !(releaseRefused [ "28:16:A8:59:29:8B" ])
             && releaseRefused [ "AA:BB:CC:00:00:01" ]
-            && workspaceOrdered [
+            && releaseFree workspaceRes [
               "cortex"
               "cortex_cuda"
               "bitstream"
@@ -2409,7 +2401,7 @@ in
                     relCleared;
               }
             ))
-            && !(workspaceOrdered [ "release_28_16_a8_59_29_8b" ])
+            && !(releaseFree relRendered.resource.restapi_object [ "h1" ])
             && !(payloadOk (withRes (r: r // { ip = "10.0.10.9"; })))
             && !(payloadOk (
               rendered
