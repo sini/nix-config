@@ -95,21 +95,31 @@ tiers), so it's the weaker candidate.
 
 ### Tier 2: user-facing, tolerable to lose for the window. Owner's call.
 
-9. **jellyfin:** either move it into the cluster's media namespace (the arr
-   stack is there and the NFS CSI driver exists) or accept the downtime.
-   - Open question: it uses uplink's Intel GPU for transcoding, and I haven't
-     checked whether any axon node has a usable GPU.
-   - Its 99 GB of state is mostly metadata and image cache, which can be
-     regenerated.
+9. **jellyfin:** a separate, scoped migration, not part of this window (owner,
+   2026-11-16).
+   - The move into the cluster overlaps with the planned Jellyfin 12 upgrade
+     (uplink runs 10.11.11), so the two are designed together.
+   - It accepts downtime for the window. The library is on the NAS
+     (10.10.10.10:/volume2/data), and its 99 GB of state is mostly regenerable
+     metadata and image cache.
+   - GPU: each axon node has an AMD Phoenix iGPU (/dev/dri/renderD128), and the
+     ROCm device plugin advertises it as `amd.com/gpu: 1` per node. llama-cpp's
+     `gpt-oss` holds all three today, one replica per node (pods -0/-1/-2 on
+     axon-03/02/01). Kubernetes allocates `amd.com/gpu` exclusively, so a
+     Jellyfin pod would never schedule.
+   - To scope: dedicate one node's iGPU to Jellyfin (drop gpt-oss to 2 replicas,
+     plus a toleration or nodeSelector), or share the iGPU through a plain
+     `/dev/dri` mount outside the device plugin, and make sure llama-cpp can't
+     take it. Also VA-API for Jellyfin on Phoenix (mesa radeonsi) replacing
+     uplink's Intel QSV, and the hardware-acceleration settings to match.
 10. **open-webui / ollama:** retire, or move open-webui into the cluster pointed
     at the cluster's llama-cpp. ollama isn't serving anything.
 11. **homepage, oauth2-proxy, den-docs-mirror, gen-status:** homepage and glance
     already run in the cluster, so retire uplink's homepage. Move the two static
     sites to the cluster. oauth2-proxy retires with the UIs it fronts (envoy
     does OIDC in the cluster).
-12. **uplink-dev microVM:** accept downtime and move the den-ag-design sessions
-    to cortex or bitstream for the week. A permanent move onto bitstream would
-    eat 16 GB of its 29 GB.
+12. **uplink-dev microVM:** down for the window (owner, 2026-11-16). It's not
+    migrated, and den-ag-design work on it pauses.
 13. **syncthing:** check whether uplink is the only always-on peer for any
     folder before the window.
 
@@ -167,13 +177,14 @@ while another step's verification is still open.
 
 1. Is cluster-first (with bitstream only as the headscale fallback) the right
    default?
-2. jellyfin: move it, or accept downtime?
-3. uplink-dev: where should den-ag-design sessions run during the window?
-4. headscale's home: cluster now, or bitstream until the edge VM exists?
+2. headscale's home: cluster now, or bitstream until the edge VM exists? (after
+   its scoping)
+
+Settled: jellyfin accepts downtime and migrates separately, together with
+Jellyfin 12; uplink-dev is down for the window.
 
 ## Not yet verified
 
 Where the terranix states live (the dns/unifi/github state passphrases are
 uplink aspects); registry.json64.dev's consumers; syncthing folder topology;
-whether any axon node has a GPU for jellyfin; uplink's role in the
-hub-originated default route.
+uplink's role in the hub-originated default route.
