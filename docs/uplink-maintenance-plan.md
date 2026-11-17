@@ -54,26 +54,38 @@ tiers), so it's the weaker candidate.
    - Risk: every OIDC client's issuer URL stays the same (same hostname), so
      clients shouldn't notice. Verify one client of each kind afterwards
      (grafana, argocd, the gateway).
-2. **headscale: move off uplink, to the cluster or bitstream.**
-   - It can't run two instances (one SQLite database, one control server), so
-     the goal is to put it somewhere that stays up.
-   - In the cluster it needs a LoadBalancer IP with TCP 443 and UDP 3478 (STUN),
-     and public reachability for roaming clients at the same server_url.
-   - Copy the database and the noise private key unchanged. Clients reconnect to
-     the same URL and keep their identities.
-   - Add a second DERP region now, and run it on the planned Hetzner edge VM
-     (docs/external-vantage-vm.md) when that exists. Then a home outage no
-     longer takes roaming relay with it.
-   - What an outage costs if this slips: existing tailnet sessions keep working,
-     but new logins, key renewals and roaming endpoint changes fail, and peers
-     that need DERP can't reach each other. For a multi-day window that's
-     significant, especially for patch away from home.
-3. **DNS: stop depending on uplink.**
-   - Add `axon` to the dev environment's `dns.resolvers`. It's uplink-only
-     today, so dev hosts (cortex, bitstream, patch) lose DNS with uplink.
-   - Prove the axon resolver's LB is reachable over the tailnet, then add it to
-     `dns.roamingResolvers`. That was the documented precondition.
-   - Prod already lists axon first.
+2. **headscale: move into the cluster, on a CNPG database (owner, 2026-11-17).**
+   - headscale is the control plane only (keys, peer lists, endpoints). Peers
+     talk to each other directly over WireGuard, so the LAN keeps its 10 Gbps;
+     only DERP relays carry traffic, and only for pairs that can't connect
+     directly.
+   - It can't federate or run active-active: one instance owns the netmap. The
+     cluster gives active/standby instead: one replica rescheduled on node
+     failure, with its state in a replicated CNPG Postgres (headscale supports
+     Postgres) instead of SQLite.
+   - uplink is already a single, older host, so the cluster (3 nodes,
+     expandable) is strictly better. A cluster outage pauses new logins, key
+     renewals and endpoint changes; existing connections keep working.
+   - Run DERP separately. `derper` is stateless, so give it independent regions:
+     one at home, and one on the Hetzner edge VM (docs/external-vantage-vm.md)
+     when it exists. Then relaying survives a home or cluster outage.
+   - To scope before execution:
+     - SQLite → Postgres migration (pgloader, or re-register nodes);
+     - keep the noise private key and server_url, so clients keep their
+       identities;
+     - public ingress: TCP 443 (the control protocol upgrades the HTTP
+       connection) and UDP 3478 (STUN) for in-cluster DERP;
+     - OIDC through kanidm, which is also moving;
+     - the auth-key generator (below).
+3. **DNS: stop depending on uplink. DONE (2026-11-17).**
+   - dev resolves through the cluster first, then uplink (90ce49f2, check fix
+     d842d351), and the dev network's UniFi DHCP DNS matches (targeted apply).
+     cortex, bitstream and cortex-cuda verified.
+   - Roaming devices get the cluster first, then uplink (f4986afe), as
+     headscale's global nameservers; a tailnet client now lists `10.10.0.53`,
+     `10.10.10.1`, then the public resolvers. Both are LAN addresses with no
+     tailnet route, so they serve a roaming device on the LAN (verified from
+     patch); off the LAN it falls through to the public upstreams, as before.
 
 ### Tier 1: degraded, but survivable. Do before the window if time allows.
 
@@ -83,15 +95,20 @@ tiers), so it's the weaker candidate.
      publish steps fail as warnings (xmsg-5dzj.5).
    - Migration: either re-seed the cache or carry the 25 GB of chunks over.
      Re-seeding is simpler; CI rebuilds what it needs.
-5. **container-registry → cluster** (registry:2 on Garage S3). First list who
-   pulls from registry.json64.dev.
+5. **container-registry → cluster** (registry:2 on Garage S3). Cleared to move
+   (owner, 2026-11-17): its consumers are CI (xmsg's images) and nix-config's
+   custom container builds.
 6. **Host alertmanager → the cluster's** (kube-prometheus-stack already runs
    one). Route host alerts and the SMTP receiver there, and retire uplink's.
 7. **Nix builders:** accept. bitstream stays a builder, and hosts build locally.
    No axon builders, to keep the nodes light.
-8. **BGP hub:** accept, after a test. The axons peer with the UDM directly and
-   advertise their LB routes there. Before the window, drop uplink's sessions
-   for a minute and confirm LB services stay reachable from the LAN.
+8. **BGP hub: accepted. TESTED (2026-11-17).** uplink's four sessions (the UDM
+   and the three axons) were shut for about 3½ minutes. Every 5 s from cortex,
+   the gateway (10.11.0.1:443), monitoring-ingest (:443), smtp-relay (:587),
+   blocky over BGP (10.11.0.54), coredns (10.11.0.53) and blocky over L2
+   (10.10.0.53) all stayed reachable, with no failed probe in 33. The axons'
+   default route is a static one via the UDM, and uplink's BGP default is only a
+   backup. Sessions were restored with the same prefix counts.
 
 ### Tier 2: user-facing, tolerable to lose for the window. Owner's call.
 
@@ -177,18 +194,14 @@ while another step's verification is still open.
 
 1. Is cluster-first (with bitstream only as the headscale fallback) the right
    default?
-2. headscale's home: open (owner, 2026-11-16). Agreed against the cluster: it
-   would make remote access to a broken cluster depend on that cluster, it needs
-   public TCP 443 plus UDP 3478 behind extra LBs and port forwards, and it can't
-   replicate. Options are the Hetzner edge VM (removes the single point of
-   failure; needs the VM to exist first) or bitstream for the window (same NixOS
-   module; a temporary single point of failure off the maintained box).
+2. headscale's home: settled, the cluster on CNPG (see item 2).
 
 Settled: jellyfin accepts downtime and migrates separately, together with
 Jellyfin 12; uplink-dev is down for the window.
 
 ## Not yet verified
 
-Where the terranix states live (the dns/unifi/github state passphrases are
-uplink aspects); registry.json64.dev's consumers; syncthing folder topology;
-uplink's role in the hub-originated default route.
+syncthing folder topology. Settled since: the terranix states live in git (the
+state passphrases are only decryption keys); the registry's consumers are CI and
+nix-config's container builds; uplink's hub default route is only a backup to
+the axons' static default.
