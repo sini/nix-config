@@ -63,9 +63,13 @@ def event(limits):
     )
 
 
-def run(t, agy_out, sessions, claude=None, agy_log=None):
+def run(t, agy_out, sessions, claude=None, agy_log=None, claude_bin=None):
     bindir = os.path.join(t, "bin")
     os.makedirs(bindir, exist_ok=True)
+    if claude_bin is not None:
+        with open(os.path.join(bindir, "claude"), "w") as f:
+            f.write(f"#!{sys.executable}\n{claude_bin}")
+        os.chmod(os.path.join(bindir, "claude"), 0o755)
     if agy_out is not None:
         with open(os.path.join(bindir, "agy"), "w") as f:
             f.write(f"#!{sys.executable}\nimport sys\nsys.stdout.write({agy_out!r})\n")
@@ -158,13 +162,16 @@ with tempfile.TemporaryDirectory() as t:
         for r in claude_rows
     ), claude_rows
     assert "Five Hour" not in text and "Claude and GPT" not in text, text
+    # every fixture reset is in the past: STALE in the text, stale in --json
     assert (
-        "agy\tGemini Models\tWeekly\t14%\t2026-11-13T23:58:35Z\tagy -p /quota" in text
+        "agy\tGemini Models\tWeekly\t14%\t2026-11-13T23:58:35Z\tSTALE agy -p /quota"
+        in text
     ), text
     assert (
         "claude\tAll models\tWeekly\t40%\t2026-11-13T00:59:59Z\t"
-        "~/.claude.json cachedUsageUtilization (1h old)" in text
+        "STALE ~/.claude.json cachedUsageUtilization (1h old)" in text
     ), text
+    assert all(r["stale"] is True for r in rows), rows
     # age_s is a number agreeing with the age in the text source
     for r in rows:
         assert type(r["age_s"]) is int, r
@@ -183,6 +190,7 @@ with tempfile.TemporaryDirectory() as t:
     for agent in ("agy", "codex", "claude"):
         assert pick(rows, agent) == [("unknown", "unknown", None, None)], rows
     assert all(r["account"] == "unknown" and r["age_s"] is None for r in rows), rows
+    assert all(r["stale"] is False for r in rows), rows  # no reading is not a stale one
     assert text.count("unknown") >= 12, text
 
 # A ~/.claude.json without the usage cache is unknown, never a guess.
@@ -318,5 +326,40 @@ with tempfile.TemporaryDirectory() as t:
         rows
     )
     assert EMAIL not in everything
+
+# claude -p /usage refreshes a day-old cache before it is read: the fresh reading wins,
+# and is not stale. The fake claude records its argv (hooks and MCP off, no session).
+FRESH = [dict(CLAUDE_LIMITS[0], percent=25, resets_at="2099-01-01T00:00:00+00:00")]
+REFRESH = f"""import json, os, sys, time
+home = os.environ["HOME"]
+open(os.path.join(home, "argv.json"), "w").write(json.dumps(sys.argv[1:]))
+c = json.load(open(os.path.join(home, ".claude.json")))
+c["cachedUsageUtilization"] = {{"fetchedAtMs": int(time.time() * 1000),
+    "utilization": {{"limits": {FRESH!r}}}}}
+json.dump(c, open(os.path.join(home, ".claude.json"), "w"))
+"""
+with tempfile.TemporaryDirectory() as t:
+    stale_cache = claude_json(CLAUDE_LIMITS, NOW_MS - 86400 * 1000)
+    rows, text = run(t, None, {}, stale_cache, claude_bin=REFRESH)
+    claude_rows = [r for r in rows if r["agent"] == "claude"]
+    assert pick(rows, "claude") == [
+        ("All models", "Weekly", 75.0, "2099-01-01T00:00:00Z")
+    ], rows
+    assert all(r["stale"] is False and r["age_s"] < 60 for r in claude_rows), rows
+    assert "STALE ~/.claude.json" not in text, text
+    with open(os.path.join(t, "argv.json")) as f:
+        argv = json.load(f)
+    assert argv[:2] == ["-p", "/usage"] and "--no-session-persistence" in argv, argv
+    assert '{"disableAllHooks":true}' in argv and "--strict-mcp-config" in argv, argv
+
+# A claude that fails leaves the old cache, read and aged, and a week-old reading with
+# a future reset is still STALE.
+with tempfile.TemporaryDirectory() as t:
+    old = [dict(CLAUDE_LIMITS[0], resets_at="2099-01-01T00:00:00+00:00")]
+    cache = claude_json(old, NOW_MS - 8 * 86400 * 1000)
+    rows, _ = run(t, None, {}, cache, claude_bin="import sys\nsys.exit(1)\n")
+    claude_rows = [r for r in rows if r["agent"] == "claude"]
+    assert [r["stale"] for r in claude_rows] == [True], rows
+    assert claude_rows[0]["remaining_pct"] == 40.0, rows
 
 print("agent-quota self-test: ok")

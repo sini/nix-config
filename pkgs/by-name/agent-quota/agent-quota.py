@@ -4,12 +4,14 @@
 Read-only and credential-free: agy answers `agy -p /quota` locally without a model call
 (its Gemini Models bucket only), codex's figures come from the rate_limits object its own
 session rollouts record, and claude's from the cachedUsageUtilization field Claude Code
-keeps in ~/.claude.json (the data /usage shows, stamped with its fetch time). Only weekly
-windows are printed. No token or auth file is opened. A source that is missing or
-unparseable prints unknown.
+keeps in ~/.claude.json (the data /usage shows, stamped with its fetch time). That cache
+is refreshed first by `claude -p /usage`, which fetches without a model call and rewrites
+the cache once it is a minute old. Only weekly windows are printed. No token or auth
+file is opened. A source that is missing or unparseable prints unknown; a reading whose
+reset has passed, or older than its weekly window, is marked STALE.
 
 --json rows also carry `age_s` (the reading's age in seconds, null when there is no
-reading) and `account`: the first 12 hex digits of the sha256 of the harness's account
+reading), `stale` (the STALE mark as a boolean) and `account`: the first 12 hex digits of the sha256 of the harness's account
 ID, never the ID itself. The IDs come from non-credential files: codex's session_meta
 creator_account_id in the same rollout, claude's oauthAccount.accountUuid in
 ~/.claude.json, and the email agy's own log records at sign-in (applyAuthResult).
@@ -57,6 +59,14 @@ def stamp(rows, acct, age_s):
     for r in rows:
         r["account"] = acct
         r["age_s"] = age_s
+    return rows
+
+
+def mark_stale(rows, now):
+    for r in rows:
+        reset = r["reset"] and datetime.fromisoformat(r["reset"]).timestamp()
+        old = r["age_s"] is not None and r["age_s"] > WEEK_MINUTES * 60
+        r["stale"] = bool((reset and reset <= now) or old)
     return rows
 
 
@@ -195,8 +205,35 @@ def codex(now):
     return stamp(parse_codex_limits(limits, source), acct, age_s)
 
 
+def refresh_claude():
+    """`/usage` is answered locally from a live fetch; hooks and MCP servers stay off."""
+    with tempfile.TemporaryDirectory() as cwd:
+        try:
+            subprocess.run(
+                [
+                    "claude",
+                    "-p",
+                    "/usage",
+                    "--no-session-persistence",
+                    "--strict-mcp-config",
+                    "--mcp-config",
+                    '{"mcpServers":{}}',
+                    "--settings",
+                    '{"disableAllHooks":true}',
+                ],
+                cwd=cwd,
+                capture_output=True,
+                timeout=60,
+                stdin=subprocess.DEVNULL,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            pass  # the cache, however old, is read next and its age shows
+
+
 def claude(now):
     """Weekly limits from cachedUsageUtilization: {fetchedAtMs, utilization: {limits}}."""
+    refresh_claude()
     base = os.environ.get("CLAUDE_CONFIG_DIR") or os.path.expanduser("~")
     try:
         with open(os.path.join(base, ".claude.json"), encoding="utf-8") as f:
@@ -245,8 +282,9 @@ def claude(now):
 
 def fmt(r):
     pct = UNKNOWN if r["remaining_pct"] is None else f"{r['remaining_pct']:g}%"
+    source = f"STALE {r['source']}" if r["stale"] else r["source"]
     return "\t".join(
-        [r["agent"], r["bucket"], r["window"], pct, r["reset"] or UNKNOWN, r["source"]]
+        [r["agent"], r["bucket"], r["window"], pct, r["reset"] or UNKNOWN, source]
     )
 
 
@@ -255,7 +293,7 @@ def main():
     p.add_argument("--json", action="store_true", help="print a JSON list of rows")
     args = p.parse_args()
     now = time.time()
-    rows = agy() + codex(now) + claude(now)
+    rows = mark_stale(agy() + codex(now) + claude(now), now)
     if args.json:
         json.dump(rows, sys.stdout, indent=2)
         print()
