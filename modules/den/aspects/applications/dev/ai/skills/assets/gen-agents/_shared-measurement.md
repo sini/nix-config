@@ -63,13 +63,15 @@ the host's free memory (cgroup limits, `free`, competing load) covers the run's
 measured peak; memory cannot be reserved, so short memory is a `DEFERRED` too.
 The reserved priority slot is not yours: `HEAVY_PRIORITY=0` always.
 Read the outcome from the receipt, the helper's own channel; stderr is shared and
-a command can print anything there. Exit 75 with a receipt reading `deferred …`
-is `DEFERRED`: the command never ran; report what it needs, or run it on a host
-your brief names. A receipt reading `admitted` means the command ran, whatever it
-printed or returned. Exit 75 with no receipt is ambiguous: report it as such and
-never replay the run automatically. The receipt path is fresh for every
-invocation (never reused); exit 74 means the helper refused it, already present or
-unpublishable, and nothing ran. Never queue on the lock (owner 2026-11-16:
+a command can print anything there, and a command can exit with any status,
+75 and 74 included. Name a NEW receipt path for every invocation, one that does
+not exist before the call. Then read it in this order: a receipt reading
+`admitted` means the command ran, whatever status it returned or printed; a
+receipt reading `deferred …` with exit 75 is `DEFERRED`, the command never ran,
+so report what it needs or run it on a host your brief names; no receipt with
+exit 74 is the helper refusing an unpublishable receipt, and nothing ran; no
+receipt with any other status is ambiguous, so report it as such and never
+replay the run automatically. Never queue on the lock (owner 2026-11-16:
 "don't wait on locks").
 
 ### Waiting on a run
