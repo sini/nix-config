@@ -67,7 +67,9 @@ a command can print anything there. Exit 75 with a receipt reading `deferred …
 is `DEFERRED`: the command never ran; report what it needs, or run it on a host
 your brief names. A receipt reading `admitted` means the command ran, whatever it
 printed or returned. Exit 75 with no receipt is ambiguous: report it as such and
-never replay the run automatically. Never queue on the lock (owner 2026-11-16:
+never replay the run automatically. The receipt path is fresh for every
+invocation (never reused); exit 74 means the helper refused it, already present or
+unpublishable, and nothing ran. Never queue on the lock (owner 2026-11-16:
 "don't wait on locks").
 
 ### Waiting on a run
