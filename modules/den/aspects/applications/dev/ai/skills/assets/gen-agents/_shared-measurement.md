@@ -48,8 +48,30 @@ paths with that lock's harness evaluator packages. Invoke absolute paths with
 NIX_CONFIG holding each family's nix.conf contents and NIX_PATH unset, and
 record version, effective settings, root and closure before measuring. Counter
 runs additionally source GEN_SERIAL_EVAL. Keep the normal Determinate
-lazy-trees setting enabled. Apply the standing 12G cap and shared heavy lock.
-Never transplant literal store paths between hosts.
+lazy-trees setting enabled. Apply the standing 12G cap. Never transplant literal
+store paths between hosts.
+
+### Admission: never queue
+
+Before a heavy run, read the host's free memory (cgroup limits and `free`) and the
+heavy lock's queue. Start only if a slot is free and the memory covers the run's
+measured peak. Otherwise do not wait: return `DEFERRED` with what the run needs,
+or run it on a host your brief names. You never sit in a lock wait (owner
+2026-11-16: "don't wait on locks").
+
+### Waiting on a run
+
+Launch the job so that it writes a marker unique to the run, atomically, on every
+outcome:
+`( if cmd > run-<id>.log 2>&1; then rc=0; else rc=$?; fi; print $rc > run-<id>.rc.tmp && mv run-<id>.rc.tmp run-<id>.rc ) &`
+(the `if` keeps an inherited `set -e` from skipping the write on failure). Poll in
+the foreground, in chunks under 4 minutes:
+`timeout 230 zsh -c 'until [[ -s run-<id>.rc ]]; do sleep 20; done'`, repeated.
+`0` is success; any other value is failure. A MISSING marker is not success: the
+run has not finished, or died unrecorded. A live PID is liveness, never success.
+The poll's `timeout` bounds the poll, never the job. Never end a turn to wait for
+a background notification: it does not reach a subagent. A pause of 5 minutes or
+more expires the prompt cache and rewrites your whole context.
 
 ## Measurement law
 
