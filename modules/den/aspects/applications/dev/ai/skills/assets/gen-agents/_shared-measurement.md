@@ -68,10 +68,10 @@ a command can print anything there, and a command can exit with any status,
 not exist before the call. Then read it in this order: a receipt reading
 `admitted` means the command ran, whatever status it returned or printed; a
 receipt reading `deferred …` with exit 75 is `DEFERRED`, the command never ran,
-so report what it needs or run it on a host your brief names; no receipt with
-exit 74 is the helper refusing an unpublishable receipt, and nothing ran; no
-receipt with any other status is ambiguous, so report it as such and never
-replay the run automatically. Never queue on the lock (owner 2026-11-16:
+so report what it needs or run it on a host your brief names. Nothing else is
+conclusive: a missing, unreadable or invalid receipt is ambiguous whatever the
+status (a command that ran can remove its receipt and exit 74), so report it as
+such and never replay the run automatically. Never queue on the lock (owner 2026-11-16:
 "don't wait on locks").
 
 ### Waiting on a run
