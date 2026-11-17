@@ -44,8 +44,15 @@
       "axon"
       "uplink"
     ];
-    # Roaming devices stay on uplink until the LB is proven reachable over the tailnet.
-    dns.roamingResolvers = [ "uplink" ];
+    # Roaming devices: the cluster's instance first, then uplink's. Both are LAN
+    # addresses with no tailnet route, so they only answer a roaming device that is on
+    # the LAN (both verified from patch on 10.9.3.2, filtering identically). Off the LAN
+    # they are unreachable and tailscaled falls through to the public upstreams, as
+    # before; a tailnet route to 10.10.0.53 would extend filtering off the LAN.
+    dns.roamingResolvers = [
+      "axon"
+      "uplink"
+    ];
 
     services = {
       argocd.domain = "argocd.zeroday.run";

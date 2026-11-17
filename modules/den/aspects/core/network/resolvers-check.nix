@@ -7,8 +7,8 @@
 #                keeps the DoT upstreams and MagicDNS. Controls: the same
 #                predicates over dns.resolvers = [ ] and over blade fail, and
 #                axon-01 on the pre-cutover list (uplink alone) fails.
-#                headscale lists prod's dns.roamingResolvers (uplink alone), not
-#                the hosts' list (control).
+#                headscale lists prod's dns.roamingResolvers (the cluster's, then
+#                uplink's) without the gateway, not the hosts' list (control).
 #                The failback timer (§2.4) is on exactly those hosts, not on
 #                blade, and probes a peer's pinned tailnet name (control: a
 #                name no host has).
@@ -127,11 +127,12 @@ let
         !(resolvers.leavesMagicDns manager (noResolvers environments.dev) hosts.cortex);
       roamingKeepsMagicDns = !(resolvers.leavesMagicDns manager environments.dev hosts.blade);
       staticLeavesMagicDns = resolvers.leavesMagicDns manager environments.dev hosts.cortex;
-      # headscale (c): prod's roaming instance (uplink alone, dns.roamingResolvers),
-      # no gateway, then the plain upstreams. Control: the hosts' list is not it.
-      headscaleRoaming = headscaleGlobal == [ blocky ] ++ resolvers.plainUpstreams environments.prod;
+      # headscale (c): prod's roaming instances (the cluster's, then uplink's;
+      # dns.roamingResolvers), no gateway, then the plain upstreams. Control: the hosts'
+      # list, which carries the gateway, is not it.
+      headscaleRoaming = headscaleGlobal == instances.prod ++ resolvers.plainUpstreams environments.prod;
       headscaleNotHostsList =
-        headscaleGlobal != instances.prod ++ resolvers.plainUpstreams environments.prod;
+        headscaleGlobal != expected "prod" ++ resolvers.plainUpstreams environments.prod;
       # Control: the pre-cutover list (uplink alone) is not what prod's hosts carry.
       cutoverUplinkOnlyFails =
         !(onResolver (
