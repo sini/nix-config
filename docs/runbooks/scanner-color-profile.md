@@ -26,11 +26,20 @@ and tools behind this runbook are in
   `modules/den/aspects/services/scanning/ff-680w.icc`).
   - `scan-classify --icc-profile` assigns it to each photo and back page. The
     pixels are unchanged; documents for paperless stay untagged.
-  - It's a shaper/matrix profile from the mean of three native card scans, with
-    neutral end anchors. On the card it fits at ΔE2000 average 2.36, max 5.8
-    (B06 orange-yellow).
-  - Repeatability: the three scans differ by 0.27/100 per patch on average,
-    worst 0.53 (D01).
+  - **Rebuilt 2026-11-17** with one shaper curve shared by all three channels
+    (`colprof -aS`). The first profile (`-as`, a separate curve per channel) put
+    a green cast on light midtones: a neutral device grey at 0.60 read a\* −6.8,
+    and at 0.80 swung to a\* +2.9, b\* +2.7. That was a fitting artifact, not
+    the scanner. Six grey patches can't pin three free curves, so they wobbled
+    between them. A shared curve keeps every device grey exactly neutral.
+  - Fitted to the mean of two native card scans from 2026-11-17, landscape and
+    portrait, plus the neutral end anchors. On the card: ΔE2000 average 2.55,
+    max 5.5. The old profile scores 2.48 on the same scans, so the card fit is
+    unchanged in practice.
+  - Repeatability: a same-orientation rescan matches the 2026-11-06 scans to
+    0.23/100 per patch. Turning the card 90° moves it by 0.99/100 (white patch
+    2.7), a light falloff across the feed path. That's why the two orientations
+    are averaged.
 - **Checked:** the `epson-scan` flake check has a native-tone case: the stock
   test batch, converted to native tone, routes the same, and only the photo is
   tagged, with its pixels unchanged. `scan-classify`'s self-test covers
@@ -106,8 +115,7 @@ error, before any printing.
    - **Where:** an online pro lab (Bay Photo, Mpix or Nations Photo Lab: true
      RA-4, calibrated, with an explicit colour-correction-off option), or Costco
      (Fuji or Noritsu minilabs; ask for no auto-correction).
-   - **Status (2026-11-07):** to be ordered from Bay Photo, with colour
-     correction off.
+   - **Printed (2026-11-17):** Bay Photo, Fujifilm Crystal Archive (RA-4).
 2. **Scan:** from cortex, as with the card ("Scanning from cortex"), then crop
    to the chart and run
    `scanin -v -dipn chart.tif labchart.cht labchart-reference.cie`. Check
@@ -195,9 +203,11 @@ Tools: Argyll CMS (`nix shell nixpkgs#argyllcms`), with
    → XYZ 0,0,0) and `W00` (device 100,100,100 → D50 white 96.422, 100, 82.521),
    and bump `NUMBER_OF_SETS`. The script is
    `~/Documents/scanner-profile/native/anchor.py`.
-4. **Fit a shaper/matrix:**
-   `colprof -qh -as -A Epson -M "FastFoto FF-680W" -D "…" -C "…" anchored`. A
-   LUT profile would overfit 24 patches.
+4. **Fit a shared-shaper/matrix:**
+   `colprof -qh -aS -A Epson -M "FastFoto FF-680W" -D "…" -C "…" anchored`. Use
+   `-aS` (one curve for all channels), not `-as`: per-channel curves wobble
+   between the card's six greys and tint neutrals (see Status). A LUT profile
+   would overfit 24 patches.
 5. **Check:** `profcheck -k target.ti3 anchored.icc` (the 24 real patches only;
    expect an average around 2–2.5), and
    `printf '0 0 0\n1 1 1\n' | xicclu -ff -ir -pl anchored.icc` (both should be
@@ -217,6 +227,38 @@ On the native scan, a plain gamma 1.8 → sRGB conversion with no card at all
 landed within 1–2 L\* of the print; the card's grey patches add 2–5 L\* of
 midtone accuracy on top. That is why the clean data comes first: no profile
 could fix the clipped data.
+
+### Result (2026-11-17)
+
+Scanned from cortex at the production settings, read by `scanin` (all 216
+patches; scan luminance against reference Y gives rank correlation 0.983).
+Findings:
+
+- **Dye neutrals read slightly green.** Through the card profile the 24-step
+  ramp averages a\* −2 in the darks and −4 in L\*60–85. That's about half of the
+  a\* −8 to −13 on the reference print's wall; the rest is in the photograph.
+  The shared-shaper rebuild halves it again (mean a\* −1.25).
+- **The print's tone range is L\*14.4 to L\*91.8.** The file asks for 0 to 100,
+  so any profile fitted to the file's values stretches tone. Profiles fitted to
+  the chart directly were also too light in the midtones: the lab's print is
+  darker than the file in the mid and light tones.
+- **Pigment and dye can't both be neutral in one profile.** Every dye-referenced
+  variant tried (chart-only matrix and LUT, a hybrid, card plus dye grey
+  balance, a chroma-limited correction, a dye-hue/card-tone LUT, a dye/card
+  blend) moved the card off by ΔE 3.8 to 11. Where variants looked better on the
+  wall, they rendered saturated reds too bright and orange and lost fabric
+  detail. The chart's reference reds are the file's sRGB-edge reds, which the
+  print never reached.
+- **Decision:** keep the card as the reference, with the shared-shaper fit. The
+  remaining dye error, saturated reds above all, needs the chart's patches
+  **measured on the print** with a reflective spectrophotometer. Argyll's
+  `chartread` reads this `printtarg` strip chart with an i1Studio or ColorMunki.
+  The judging was done by eye on an uncalibrated monitor, so treat it as a
+  direction, not a measurement.
+
+Data: `~/Documents/scanner-profile/labchart/20261117-075526/` (chart scan,
+`chart.ti3`, every candidate profile, `compare/`) and
+`~/Documents/scanner-profile/card-rescan/` (the two card scans and `rebuild/`).
 
 ## Metamerism: the known limit
 
