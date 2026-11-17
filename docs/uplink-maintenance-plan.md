@@ -58,13 +58,81 @@ tiers), so it's the weaker candidate.
      headscale starts. Replicas make that much less fragile.
    - SSH doesn't depend on it: users keep static authorized keys, and opkssh
      also accepts Google as an issuer.
-   - To scope before execution:
-     - replication certificate exchange (agenix, or automated
-       `kanidmd show-replication-certificate`);
-     - which replica is the provisioning writer;
-     - envoy's backend health checks;
-     - the xmsg-gateway's `kanidmHost` model, which assumes one host IP for its
-       egress.
+   - Scoped (2026-11-17). Upstream facts are from the kanidm book's replication
+     chapters; repo facts are from `services/security/kanidm.nix`,
+     `gateway/host-upstreams.nix` and `xmsg-gateway.nix`.
+     - **Replication config.** nixpkgs' `services.kanidm.server.settings` is
+       freeform, so `[replication]` needs no module work. Each node sets
+       `origin = "repl://<host address>:8445"` and a bind address, plus one
+       `[replication."repl://<partner>:8445"]` table per partner with
+       `type = "mutual-pull"` and `partner_cert`. Port 8444 is taken on uplink
+       by nginx's PROXY listener. The firewall opens the replication port to the
+       partner addresses only.
+     - **Certificates.** Each node generates its own replication identity
+       certificate the first time it starts with `[replication]` set. Read it
+       with `kanidmd show-replication-certificate`. It's a public certificate,
+       so it can be committed in plain text (as
+       `hosts/<host>/kanidm-replication.crt`, like the xmsg federation CA
+       certificates), with no agenix. Bootstrapping takes two deploys per node:
+       first with `[replication]` and no partners, then with the certificates
+       committed. Certificates expire after 4 years
+       (`kanidmd renew-replication-certificate`, then recommit). A check should
+       assert that every partner's certificate is present and not near expiry.
+     - **Joining.** uplink is the primary and must NOT set `automatic_refresh`.
+       Each axon sets `automatic_refresh = true` toward uplink only, so its
+       first start replaces its database with uplink's. When content conflicts,
+       the primary wins. The axons pair with each other in full mesh, without
+       `automatic_refresh`. After uplink retires, the writer (below) is the
+       refresh source for any new node.
+     - **Writer.** axon-01 runs everything that writes on its own: the
+       `services.kanidm.provision` run, the `entryManagement` migrations (they
+       assert fixed UUIDs, and running them on two nodes before those nodes sync
+       risks replication conflicts), the mail-sender bootstrap and daemon (two
+       daemons would drain the replicated queue twice), and the xmsg-gateway
+       liveness unit. The other replicas run only kanidmd. The OIDC client
+       secrets and the admin password are already environment-scoped
+       (`environment.secretPath`), so agenix rekeys them for axon-01 with no
+       secret moves. The writer moves in one deploy, once the replicas are in
+       sync: uplink's provisioning off, axon-01's on.
+     - **Ingress, without nginx on the axons.** kanidm accepts PROXY v2 itself
+       (`http_client_address_info.proxy-v2`, trusting the k3s node addresses),
+       so envoy can pass TLS through straight to kanidmd on
+       `<host address>:8443`. kanidmd terminates TLS with the environment
+       certificate from `services.security.acme`, which each replica includes.
+       That's four ACME orders for the same certificate, inside Let's Encrypt's
+       5-duplicates-a-week limit; a rebuild loop could still exhaust it.
+     - **host-upstreams.** It is keyed by host: one listener set, one Backend
+       and one TLSRoute per host. Three hosts serving `idm` would produce
+       duplicate listeners and routes for one name. It has to group by name
+       instead: one listener per name, and a route whose Backend lists every
+       host serving that name. The check gains a multi-host case.
+     - **Health checks.** Under passthrough envoy can't speak HTTP to kanidm,
+       because the TLS is end to end. So use an active TCP check on kanidmd's
+       port, plus passive outlier detection on connection failures, in the
+       BackendTrafficPolicy. That detects a node or process that is down. It
+       doesn't detect a replica that has stopped replicating: a consumer offline
+       for more than 7 days needs `kanidmd refresh-replication-consumer`, and
+       only its error log says so. That needs an alert from the logs (alloy →
+       loki).
+     - **LAN DNS.** `idm` resolves to uplink's address today (10.10.10.1 from
+       the cluster resolver). It moves to the gateway VIP, so LAN clients get
+       envoy's failover too. kanidm's book warns against DNS-based failover
+       (multiple A records), because clients cache them.
+     - **xmsg-gateway.** `kanidmHost = "uplink"` feeds `provider_addresses` and
+       a `/32` egress rule. It becomes the list of hosts that carry the kanidm
+       aspect, with one address and egress rule each. The origin and domain
+       lookups take the writer's settings. `xmsg-gateway-check` and
+       `blocky-ui-check` read `uplink` by name and move to the writer.
+     - **Version lockstep.** Every replica runs the same patched `kanidm_1_11`
+       from the same channel. A kanidm bump becomes a coordinated, fleet-wide
+       deploy.
+   - Execution order: host-upstreams grouping (inert while uplink is the only
+     host) → ACME and kanidmd with `[replication]`, no partners, on the axons
+     (not yet in DNS or envoy) → commit the certificates and pair with uplink as
+     primary → verify sync (a provisioned change on uplink shows up on every
+     axon) → envoy backends gain the axons, and LAN DNS points to the VIP → move
+     the writer to axon-01 → drop uplink from the partners, the backends and the
+     xmsg-gateway list.
 2. **headscale: move into the cluster, on a CNPG database (owner, 2026-11-17).**
    - headscale is the control plane only (keys, peer lists, endpoints). Peers
      talk to each other directly over WireGuard, so the LAN keeps its 10 Gbps;
