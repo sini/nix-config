@@ -14,9 +14,14 @@
     # The fleet's one xmsg federation CA (.secrets/xmsg-ca); prod names it the same.
     xmsg.caName = "json64.dev xmsg";
 
-    # Clients resolve through prod's instance on uplink, then the gateway
-    # (core/network/_resolvers.nix, docs/dns-resolver.md).
-    dns.resolvers = [ "uplink" ];
+    # Clients resolve through prod's instances, the cluster's first, then the gateway
+    # (core/network/_resolvers.nix, docs/dns-resolver.md). The cluster's L2 address is
+    # reachable from every dev host over the LAN, and it filters the same as uplink's,
+    # so dev keeps filtered DNS while uplink is down.
+    dns.resolvers = [
+      "axon"
+      "uplink"
+    ];
 
     certificates.issuers = {
       "json64-dev" = {
