@@ -71,11 +71,12 @@ tiers), so it's the weaker candidate.
      - **Certificates.** Each node generates its own replication identity
        certificate the first time it starts with `[replication]` set. Read it
        with `kanidmd show-replication-certificate`. It's a public certificate,
-       so it can be committed in plain text (as
-       `hosts/<host>/kanidm-replication.crt`, like the xmsg federation CA
-       certificates), with no agenix. Bootstrapping takes two deploys per node:
-       first with `[replication]` and no partners, then with the certificates
-       committed. Certificates expire after 4 years
+       so it's committed in plain text with no agenix (owner, 2026-11-17), as
+       `.secrets/hosts/<host>/kanidm-replication.crt`, beside the host's other
+       public material (`syncthing-uplink.crt`, `xmsg-sini-fed-ca.crt`), never
+       next to the aspect. Bootstrapping takes two deploys per node: first with
+       `[replication]` and no partners, then with the certificates committed.
+       Certificates expire after 4 years
        (`kanidmd renew-replication-certificate`, then recommit). A check should
        assert that every partner's certificate is present and not near expiry.
      - **Joining.** uplink is the primary and must NOT set `automatic_refresh`.
@@ -84,13 +85,13 @@ tiers), so it's the weaker candidate.
        the primary wins. The axons pair with each other in full mesh, without
        `automatic_refresh`. After uplink retires, the writer (below) is the
        refresh source for any new node.
-     - **Writer.** axon-01 runs everything that writes on its own: the
-       `services.kanidm.provision` run, the `entryManagement` migrations (they
-       assert fixed UUIDs, and running them on two nodes before those nodes sync
-       risks replication conflicts), the mail-sender bootstrap and daemon (two
-       daemons would drain the replicated queue twice), and the xmsg-gateway
-       liveness unit. The other replicas run only kanidmd. The OIDC client
-       secrets and the admin password are already environment-scoped
+     - **Writer: axon-01 (owner, 2026-11-17).** It runs everything that writes
+       on its own: the `services.kanidm.provision` run, the `entryManagement`
+       migrations (they assert fixed UUIDs, and running them on two nodes before
+       those nodes sync risks replication conflicts), the mail-sender bootstrap
+       and daemon (two daemons would drain the replicated queue twice), and the
+       xmsg-gateway liveness unit. The other replicas run only kanidmd. The OIDC
+       client secrets and the admin password are already environment-scoped
        (`environment.secretPath`), so agenix rekeys them for axon-01 with no
        secret moves. The writer moves in one deploy, once the replicas are in
        sync: uplink's provisioning off, axon-01's on.
@@ -114,10 +115,12 @@ tiers), so it's the weaker candidate.
        for more than 7 days needs `kanidmd refresh-replication-consumer`, and
        only its error log says so. That needs an alert from the logs (alloy →
        loki).
-     - **LAN DNS.** `idm` resolves to uplink's address today (10.10.10.1 from
-       the cluster resolver). It moves to the gateway VIP, so LAN clients get
-       envoy's failover too. kanidm's book warns against DNS-based failover
-       (multiple A records), because clients cache them.
+     - **LAN DNS (owner, 2026-11-17).** `idm` resolves to uplink's address today
+       (10.10.10.1 from the cluster resolver). It moves to the gateway VIP, so
+       LAN clients get envoy's failover too, which makes LAN sign-in depend on
+       the cluster gateway, as off-LAN sign-in already does. kanidm's book warns
+       against DNS-based failover (multiple A records), because clients cache
+       them.
      - **xmsg-gateway.** `kanidmHost = "uplink"` feeds `provider_addresses` and
        a `/32` egress rule. It becomes the list of hosts that carry the kanidm
        aspect, with one address and egress rule each. The origin and domain
