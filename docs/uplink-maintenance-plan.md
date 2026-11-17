@@ -40,20 +40,31 @@ tiers), so it's the weaker candidate.
 
 ### Tier 0: the fleet breaks without these. Must be done before the window.
 
-1. **kanidm: move into the cluster.**
-   - Run it as a single-replica StatefulSet on a 2-replica Longhorn volume
-     (state is under 1 MB), behind the envoy gateway at idm.json64.dev.
-   - A node failure then reschedules it. That's enough HA for a homelab IdM.
-     kanidm's own replication is the follow-up if we want two live instances.
-   - Changes: a kubernetes aspect; DNS for idm; the xmsg-gateway aspect's
-     `kanidmHost` model (it assumes a host IP for egress) becomes an in-cluster
-     service; the mail sender relays through the cluster's smtp-relay, which
-     already exists.
-   - Migration: stop kanidm on uplink, copy its database, start it in the
-     cluster, flip DNS. Downtime is minutes.
-   - Risk: every OIDC client's issuer URL stays the same (same hostname), so
-     clients shouldn't notice. Verify one client of each kind afterwards
-     (grafana, argocd, the gateway).
+1. **kanidm: replicated NixOS services on the axon hosts (owner, 2026-11-17).**
+   - Not a pod. The server runs on the hosts, and envoy proxies `idm.json64.dev`
+     to every replica, as it already proxies uplink's instance today. So the
+     cluster is in identity's path either way. What replication buys is a real
+     multi-writer failover, not one pod rescheduling.
+   - It keeps provisioning as it is: the NixOS module
+     (`services.kanidm.provision` plus our extra JSON) runs on one designated
+     node, and replication carries it to the others. That avoids re-homing
+     provisioning in terranix or a job.
+   - Migration without a cut-over:
+     1. Add the axon replicas, replicating from uplink.
+     2. Let them catch up, then add them to envoy's backends.
+     3. Retire uplink's instance.
+   - headscale depends on it: its OIDC block sets
+     `only_start_if_oidc_is_available`, so kanidm must be reachable before
+     headscale starts. Replicas make that much less fragile.
+   - SSH doesn't depend on it: users keep static authorized keys, and opkssh
+     also accepts Google as an issuer.
+   - To scope before execution:
+     - replication certificate exchange (agenix, or automated
+       `kanidmd show-replication-certificate`);
+     - which replica is the provisioning writer;
+     - envoy's backend health checks;
+     - the xmsg-gateway's `kanidmHost` model, which assumes one host IP for its
+       egress.
 2. **headscale: move into the cluster, on a CNPG database (owner, 2026-11-17).**
    - headscale is the control plane only (keys, peer lists, endpoints). Peers
      talk to each other directly over WireGuard, so the LAN keeps its 10 Gbps;
@@ -142,8 +153,10 @@ tiers), so it's the weaker candidate.
 
 ## Scoping required before kanidm and headscale move (owner, 2026-11-16)
 
-Both moves are blocked on design work that the summaries above leave out. Each
-gets a scoped design before any execution starts.
+Both moves are blocked on design work that the summaries above leave out.
+(kanidm's provisioning stays NixOS under the replicated design, so its scoping
+is now the replication items in item 1.) Each gets a scoped design before any
+execution starts.
 
 - **kanidm provisioning.** Today the NixOS module provisions persons, groups,
   POSIX attributes and OAuth2 clients (`services.kanidm.provision` with our
