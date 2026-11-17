@@ -53,11 +53,12 @@ store paths between hosts.
 
 ### Admission: never queue
 
-Before a heavy run, read the host's free memory (cgroup limits and `free`) and the
-heavy lock's queue. Start only if a slot is free and the memory covers the run's
-measured peak. Otherwise do not wait: return `DEFERRED` with what the run needs,
-or run it on a host your brief names. You never sit in a lock wait (owner
-2026-11-16: "don't wait on locks").
+Run every heavy phase as `HEAVY_NOWAIT=1 zsh STATUS/heavy-lock.zsh <cmd>`, once
+per phase, after checking that the host's free memory (cgroup limits and `free`)
+covers the run's measured peak. The lock still holds the host's slot budget; the
+no-wait mode only refuses to queue. Exit 75, or short memory, means `DEFERRED`:
+report what the run needs, or run it on a host your brief names. Never queue on
+the lock (owner 2026-11-16: "don't wait on locks").
 
 ### Waiting on a run
 
