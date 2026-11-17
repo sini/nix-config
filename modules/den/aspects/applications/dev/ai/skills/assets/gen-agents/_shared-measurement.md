@@ -53,26 +53,37 @@ store paths between hosts.
 
 ### Admission: never queue
 
-Run every heavy phase as `HEAVY_NOWAIT=1 zsh STATUS/heavy-lock.zsh <cmd>`, once
-per phase, after checking that the host's free memory (cgroup limits and `free`)
-covers the run's measured peak. The lock still holds the host's slot budget; the
-no-wait mode only refuses to queue. Exit 75, or short memory, means `DEFERRED`:
-report what the run needs, or run it on a host your brief names. Never queue on
-the lock (owner 2026-11-16: "don't wait on locks").
+Run every heavy phase as
+`HEAVY_NOWAIT=1 HEAVY_PRIORITY=0 zsh STATUS/heavy-lock.zsh <cmd>`, once per phase.
+The helper's one `flock -n` per slot IS the acquisition: atomic, never blocking,
+with no separate check of the slots. First confirm the checkout supports it
+(`grep -q HEAVY_NOWAIT STATUS/heavy-lock.zsh`); if not, report `DEFERRED` and never
+fall back to the blocking form. Before the take, check that the host's free
+memory (cgroup limits, `free`, competing load) covers the run's measured peak;
+memory cannot be reserved, so short memory is a `DEFERRED` too. The reserved
+priority slot is not yours: `HEAVY_PRIORITY=0` always.
+Read the outcome by the helper's own words: `DEFERRED` only when stderr carries
+`heavy-lock: DEFERRED (…)`, which proves the command never ran. An exit 75
+without that line is the command's own result. On `DEFERRED`, report what the run
+needs, or run it on a host your brief names. Never queue on the lock (owner
+2026-11-16: "don't wait on locks").
 
 ### Waiting on a run
 
-Launch the job so that it writes a marker unique to the run, atomically, on every
-outcome:
-`( if cmd > run-<id>.log 2>&1; then rc=0; else rc=$?; fi; print $rc > run-<id>.rc.tmp && mv run-<id>.rc.tmp run-<id>.rc ) &`
-(the `if` keeps an inherited `set -e` from skipping the write on failure). Poll in
-the foreground, in chunks under 4 minutes:
+Run the job in a fresh shell with errexit live, so that a failing step inside a
+compound or a function is not masked by the `if`, and write a marker unique to the
+run, atomically, on every outcome:
+`( if zsh -e -o pipefail -c '<cmd>' > run-<id>.log 2>&1; then rc=0; else rc=$?; fi; print $rc > run-<id>.rc.tmp && mv run-<id>.rc.tmp run-<id>.rc ) &`
+`<cmd>` must be self-contained (it does not see your shell's functions); put a
+multi-step phase in a script file and run that. Poll in the foreground, in chunks
+under 4 minutes:
 `timeout 230 zsh -c 'until [[ -s run-<id>.rc ]]; do sleep 20; done'`, repeated.
 `0` is success; any other value is failure. A MISSING marker is not success: the
 run has not finished, or died unrecorded. A live PID is liveness, never success.
 The poll's `timeout` bounds the poll, never the job. Never end a turn to wait for
-a background notification: it does not reach a subagent. A pause of 5 minutes or
-more expires the prompt cache and rewrites your whole context.
+a background notification: it does not reach a subagent. In the agent sessions
+measured (den-ag-design build sessions 221 and 222, den-hoag-qbs25), requests after
+a pause of 5 minutes or more rewrote the whole context into the prompt cache.
 
 ## Measurement law
 
