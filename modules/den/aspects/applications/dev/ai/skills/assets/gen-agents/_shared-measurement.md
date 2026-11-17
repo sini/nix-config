@@ -54,29 +54,33 @@ store paths between hosts.
 ### Admission: never queue
 
 Run every heavy phase as
-`HEAVY_NOWAIT=1 HEAVY_PRIORITY=0 zsh STATUS/heavy-lock.zsh <cmd>`, once per phase.
-The helper's one `flock -n` per slot IS the acquisition: atomic, never blocking,
-with no separate check of the slots. First confirm the checkout supports it
-(`grep -q HEAVY_NOWAIT STATUS/heavy-lock.zsh`); if not, report `DEFERRED` and never
-fall back to the blocking form. Before the take, check that the host's free
-memory (cgroup limits, `free`, competing load) covers the run's measured peak;
-memory cannot be reserved, so short memory is a `DEFERRED` too. The reserved
-priority slot is not yours: `HEAVY_PRIORITY=0` always.
-Read the outcome by the helper's own words: `DEFERRED` only when stderr carries
-`heavy-lock: DEFERRED (…)`, which proves the command never ran. An exit 75
-without that line is the command's own result. On `DEFERRED`, report what the run
-needs, or run it on a host your brief names. Never queue on the lock (owner
-2026-11-16: "don't wait on locks").
+`HEAVY_NOWAIT=1 HEAVY_PRIORITY=0 HEAVY_RECEIPT=<phase-dir>/heavy-<id>.receipt zsh STATUS/heavy-lock.zsh <cmd>`,
+once per phase. The helper's one `flock -n` per slot IS the acquisition: atomic,
+never blocking, with no separate check of the slots. First confirm the checkout
+supports it (`grep -q HEAVY_RECEIPT STATUS/heavy-lock.zsh`); if not, report
+`DEFERRED` and never fall back to the blocking form. Before the take, check that
+the host's free memory (cgroup limits, `free`, competing load) covers the run's
+measured peak; memory cannot be reserved, so short memory is a `DEFERRED` too.
+The reserved priority slot is not yours: `HEAVY_PRIORITY=0` always.
+Read the outcome from the receipt, the helper's own channel; stderr is shared and
+a command can print anything there. Exit 75 with a receipt reading `deferred …`
+is `DEFERRED`: the command never ran; report what it needs, or run it on a host
+your brief names. A receipt reading `admitted` means the command ran, whatever it
+printed or returned. Exit 75 with no receipt is ambiguous: report it as such and
+never replay the run automatically. Never queue on the lock (owner 2026-11-16:
+"don't wait on locks").
 
 ### Waiting on a run
 
-Run the job in a fresh shell with errexit live, so that a failing step inside a
-compound or a function is not masked by the `if`, and write a marker unique to the
-run, atomically, on every outcome:
+Run the job with errexit and pipefail live in the shell that runs its steps, so
+that a failing step inside a compound, a function or a pipeline is not masked by
+the `if`, and write a marker unique to the run, atomically, on every outcome:
 `( if zsh -e -o pipefail -c '<cmd>' > run-<id>.log 2>&1; then rc=0; else rc=$?; fi; print $rc > run-<id>.rc.tmp && mv run-<id>.rc.tmp run-<id>.rc ) &`
-`<cmd>` must be self-contained (it does not see your shell's functions); put a
-multi-step phase in a script file and run that. Poll in the foreground, in chunks
-under 4 minutes:
+`<cmd>` is one self-contained command line (it does not see your shell's
+functions). A multi-step phase goes in a script file run as
+`zsh -e -o pipefail phase.zsh` in place of `zsh -e -o pipefail -c '<cmd>'`: an
+inner `zsh phase.zsh` under `-c` does not inherit the flags, and a failing step
+in it is masked. Poll in the foreground, in chunks under 4 minutes:
 `timeout 230 zsh -c 'until [[ -s run-<id>.rc ]]; do sleep 20; done'`, repeated.
 `0` is success; any other value is failure. A MISSING marker is not success: the
 run has not finished, or died unrecorded. A live PID is liveness, never success.
