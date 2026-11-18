@@ -29,6 +29,7 @@
         dns-resolvers,
         environment,
         served-domains,
+        gateway-upstreams,
         lib,
         ...
       }:
@@ -40,6 +41,16 @@
           lib.listToAttrs (
             lib.concatMap (r: map (d: lib.nameValuePair d r.address) r.domains) (
               lib.filter (r: r.environment == cluster.environment) served-domains
+            )
+          )
+          # A name a replica routes itself (an upstream with explicit domains,
+          # gateway/host-upstreams.nix) has several hosts behind one gateway route,
+          # so it answers with the gateway VIP and gets the route's failover.
+          // lib.listToAttrs (
+            map (d: lib.nameValuePair d cluster.networks.kubernetes-loadbalancers.assignments.default-gateway) (
+              lib.concatMap (u: u.domains or [ ]) (
+                lib.filter (u: u.environment == cluster.environment) gateway-upstreams
+              )
             )
           )
           // cluster.settings.kubernetes.services.network.coredns.staticHosts;
