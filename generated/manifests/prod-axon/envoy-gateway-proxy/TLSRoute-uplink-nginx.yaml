@@ -6,7 +6,6 @@ metadata:
 spec:
   hostnames:
     - hs.json64.dev
-    - idm.json64.dev
     - jellyfin.json64.dev
     - homepage.json64.dev
     - oauth2-proxy.json64.dev

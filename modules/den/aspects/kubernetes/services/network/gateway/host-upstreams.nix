@@ -14,12 +14,15 @@ let
     let
       inEnv = lib.filter (r: r.environment == environment);
       upstreams = inEnv gateway-upstreams;
+      # An upstream may name its domains itself (a replica that publishes no DNS
+      # record of its own); otherwise they are its host's served-domains.
       domainsOf =
         u:
         lib.subtractLists u.exclude (
-          lib.concatMap (r: r.domains) (lib.filter (r: r.host or null == u.host) (inEnv served-domains))
+          u.domains
+            or (lib.concatMap (r: r.domains) (lib.filter (r: r.host or null == u.host) (inEnv served-domains)))
         );
-      nameOf = u: "${u.host}-nginx";
+      nameOf = u: u.name or "${u.host}-nginx";
       # Fields the API server defaults are stated explicitly: Argo's predicted
       # state for these experimental-channel kinds omits them, so leaving them
       # out keeps the Gateway and TLSRoutes OutOfSync after every sync.
@@ -56,6 +59,10 @@ let
           "gateway-upstream: the hosts serving ${d} (${
             lib.concatMapStringsSep ", " (u: u.host) us
           }) disagree on proxyProtocol, which is set per route";
+        assert lib.assertMsg (lib.any (u: !(u.fallback or false)) us)
+          "gateway-upstream: every host serving ${d} (${
+            lib.concatMapStringsSep ", " (u: u.host) us
+          }) is a fallback; one must be active";
         acc
         // {
           ${name} = {
@@ -68,14 +75,19 @@ let
     {
       gateways.default-gateway.spec.listeners = map listenerFor names;
 
+      # A fallback backend takes traffic only while every non-fallback one of its
+      # route is unhealthy: active/passive, for servers whose sessions are local.
       backends = perHost upstreams (u: {
-        spec.endpoints = [
-          {
-            ip = {
-              inherit (u) address port;
-            };
-          }
-        ];
+        spec = {
+          endpoints = [
+            {
+              ip = {
+                inherit (u) address port;
+              };
+            }
+          ];
+        }
+        // lib.optionalAttrs (u.fallback or false) { fallback = true; };
       });
 
       tlsRoutes = lib.mapAttrs (_: r: {
@@ -112,36 +124,73 @@ let
           spec = {
             endpointSelector.matchLabels."gateway.networking.k8s.io/gateway-name" = "default-gateway";
             egress = [
-              {
-                toCIDR = [ "${u.address}/32" ];
-                toPorts = [
-                  {
-                    ports = [
-                      {
-                        port = toString u.port;
-                        protocol = "TCP";
-                      }
-                    ];
-                  }
-                ];
-              }
+              (
+                # Cilium's CIDR rules never select cluster nodes, so a backend on a
+                # node is reached by entity (any node, this port only).
+                (
+                  if u.node or false then
+                    {
+                      toEntities = [
+                        "host"
+                        "remote-node"
+                      ];
+                    }
+                  else
+                    { toCIDR = [ "${u.address}/32" ]; }
+                )
+                // {
+                  toPorts = [
+                    {
+                      ports = [
+                        {
+                          port = toString u.port;
+                          protocol = "TCP";
+                        }
+                      ];
+                    }
+                  ];
+                }
+              )
             ];
           };
         })
       );
 
-      backendTrafficPolicies = lib.mapAttrs (name: _: {
-        spec = {
-          targetRefs = [
-            {
-              group = "gateway.networking.k8s.io";
-              kind = "TLSRoute";
-              inherit name;
+      # Under passthrough envoy sees only TCP, so a shared name's backends are
+      # checked by connect (active) and by connection failures (passive).
+      backendTrafficPolicies =
+        lib.mapAttrs
+          (name: r: {
+            spec = {
+              targetRefs = [
+                {
+                  group = "gateway.networking.k8s.io";
+                  kind = "TLSRoute";
+                  inherit name;
+                }
+              ];
             }
-          ];
-          proxyProtocol.version = "V2";
-        };
-      }) (lib.filterAttrs (_: r: (lib.head r.upstreams).proxyProtocol) routes);
+            // lib.optionalAttrs (lib.head r.upstreams).proxyProtocol { proxyProtocol.version = "V2"; }
+            // lib.optionalAttrs (lib.length r.upstreams > 1) {
+              healthCheck = {
+                active = {
+                  type = "TCP";
+                  interval = "5s";
+                  timeout = "2s";
+                  unhealthyThreshold = 2;
+                  healthyThreshold = 2;
+                };
+                passive = {
+                  splitExternalLocalOriginErrors = true;
+                  consecutiveLocalOriginFailures = 2;
+                  interval = "5s";
+                  baseEjectionTime = "30s";
+                  maxEjectionPercent = 100;
+                };
+              };
+            };
+          })
+          (lib.filterAttrs (_: r: (lib.head r.upstreams).proxyProtocol || lib.length r.upstreams > 1) routes);
     };
 in
 {
@@ -249,6 +298,61 @@ in
           ];
         };
       shared = replicated false;
+      # A replica that names its domain, a fallback on a node: s.x routes to h
+      # (active) and k (fallback, entity egress, health-checked).
+      standby = render {
+        environment = "e";
+        gateway-upstreams = [
+          (upstream "e" [ ])
+          {
+            environment = "e";
+            host = "k";
+            name = "k-kanidm";
+            address = "10.0.0.3";
+            port = 8443;
+            proxyProtocol = false;
+            protocol = "tls-passthrough";
+            exclude = [ ];
+            domains = [ "s.x" ];
+            fallback = true;
+            node = true;
+          }
+        ];
+        served-domains = [
+          (
+            served "e"
+            // {
+              domains = [
+                "a.x"
+                "s.x"
+              ];
+            }
+          )
+        ];
+      };
+      allFallback = render {
+        environment = "e";
+        gateway-upstreams = [
+          (upstream "e" [ ] // { fallback = true; })
+          (
+            upstream "e" [ ]
+            // {
+              host = "q";
+              fallback = true;
+            }
+          )
+        ];
+        served-domains = [
+          (served "e" // { domains = [ "s.x" ]; })
+          (
+            served "e"
+            // {
+              host = "q";
+              domains = [ "s.x" ];
+            }
+          )
+        ];
+      };
       failures = lib.runTests {
         testSharedNameOneListener = {
           expr = map (l: l.hostname) shared.gateways.default-gateway.spec.listeners;
@@ -275,6 +379,40 @@ in
               ];
             };
           };
+        };
+        testStandbyRoute = {
+          expr = map (b: b.name) (builtins.head standby.tlsRoutes.h-k.spec.rules).backendRefs;
+          expected = [
+            "h-nginx"
+            "k-kanidm"
+          ];
+        };
+        testStandbyFallbackOnlyOnReplica = {
+          expr = lib.mapAttrs (_: b: b.spec.fallback or false) standby.backends;
+          expected = {
+            h-nginx = false;
+            k-kanidm = true;
+          };
+        };
+        testStandbyHealthChecked = {
+          expr = lib.mapAttrs (_: p: [
+            (p.spec.healthCheck.active.type or null)
+            (p.spec ? proxyProtocol)
+          ]) standby.backendTrafficPolicies;
+          expected.h-k = [
+            "TCP"
+            false
+          ];
+        };
+        testNodeEgressByEntity = {
+          expr =
+            (builtins.head standby.ciliumNetworkPolicies.allow-gateway-k-kanidm-egress.spec.egress)
+              ? toEntities;
+          expected = true;
+        };
+        testAllFallbackRefused = {
+          expr = (builtins.tryEval (builtins.deepSeq allFallback.tlsRoutes null)).success;
+          expected = false;
         };
         testSharedNameMixedProxyRefused = {
           expr = (builtins.tryEval (builtins.deepSeq (replicated true).tlsRoutes null)).success;

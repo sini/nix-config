@@ -1,0 +1,11 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: Backend
+metadata:
+  name: axon-01-kanidm
+  namespace: gateways
+spec:
+  endpoints:
+    - ip:
+        address: 10.10.10.2
+        port: 8443
+  fallback: true

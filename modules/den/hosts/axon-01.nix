@@ -80,8 +80,9 @@ in
       hardware.cpu.amd
       hardware.gpu.amd
       services.networking.thunderbolt-mesh-of
-      # A kanidm replica (docs/uplink-maintenance-plan.md, Tier 0 item 1).
-      services.security.kanidm-server
+      # A kanidm replica (docs/uplink-maintenance-plan.md, Tier 0 item 1), and
+      # the gateway's fallback backend for it (the future writer).
+      services.security.kanidm-ingress
     ];
   };
 }

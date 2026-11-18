@@ -24,8 +24,8 @@ spec:
             kind: TLSRoute
         namespaces:
           from: Same
-      hostname: hs.json64.dev
-      name: tls-hs-json64-dev
+      hostname: idm.json64.dev
+      name: tls-idm-json64-dev
       port: 443
       protocol: TLS
       tls:
@@ -50,8 +50,8 @@ spec:
             kind: TLSRoute
         namespaces:
           from: Same
-      hostname: idm.json64.dev
-      name: tls-idm-json64-dev
+      hostname: hs.json64.dev
+      name: tls-hs-json64-dev
       port: 443
       protocol: TLS
       tls:
