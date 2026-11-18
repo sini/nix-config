@@ -88,12 +88,18 @@
           '';
 
           virtualHosts = {
+            # A Host this nginx doesn't serve gets 421 Misdirected Request, not 404.
+            # Browsers coalesce HTTP/2 connections across names that share a
+            # certificate and an address, so a request for a gateway-routed name can
+            # arrive on a connection opened for one of this host's names (idm, through
+            # the gateway's TLS passthrough). 421 makes the browser retry on a fresh
+            # connection, which the gateway routes correctly (RFC 9113 §9.1.2).
             _ = {
               forceSSL = true;
               useACMEHost = environment.domain;
               default = true;
               locations."/" = {
-                return = "404";
+                return = "421";
               };
             };
           };
