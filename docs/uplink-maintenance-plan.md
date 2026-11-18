@@ -154,10 +154,21 @@ tiers), so it's the weaker candidate.
        the route ran without PROXY v2 and idm through the gateway (public
        sign-in) reset connections for about 6 minutes, until the fix was applied
        by hand and committed.
-     - Open: the xmsg-gateway still pins uplink's address (`provider_addresses`,
-       a /32 egress), so it doesn't fail over yet; then the writer move and
-       uplink's removal. uplink's pre-pairing ZFS snapshot is
-       `zroot/local/persist@pre-kanidm-replication-20261117`.
+     - DONE (2026-11-18): the xmsg-gateway reaches kanidm at the gateway VIP
+       (195bf888), not uplink's address.
+     - DONE (2026-11-18): axon-01 is the writer (88a17a34): provisioning,
+       migrations, mail sender and liveness accounts, served through the gateway
+       with no nginx. idm routes to axon-01 (active) and axon-02 (fallback);
+       uplink left the route and lost its idm vhost. A group created and deleted
+       on axon-01 reached axon-02, axon-03 and uplink within about 30 s
+       (replication pulls on an interval). Found on the way: uplink's kanidmd
+       lost read access to the wildcard certificate with the writer's nginx
+       group (fixed e9803112), and a browser-coalescing 404 through uplink's
+       nginx (421 since 4adcb80c).
+     - Open: retire uplink's replica (drop it from the mesh, stop its kanidmd).
+       The gateway's TCP health checks log "Unable to process proxy header" on
+       every routed replica (about 36 a minute, no PROXY header on a bare
+       connect): noise, worth a quieter check.
 2. **headscale: move into the cluster, on a CNPG database (owner, 2026-11-17).**
    - headscale is the control plane only (keys, peer lists, endpoints). Peers
      talk to each other directly over WireGuard, so the LAN keeps its 10 Gbps;
