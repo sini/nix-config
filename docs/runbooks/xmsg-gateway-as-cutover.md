@@ -61,6 +61,15 @@ Deployment syncs after it.
    - `/mcp` without a token answers 401 with the PRM challenge;
    - the pod is Ready with 0 restarts, and OLD still works through the tunnel.
 
+## Lesson from the window (2026-11-18)
+
+The pod's `secrets` volume projects only the keys in its `items` list
+(`kubernetes/services/ai/xmsg-gateway.nix`). A key added to the SopsSecret
+reaches the Secret but not the pod until it is also listed there. The first
+post-cutover pod failed `prepare` with
+`cp: can't stat '/run/secrets/xmsg-gateway/as-client-secret'`, fixed in
+4d274369. A new Secret key needs both the SopsSecret entry and an `items` entry.
+
 ## Rollback
 
 - Before step 4 changes the store, revert the cutover commit and scale back up.
