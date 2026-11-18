@@ -181,29 +181,21 @@ tiers), so it's the weaker candidate.
        Measured failover: blocking the pinned replica gave 3 failed requests in
        the first 6 s, then 200 throughout. The switch itself gave intermittent
        503s for about a minute, until axon-01 and -02 left PROXY mode.
-2. **headscale: move into the cluster, on a CNPG database (owner, 2026-11-17).**
-   - headscale is the control plane only (keys, peer lists, endpoints). Peers
-     talk to each other directly over WireGuard, so the LAN keeps its 10 Gbps;
-     only DERP relays carry traffic, and only for pairs that can't connect
-     directly.
-   - It can't federate or run active-active: one instance owns the netmap. The
-     cluster gives active/standby instead: one replica rescheduled on node
-     failure, with its state in a replicated CNPG Postgres (headscale supports
-     Postgres) instead of SQLite.
-   - uplink is already a single, older host, so the cluster (3 nodes,
-     expandable) is strictly better. A cluster outage pauses new logins, key
-     renewals and endpoint changes; existing connections keep working.
-   - Run DERP separately. `derper` is stateless, so give it independent regions:
-     one at home, and one on the Hetzner edge VM (docs/external-vantage-vm.md)
-     when it exists. Then relaying survives a home or cluster outage.
-   - To scope before execution:
-     - SQLite → Postgres migration (pgloader, or re-register nodes);
-     - keep the noise private key and server_url, so clients keep their
-       identities;
-     - public ingress: TCP 443 (the control protocol upgrades the HTTP
-       connection) and UDP 3478 (STUN) for in-cluster DERP;
-     - OIDC through kanidm, which is also moving;
-     - the auth-key generator (below).
+2. **headscale: in the cluster. DONE (2026-11-18).**
+   - One replica on SQLite in a Longhorn volume (fc3fbfcf, 9db0876f), not CNPG:
+     upstream calls Postgres "highly discouraged" (config-example.yaml,
+     v0.29.7), and the owner agreed. The cutover copied uplink's database and
+     both keys (checksums matched), so all 13 nodes kept their identities; 11
+     were online before and after.
+   - hs.json64.dev is on the gateway's HTTPS listener with the control-protocol
+     and DERP upgrades allowed. STUN is UDP 3478 at 10.11.0.32 with its UniFi
+     forward, and the DERP map carries the WAN address, so the embedded region
+     answers from the LAN too (netcheck: nearest, 3 ms).
+   - The auth-key generator runs headscale's CLI in the pod over kubeconfig.
+   - uplink's headscale state stays in /var/lib/headscale as the rollback.
+   - Open: scrape the pod's metrics (port 9090); STUN from a real outside client
+     is unverified; DERP connections through the gateway close at about 60 s, as
+     they did through uplink's nginx.
 3. **DNS: stop depending on uplink. DONE (2026-11-17).**
    - dev resolves through the cluster first, then uplink (90ce49f2, check fix
      d842d351), and the dev network's UniFi DHCP DNS matches (targeted apply).
