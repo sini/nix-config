@@ -365,6 +365,15 @@ in
         + "${lib.escapeShellArg secret.settings.username})\"; "
       ) deps;
 
+    # An OAuth client secret the xmsg gateway's authorization server accepts: exactly
+    # 43 unreserved characters and no trailing newline (32 random bytes, unpadded
+    # base64url; gateway docs/authorization-server.md).
+    oauth-client-secret =
+      { pkgs, ... }:
+      ''
+        ${pkgs.openssl}/bin/openssl rand 32 | ${pkgs.coreutils}/bin/basenc --base64url --wrap=0 | tr -d '='
+      '';
+
     rfc3986-secret =
       { pkgs, ... }:
       ''
