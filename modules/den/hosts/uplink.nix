@@ -89,7 +89,6 @@
       services.security.oauth2-proxy
       services.ai.ollama
       services.ai.open-webui
-      services.nix.attic
       core.network.tailscale
       core.network.tailscale.exit-node
       core.network.syncthing.hub

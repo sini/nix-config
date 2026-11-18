@@ -20,6 +20,34 @@ let
   pod."app.kubernetes.io/name" = name;
   pgCluster = "attic-pg";
   ref = image: "${image.repository}@${image.digest}";
+  # A token minted at generation time with the server's RS256 secret. atticadm only
+  # signs, so it gets a config that parses, not the server's.
+  mintToken =
+    {
+      decrypt,
+      deps,
+      pkgs,
+      lib,
+      ...
+    }:
+    args: ''
+      ATTIC_SERVER_TOKEN_RS256_SECRET_BASE64=$(${decrypt} ${lib.escapeShellArg (lib.head deps).file}) \
+        ${pkgs.attic-server}/bin/atticadm -f ${
+          (pkgs.formats.toml { }).generate "atticadm.toml" {
+            database.url = "sqlite::memory:";
+            storage = {
+              type = "local";
+              path = "/nonexistent";
+            };
+            chunking = {
+              nar-size-threshold = 1;
+              min-size = 1;
+              avg-size = 2;
+              max-size = 4;
+            };
+          }
+        } make-token ${args}
+    '';
   uid = 65532;
   hardened = {
     runAsUser = uid;
@@ -81,54 +109,53 @@ in
               key = "dsn";
             };
           };
-          # uplink's: the same RS256 secret (services/nix/attic.nix) and env file.
+          # The server's RS256 token secret (uplink's, kept so issued tokens stay
+          # valid). Rotating it invalidates every token, CI's included.
           attic-k8s-server-env = {
             rekeyFile = environment.secretPath + "/attic/server-token.age";
+            generator = {
+              tags = [ "attic" ];
+              script =
+                { pkgs, ... }:
+                ''
+                  ${pkgs.openssl}/bin/openssl genrsa -traditional 4096 | base64 -w0
+                '';
+            };
             sopsOutput = {
               file = "attic";
               key = "server-token";
             };
           };
-          # The cache Job's token: create and configure `ci` only, minted with the
-          # server's RS256 secret by atticadm (it needs no running server), as
-          # services/nix/attic.nix mints CI's push token.
+          # The cache Job's token: create and configure `ci` only.
           attic-ci-admin-token = {
             rekeyFile = environment.secretPath + "/attic/ci-admin-token.age";
             generator = {
               tags = [ "attic" ];
               dependencies = [ config.age.secrets.attic-k8s-server-env ];
               script =
-                {
-                  decrypt,
-                  deps,
-                  pkgs,
-                  ...
-                }:
-                ''
-                  ATTIC_SERVER_TOKEN_RS256_SECRET_BASE64=$(${decrypt} ${lib.escapeShellArg (lib.head deps).file}) \
-                    ${pkgs.attic-server}/bin/atticadm -f ${
-                      (pkgs.formats.toml { }).generate "server.toml" {
-                        # atticadm only signs; it needs a parseable config, not these.
-                        database.url = "sqlite::memory:";
-                        storage = {
-                          type = "local";
-                          path = "/nonexistent";
-                        };
-                        chunking = {
-                          nar-size-threshold = 1;
-                          min-size = 1;
-                          avg-size = 2;
-                          max-size = 4;
-                        };
-                      }
-                    } make-token \
-                    --sub attic-ci-cache --validity 5y --pull ${ciCache} --push ${ciCache} \
-                    --create-cache ${ciCache} --configure-cache ${ciCache} --configure-cache-retention ${ciCache}
-                '';
+                args@{ ... }:
+                mintToken (args // { inherit lib; })
+                  "--sub attic-ci-cache --validity 5y --pull ${ciCache} --push ${ciCache} --create-cache ${ciCache} --configure-cache ${ciCache} --configure-cache-retention ${ciCache}";
             };
             sopsOutput = {
               file = "attic";
               key = "ci-admin-token";
+            };
+          };
+          # CI's token: push+pull on `ci` only, five years. Never deployed: the github
+          # terranix workspace sets it as each repo's ATTIC_TOKEN at apply time.
+          # Rotate by deleting the .age and running `agenix generate`.
+          attic-ci-push-token = {
+            rekeyFile = environment.secretPath + "/attic/ci-push-token.age";
+            intermediary = true;
+            generator = {
+              tags = [ "attic" ];
+              dependencies = [ config.age.secrets.attic-k8s-server-env ];
+              script =
+                args@{ ... }:
+                mintToken (
+                  args // { inherit lib; }
+                ) "--sub github-actions --validity 5y --pull ${ciCache} --push ${ciCache}";
             };
           };
           # The `ci` cache's signing keypair, copied once from uplink's database.

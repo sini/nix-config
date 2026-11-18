@@ -80,6 +80,8 @@ in
     # headscale serves from the cluster (network/headscale.nix); its volume holds
     # uplink's state, copied at the cutover (2026-11-18).
     settings.kubernetes.services.network.headscale.live = true;
+    # attic serves from the cluster (dev/attic.nix); uplink's atticd is gone.
+    settings.kubernetes.services.dev.attic.live = true;
 
     # RomM initial full-library scan: the ~100k-ROM first pass far exceeds RomM's
     # 4h default scan window, so give the scan job a 14-day timeout and raise the

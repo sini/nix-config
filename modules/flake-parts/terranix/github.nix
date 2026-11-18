@@ -1,7 +1,7 @@
 # Terranix: GitHub repository settings as code, applied with OpenTofu. A separate
 # workspace and state from DNS and UniFi (./terranix.nix, ./unifi.nix).
 #
-# The repos whose CI pushes to the attic `ci` cache (services/nix/attic.nix) get
+# The repos whose CI pushes to the attic `ci` cache (kubernetes/services/dev/attic.nix) get
 # the ATTIC_TOKEN Actions secret and the ATTIC_PUBLIC_KEY Actions variable. The
 # secret's value is the agenix `attic-ci-push-token`, decrypted at apply time, so
 # it exists only in agenix and in this workspace's encrypted state, never in a

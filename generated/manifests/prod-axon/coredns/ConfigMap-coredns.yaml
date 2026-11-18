@@ -10,7 +10,7 @@ data:
         hosts {
             10.11.0.1 alertmanager.json64.dev
             10.11.0.1 argocd.zeroday.run
-            10.10.10.1 attic.json64.dev
+            10.11.0.1 attic.json64.dev
             10.11.0.1 bazarr.json64.dev
             10.11.0.1 chat.json64.dev
             10.11.0.1 dash.json64.dev

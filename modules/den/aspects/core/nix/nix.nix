@@ -63,7 +63,7 @@
               "https://cache.nixos.org/"
               "https://nix-community.cachix.org"
               "https://numtide.cachix.org"
-              # What our CI builds (services/nix/attic.nix): public-read.
+              # What our CI builds (kubernetes/services/dev/attic.nix): public-read.
               "https://attic.json64.dev/ci"
             ];
 
