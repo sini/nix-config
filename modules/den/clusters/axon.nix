@@ -77,6 +77,9 @@ in
     # carry cluster data-plane traffic. See
     # modules/den/aspects/kubernetes/services/network/cilium/settings.nix.
     settings.kubernetes.services.network.cilium.devices = "enp+";
+    # headscale serves from the cluster (network/headscale.nix); its volume holds
+    # uplink's state, copied at the cutover (2026-11-18).
+    settings.kubernetes.services.network.headscale.live = true;
 
     # RomM initial full-library scan: the ~100k-ROM first pass far exceeds RomM's
     # 4h default scan window, so give the scan job a 14-day timeout and raise the
@@ -257,7 +260,7 @@ in
       services.network.blocky-ui
       # The resolver's replicas behind the blocky LB (docs/dns-resolver.md §2.7).
       services.network.blocky
-      # The tailnet control plane (network/headscale.nix); off until the cutover.
+      # The tailnet control plane (network/headscale.nix).
       services.network.headscale
       services.media.base
       services.media.media-pg

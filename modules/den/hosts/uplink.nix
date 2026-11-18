@@ -77,7 +77,6 @@
       roles.nix-builder
       services.monitoring.alertmanager
       services.bgp.hub
-      services.networking.headscale
       services.networking.blocky
       services.security.acme
       dns-state-passphrase

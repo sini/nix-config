@@ -424,26 +424,28 @@ in
         inherit (lib.trivial) throwIfNot;
         inherit (lib) isAttrs isString;
         inherit (secret) settings;
-        ssh = "${pkgs.openssh}/bin/ssh -o StrictHostKeyChecking=accept-new root@${escapeShellArg settings.headscaleHost}";
+        # headscale's CLI inside its pod (kubernetes/services/network/headscale.nix),
+        # over the caller's kubeconfig, as synapse-bot-token does.
+        hs = "${pkgs.kubectl}/bin/kubectl -n ${escapeShellArg settings.namespace} exec ${escapeShellArg settings.workload} --";
         jq = "${pkgs.jq}/bin/jq";
         user = escapeShellArg settings.user;
       in
       throwIfNot (isAttrs settings) "Secret '${name}' must have a `settings` attrset." throwIfNot
-        (isString settings.headscaleHost)
-        "Secret '${name}' is missing a `headscaleHost` string."
+        (isString settings.namespace && isString settings.workload)
+        "Secret '${name}' is missing a `namespace` or `workload` string."
         throwIfNot
         (isString settings.user)
         "Secret '${name}' is missing a `user` string."
         ''
           set -euo pipefail
 
-          if ! ${ssh} headscale users list -o json | ${jq} -e --arg u ${user} '.[] | select(.name == $u)' >/dev/null 2>&1; then
-            ${ssh} headscale users create ${user} >&2
+          if ! ${hs} headscale users list -o json | ${jq} -e --arg u ${user} '.[] | select(.name == $u)' >/dev/null 2>&1; then
+            ${hs} headscale users create ${user} >&2
           fi
 
-          user_id=$(${ssh} headscale users list -o json | ${jq} -r --arg u ${user} '.[] | select(.name == $u) | .id')
+          user_id=$(${hs} headscale users list -o json | ${jq} -r --arg u ${user} '.[] | select(.name == $u) | .id')
 
-          ${ssh} headscale preauthkeys create --user "$user_id" --reusable --expiration 99y
+          ${hs} headscale preauthkeys create --user "$user_id" --reusable --expiration 99y
         '';
 
     # An access token for a non-admin Synapse user, registered inside the
