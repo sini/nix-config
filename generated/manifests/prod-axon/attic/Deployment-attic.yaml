@@ -11,7 +11,7 @@ spec:
   template:
     metadata:
       annotations:
-        json64.dev/config-hash: 29a108efbe4953820ee4ceda34bf081e12525682a5491b641584761766387e7d
+        json64.dev/config-hash: e4d57d655fa37099c2bac2ff5af12c83df8fc42ed6d1db3bcb618033517912a7
       labels:
         app.kubernetes.io/name: attic
     spec:

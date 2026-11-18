@@ -113,6 +113,8 @@ in
           listen = "[::]:${toString port}";
           allowed-hosts = [ domain ];
           api-endpoint = "https://${domain}/";
+          # Required as a table; its url comes from ATTIC_SERVER_DATABASE_URL.
+          database = { };
           storage = {
             type = "s3";
             region = "garage";
