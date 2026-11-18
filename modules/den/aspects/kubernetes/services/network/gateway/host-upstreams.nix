@@ -153,6 +153,21 @@ let
           );
           rules = [
             {
+              # The backend sees exactly the client envoy detected (Cloudflare's
+              # forwarded client from its ranges only, else the peer), never a
+              # client-supplied X-Forwarded-For: envoy appends to that header, and a
+              # backend taking its leftmost entry would trust a forged one.
+              filters = [
+                {
+                  type = "RequestHeaderModifier";
+                  requestHeaderModifier.set = [
+                    {
+                      name = "X-Forwarded-For";
+                      value = "%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%";
+                    }
+                  ];
+                }
+              ];
               backendRefs = map (u: {
                 group = "gateway.envoyproxy.io";
                 kind = "Backend";

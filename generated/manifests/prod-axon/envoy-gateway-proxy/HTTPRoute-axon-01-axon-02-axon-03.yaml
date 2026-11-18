@@ -26,3 +26,9 @@ spec:
           name: axon-03-kanidm
           port: 8443
           weight: 1
+      filters:
+        - requestHeaderModifier:
+            set:
+              - name: X-Forwarded-For
+                value: '%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%'
+          type: RequestHeaderModifier
