@@ -33,7 +33,7 @@ spec:
     rootDomain: .s3.json64.dev
   storage:
     data:
-      size: 150Gi
+      size: 50Gi
       storageClassName: longhorn-single
     metadata:
       size: 5Gi
