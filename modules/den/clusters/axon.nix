@@ -64,6 +64,9 @@ in
       # The new connector for the gateway's own authorization server, created by the
       # owner 2026-11-18 (cutover §2.10 step 2); its exact per-connector redirect.
       authorizationServer.redirectUris = [ "https://chatgpt.com/connector/oauth/44LD9UTXVNyp" ];
+      # Events on the local grant (cutover §2.10 step 6), after cutover-events committed
+      # its chatgpt -> chatgpt-as marker.
+      authorizationServer.eventsOnLocalGrant = true;
     };
 
     # Pin Cilium's datapath devices to the physical NICs: enp2s0 (WAN

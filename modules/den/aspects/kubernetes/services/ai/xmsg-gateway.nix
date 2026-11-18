@@ -280,6 +280,17 @@ in
         '';
       };
 
+      authorizationServer.eventsOnLocalGrant = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = ''
+          Move Events to the local grant (`events.grant_id` = the AS's grant), cutover
+          §2.10 step 6. Set only after `cutover-events --from <old> --to <local>` has
+          committed its marker: startup refuses an `events.grant_id` other than the
+          latest marker's `to_grant`. Requires the authorization server.
+        '';
+      };
+
       tunnel = {
         enable = lib.mkOption {
           type = lib.types.bool;
@@ -458,6 +469,13 @@ in
         # connector's redirect URIs are set: both profiles, Kanidm hidden.
         asRedirectUris = (cfg.authorizationServer or { }).redirectUris or null;
         asEnabled = asRedirectUris != null;
+        eventsGrant =
+          if (cfg.authorizationServer or { }).eventsOnLocalGrant or false then
+            assert lib.assertMsg asEnabled
+              "xmsg-gateway: authorizationServer.eventsOnLocalGrant needs authorizationServer.redirectUris";
+            localGrantId
+          else
+            grantId;
         # The local grant's enrollment document. The AS issuer is the gateway's public
         # origin, distinct from the resource <origin>/mcp (§2.8 `issuer != R`).
         localBinding = {
@@ -550,11 +568,11 @@ in
               max_reservations = 1000;
               max_retained_bytes = 67108864;
             };
-            # Events stays on the OLD grant until the drain and cutover-events (§2.10
-            # steps 4-6).
+            # Events moves to the local grant only after cutover-events (§2.10 steps
+            # 5-6); until then it stays on the OLD grant.
             events = {
               key_file = eventsKey;
-              grant_id = grantId;
+              grant_id = eventsGrant;
               dispatch_timeout_ms = timeouts.dispatch;
             };
           }
