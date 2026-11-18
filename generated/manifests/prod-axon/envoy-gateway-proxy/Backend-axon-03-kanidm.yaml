@@ -1,0 +1,13 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: Backend
+metadata:
+  name: axon-03-kanidm
+  namespace: gateways
+spec:
+  endpoints:
+    - ip:
+        address: 10.10.10.4
+        port: 8443
+  tls:
+    sni: idm.json64.dev
+    wellKnownCACertificates: System

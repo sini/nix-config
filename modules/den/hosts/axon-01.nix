@@ -52,9 +52,8 @@ in
       disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-NVMe_CA6-8D1024_00230650035M";
       disk.xfs-disk-longhorn.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_S73WNJ0W310395L";
       services.security.kanidm-server.replication = true;
-      # The kanidm writer (provisioning, migrations, mail), and the gateway's active
-      # backend for it. A writer never refreshes from a partner.
-      services.security.kanidm-ingress.fallback = false;
+      # The kanidm writer (provisioning, migrations, mail), routed by the gateway like
+      # every replica. A writer never refreshes from a partner.
       # Credential reset / account recovery mail, through the cluster's Postfix
       # relay to Proton (kubernetes/services/communication/smtp-relay.nix).
       services.security.kanidm.mailSender = {

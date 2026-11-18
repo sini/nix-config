@@ -1,0 +1,19 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  name: allow-gateway-axon-03-kanidm-egress
+  namespace: gateways
+spec:
+  egress:
+    - toEntities:
+        - host
+        - remote-node
+      toPorts:
+        - ports:
+            - port: "8443"
+              protocol: TCP
+  endpointSelector:
+    matchLabels:
+      gateway.networking.k8s.io/gateway-name: default-gateway

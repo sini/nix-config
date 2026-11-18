@@ -8,3 +8,6 @@ spec:
     - ip:
         address: 10.10.10.2
         port: 8443
+  tls:
+    sni: idm.json64.dev
+    wellKnownCACertificates: System

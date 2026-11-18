@@ -1,5 +1,8 @@
-# Public names served by static hosts' nginx, routed by the default gateway:
-# one TLS-passthrough listener per name, one envoy Backend + TLSRoute per host.
+# Public names served by static hosts, routed by the default gateway. A
+# "tls-passthrough" upstream (a host's nginx) gets one TLS-passthrough listener per
+# name and a TLSRoute. An "https" upstream is terminated on the gateway's HTTPS
+# listener and re-encrypted to the backend (Backend tls): envoy then sees HTTP, so it
+# health-checks a path and can pin a client to one replica with a cookie.
 # Consumes the gateway-upstreams and served-domains quirks (joined by host);
 # a name in the upstream's `exclude` gets no listener and no route.
 #   nix build .#checks.x86_64-linux.gateway-host-upstreams
@@ -44,6 +47,11 @@ let
         };
       };
       perHost = us: f: lib.listToAttrs (map (u: lib.nameValuePair (nameOf u) (f u)) us);
+      isHttps = u: (u.protocol or "tls-passthrough") == "https";
+      # schema/cluster.nix resourceNameOf: the HTTPS listener of a name's zone.
+      httpsSection =
+        d:
+        "${lib.concatStringsSep "-" (lib.reverseList (lib.take 2 (lib.reverseList (lib.splitString "." d))))}-https";
       # A name served by several hosts (replicas) gets one listener and one route
       # whose backends are all of them: names are grouped by the hosts serving
       # them, one route per group. A one-host group keeps the host's own name.
@@ -59,6 +67,10 @@ let
           "gateway-upstream: the hosts serving ${d} (${
             lib.concatMapStringsSep ", " (u: u.host) us
           }) disagree on proxyProtocol, which is set per route";
+        assert lib.assertMsg (lib.length (lib.unique (map isHttps us)) == 1)
+          "gateway-upstream: the hosts serving ${d} (${
+            lib.concatMapStringsSep ", " (u: u.host) us
+          }) disagree on protocol, which is set per route";
         assert lib.assertMsg (lib.any (u: !(u.fallback or false)) us)
           "gateway-upstream: every host serving ${d} (${
             lib.concatMapStringsSep ", " (u: u.host) us
@@ -67,13 +79,19 @@ let
         // {
           ${name} = {
             upstreams = us;
+            https = isHttps (lib.head us);
             hostnames = (acc.${name}.hostnames or [ ]) ++ [ d ];
           };
         }
       ) { } names;
+      passRoutes = lib.filterAttrs (_: r: !r.https) routes;
+      httpsRoutesOf = lib.filterAttrs (_: r: r.https) routes;
     in
     {
-      gateways.default-gateway.spec.listeners = map listenerFor names;
+      # Only passthrough names need a listener; https names use the zone's HTTPS one.
+      gateways.default-gateway.spec.listeners = map listenerFor (
+        lib.concatMap (r: r.hostnames) (lib.attrValues passRoutes)
+      );
 
       # A fallback backend takes traffic only while every non-fallback one of its
       # route is unhealthy: active/passive, for servers whose sessions are local.
@@ -87,7 +105,15 @@ let
             }
           ];
         }
-        // lib.optionalAttrs (u.fallback or false) { fallback = true; };
+        // lib.optionalAttrs (u.fallback or false) { fallback = true; }
+        # Re-encrypted to the backend, verified against the system CAs by the name it
+        # serves.
+        // lib.optionalAttrs (isHttps u) {
+          tls = {
+            sni = lib.head (domainsOf u);
+            wellKnownCACertificates = "System";
+          };
+        };
       });
 
       tlsRoutes = lib.mapAttrs (_: r: {
@@ -114,7 +140,30 @@ let
             }
           ];
         };
-      }) routes;
+      }) passRoutes;
+
+      httpRoutes = lib.mapAttrs (_: r: {
+        spec = {
+          inherit (r) hostnames;
+          parentRefs = lib.unique (
+            map (d: {
+              name = "default-gateway";
+              sectionName = httpsSection d;
+            }) r.hostnames
+          );
+          rules = [
+            {
+              backendRefs = map (u: {
+                group = "gateway.envoyproxy.io";
+                kind = "Backend";
+                name = nameOf u;
+                inherit (u) port;
+                weight = 1;
+              }) r.upstreams;
+            }
+          ];
+        };
+      }) httpsRoutesOf;
 
       # allow-gateway-world-egress admits world:443 only; each upstream's own
       # address:port (e.g. an nginx PROXY listener) is allowed explicitly.
@@ -163,43 +212,104 @@ let
       # header logs an error per probe (kanidm, measured 2026-11-18: SYN, FIN, no
       # bytes). Passive ejection counts as unhealthy for the fallback priority.
       backendTrafficPolicies =
-        lib.mapAttrs
-          (name: r: {
+        lib.mapAttrs (
+          name: r:
+          let
+            u = lib.head r.upstreams;
+          in
+          {
             spec = {
               targetRefs = [
                 {
                   group = "gateway.networking.k8s.io";
-                  kind = "TLSRoute";
+                  kind = "HTTPRoute";
                   inherit name;
                 }
               ];
-            }
-            // lib.optionalAttrs (lib.head r.upstreams).proxyProtocol { proxyProtocol.version = "V2"; }
-            // lib.optionalAttrs (lib.length r.upstreams > 1) {
-              healthCheck =
-                lib.optionalAttrs (!(lib.head r.upstreams).proxyProtocol) {
-                  active = {
-                    type = "TCP";
-                    # Required with type TCP (CRD validation); empty: connect only.
-                    tcp = { };
-                    interval = "5s";
-                    timeout = "2s";
-                    unhealthyThreshold = 2;
-                    healthyThreshold = 2;
+              healthCheck = {
+                active = {
+                  type = "HTTP";
+                  http = {
+                    path = u.healthPath or "/";
+                    hostname = lib.head r.hostnames;
+                    expectedStatuses = [ 200 ];
                   };
-                }
-                // {
-                  passive = {
-                    splitExternalLocalOriginErrors = true;
-                    consecutiveLocalOriginFailures = 2;
-                    interval = "5s";
-                    baseEjectionTime = "30s";
-                    maxEjectionPercent = 100;
+                  interval = "5s";
+                  timeout = "2s";
+                  unhealthyThreshold = 2;
+                  healthyThreshold = 2;
+                };
+                passive = {
+                  splitExternalLocalOriginErrors = true;
+                  consecutiveLocalOriginFailures = 2;
+                  interval = "5s";
+                  baseEjectionTime = "30s";
+                  maxEjectionPercent = 100;
+                };
+              };
+            }
+            # One client, one replica, for servers that keep a flow's state locally.
+            // lib.optionalAttrs (u ? affinityCookie) {
+              loadBalancer = {
+                type = "ConsistentHash";
+                consistentHash = {
+                  type = "Cookie";
+                  cookie = {
+                    name = u.affinityCookie;
+                    ttl = "8h";
+                    attributes = {
+                      Secure = "";
+                      HttpOnly = "";
+                      SameSite = "Lax";
+                    };
                   };
                 };
+              };
             };
-          })
-          (lib.filterAttrs (_: r: (lib.head r.upstreams).proxyProtocol || lib.length r.upstreams > 1) routes);
+          }
+        ) httpsRoutesOf
+        //
+          lib.mapAttrs
+            (name: r: {
+              spec = {
+                targetRefs = [
+                  {
+                    group = "gateway.networking.k8s.io";
+                    kind = "TLSRoute";
+                    inherit name;
+                  }
+                ];
+              }
+              // lib.optionalAttrs (lib.head r.upstreams).proxyProtocol { proxyProtocol.version = "V2"; }
+              // lib.optionalAttrs (lib.length r.upstreams > 1) {
+                healthCheck =
+                  lib.optionalAttrs (!(lib.head r.upstreams).proxyProtocol) {
+                    active = {
+                      type = "TCP";
+                      # Required with type TCP (CRD validation); empty: connect only.
+                      tcp = { };
+                      interval = "5s";
+                      timeout = "2s";
+                      unhealthyThreshold = 2;
+                      healthyThreshold = 2;
+                    };
+                  }
+                  // {
+                    passive = {
+                      splitExternalLocalOriginErrors = true;
+                      consecutiveLocalOriginFailures = 2;
+                      interval = "5s";
+                      baseEjectionTime = "30s";
+                      maxEjectionPercent = 100;
+                    };
+                  };
+              };
+            })
+            (
+              lib.filterAttrs (
+                _: r: (lib.head r.upstreams).proxyProtocol || lib.length r.upstreams > 1
+              ) passRoutes
+            );
     };
 in
 {
@@ -362,7 +472,87 @@ in
           )
         ];
       };
+      # Two https replicas of i.x beside a passthrough host: no listener, one
+      # HTTPRoute on the zone's HTTPS listener, re-encrypting Backends, an HTTP check
+      # and cookie affinity.
+      terminated =
+        let
+          replica = host: address: {
+            environment = "e";
+            inherit host address;
+            name = "${host}-kanidm";
+            port = 8443;
+            proxyProtocol = false;
+            protocol = "https";
+            exclude = [ ];
+            domains = [ "i.x" ];
+            healthPath = "/status";
+            affinityCookie = "i-backend";
+            node = true;
+          };
+        in
+        render {
+          environment = "e";
+          gateway-upstreams = [
+            (upstream "e" [ ])
+            (replica "k1" "10.0.0.5")
+            (replica "k2" "10.0.0.6")
+          ];
+          served-domains = [ (served "e" // { domains = [ "a.x" ]; }) ];
+        };
       failures = lib.runTests {
+        testHttpsNoListener = {
+          expr = map (l: l.hostname) terminated.gateways.default-gateway.spec.listeners;
+          expected = [ "a.x" ];
+        };
+        testHttpsRoute = {
+          expr = lib.mapAttrs (_: r: {
+            inherit (r.spec) hostnames parentRefs;
+            backends = map (b: b.name) (builtins.head r.spec.rules).backendRefs;
+          }) terminated.httpRoutes;
+          expected.k1-k2 = {
+            hostnames = [ "i.x" ];
+            parentRefs = [
+              {
+                name = "default-gateway";
+                sectionName = "i-x-https";
+              }
+            ];
+            backends = [
+              "k1-kanidm"
+              "k2-kanidm"
+            ];
+          };
+        };
+        testHttpsBackendTls = {
+          expr = terminated.backends.k1-kanidm.spec.tls;
+          expected = {
+            sni = "i.x";
+            wellKnownCACertificates = "System";
+          };
+        };
+        testHttpsPolicy = {
+          expr =
+            let
+              sp = terminated.backendTrafficPolicies.k1-k2.spec;
+            in
+            [
+              (builtins.head sp.targetRefs).kind
+              sp.healthCheck.active.http.path
+              sp.loadBalancer.consistentHash.cookie.name
+              (sp ? proxyProtocol)
+            ];
+          expected = [
+            "HTTPRoute"
+            "/status"
+            "i-backend"
+            false
+          ];
+        };
+        testPassthroughUnchangedBesideHttps = {
+          expr = lib.attrNames terminated.tlsRoutes;
+          expected = [ "h-nginx" ];
+        };
         testSharedNameOneListener = {
           expr = map (l: l.hostname) shared.gateways.default-gateway.spec.listeners;
           expected = [

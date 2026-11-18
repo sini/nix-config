@@ -1,0 +1,39 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: BackendTrafficPolicy
+metadata:
+  name: axon-01-axon-02-axon-03
+  namespace: gateways
+spec:
+  healthCheck:
+    active:
+      healthyThreshold: 2
+      http:
+        expectedStatuses:
+          - 200
+        hostname: idm.json64.dev
+        path: /status
+      interval: 5s
+      timeout: 2s
+      type: HTTP
+      unhealthyThreshold: 2
+    passive:
+      baseEjectionTime: 30s
+      consecutiveLocalOriginFailures: 2
+      interval: 5s
+      maxEjectionPercent: 100
+      splitExternalLocalOriginErrors: true
+  loadBalancer:
+    consistentHash:
+      cookie:
+        attributes:
+          HttpOnly: ""
+          SameSite: Lax
+          Secure: ""
+        name: idm-backend
+        ttl: 8h
+      type: Cookie
+    type: ConsistentHash
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: axon-01-axon-02-axon-03
