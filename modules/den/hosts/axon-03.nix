@@ -49,6 +49,7 @@ in
       };
       disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-KINGSTON_OM8PGP41024Q-A0_50026B738300CCCC";
       disk.xfs-disk-longhorn.device_id = "/dev/disk/by-id/nvme-Force_MP600_1925823000012856500E";
+      services.security.kanidm-server.replication = true;
       core.impermanence = {
         wipeRootOnBoot = true;
         wipeHomeOnBoot = true;
@@ -74,6 +75,8 @@ in
       hardware.cpu.amd
       hardware.gpu.amd
       services.networking.thunderbolt-mesh-of
+      # A kanidm replica (docs/uplink-maintenance-plan.md, Tier 0 item 1).
+      services.security.kanidm-server
     ];
   };
 }

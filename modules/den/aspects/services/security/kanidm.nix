@@ -676,7 +676,10 @@ let
 in
 {
   den.aspects.services.security.kanidm = {
-    includes = [ den.aspects.services.networking.nginx ];
+    includes = [
+      den.aspects.services.networking.nginx
+      den.aspects.services.security.kanidm-server
+    ];
 
     settings = {
       xmsgGateway.redirectUris = lib.mkOption {
@@ -832,32 +835,8 @@ in
             }
           ];
           services = {
+            # The server itself is services.security.kanidm-server.
             kanidm = {
-              # Carries two OAuth2 token-lifetime patches (see the .patch header):
-              # (B) 8h access tokens so the stateless Envoy oauth2 filter rarely
-              # refreshes, and (A) a refresh-token reuse grace so the rare concurrent
-              # refresh fanned across the gateway replicas isn't misdetected as reuse
-              # and doesn't destroy the session. Neither is configurable in kanidm
-              # (proven from source). Only .rs files change, so vendored cargoDeps
-              # stay valid; --replace would silently no-op on a bump, so a context
-              # diff (fails loudly if the lines move) is used instead.
-              package = pkgs.kanidm_1_11.withSecretProvisioning.overrideAttrs (old: {
-                patches = (old.patches or [ ]) ++ [ ./kanidm-oauth2-token-tuning.patch ];
-              });
-
-              server = {
-                enable = true;
-                settings = {
-                  inherit (environment) domain;
-                  origin = "https://${domain}";
-                  bindaddress = "127.0.0.1:8443";
-                  ldapbindaddress = "127.0.0.1:3636";
-
-                  tls_chain = "${config.security.acme.certs.${topDomain}.directory}/fullchain.pem";
-                  tls_key = "${config.security.acme.certs.${topDomain}.directory}/key.pem";
-                };
-              };
-
               client = {
                 enable = true;
                 settings = {
@@ -930,11 +909,6 @@ in
                 '';
               };
             };
-          };
-
-          # Ensure kanidm user can read secret files and certificates
-          systemd.services.kanidm.serviceConfig = {
-            SupplementaryGroups = [ "keys" ];
           };
 
           users.users.kanidm.extraGroups = [
@@ -1175,16 +1149,9 @@ in
     persist =
       { host, ... }:
       {
-        directories = [
-          {
-            directory = "/var/lib/kanidm";
-            user = "kanidm";
-            group = "kanidm";
-            mode = "0700";
-          }
-        ]
+        # kanidmd's database is persisted by services.security.kanidm-server.
         # The minted mail-sender token (kanidm-mail-sender-bootstrap).
-        ++ lib.optional (host.settings.services.security.kanidm.mailSender != null) {
+        directories = lib.optional (host.settings.services.security.kanidm.mailSender != null) {
           directory = "/var/lib/kanidm-mail-sender";
           user = "root";
           group = "root";
