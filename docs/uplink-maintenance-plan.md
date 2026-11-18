@@ -165,10 +165,17 @@ tiers), so it's the weaker candidate.
        lost read access to the wildcard certificate with the writer's nginx
        group (fixed e9803112), and a browser-coalescing 404 through uplink's
        nginx (421 since 4adcb80c).
-     - Open: retire uplink's replica (drop it from the mesh, stop its kanidmd).
-       The gateway's TCP health checks log "Unable to process proxy header" on
-       every routed replica (about 36 a minute, no PROXY header on a bare
-       connect): noise, worth a quieter check.
+     - DONE (2026-11-18): uplink's replica retired (0992bf89). The axons
+       replicate as a three-node mesh; uplink runs no kanidm (its
+       /var/lib/kanidm stays on persist, unused). headscale on uplink reaches
+       idm at the gateway VIP and started with its OIDC check passing.
+     - DONE (2026-11-18): the PROXY-header log noise. Envoy's TCP health check
+       closes the moment it connects (a capture showed SYN, FIN and no bytes),
+       so it could never send a PROXY header; PROXY routes are now checked
+       passively only (dea41449), and kanidm logs no header errors.
+     - Open: nothing probes kanidm's /status. Under TLS passthrough envoy can
+       only see TCP; checking /status needs the gateway to terminate and
+       re-encrypt idm (BackendTLSPolicy), or an out-of-band probe for alerting.
 2. **headscale: move into the cluster, on a CNPG database (owner, 2026-11-17).**
    - headscale is the control plane only (keys, peer lists, endpoints). Peers
      talk to each other directly over WireGuard, so the LAN keeps its 10 Gbps;
