@@ -1,0 +1,111 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  annotations:
+    cert-manager.io/inject-ca-from: garage/garage-operator-webhook-cert
+  labels:
+    app.kubernetes.io/instance: garage-operator
+    app.kubernetes.io/name: garage-operator
+    control-plane: controller-manager
+  name: garage-operator-mutating
+webhooks:
+  - admissionReviewVersions:
+      - v1
+    clientConfig:
+      service:
+        name: garage-operator-webhook
+        namespace: garage
+        path: /mutate-garage-rajsingh-info-v1beta1-garagebucket
+    failurePolicy: Fail
+    name: mgaragebucket.kb.io
+    rules:
+      - apiGroups:
+          - garage.rajsingh.info
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - garagebuckets
+    sideEffects: None
+  - admissionReviewVersions:
+      - v1
+    clientConfig:
+      service:
+        name: garage-operator-webhook
+        namespace: garage
+        path: /mutate-garage-rajsingh-info-v1beta2-garagecluster
+    failurePolicy: Fail
+    name: mgaragecluster.kb.io
+    rules:
+      - apiGroups:
+          - garage.rajsingh.info
+        apiVersions:
+          - v1beta2
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - garageclusters
+    sideEffects: None
+  - admissionReviewVersions:
+      - v1
+    clientConfig:
+      service:
+        name: garage-operator-webhook
+        namespace: garage
+        path: /mutate-garage-rajsingh-info-v1beta1-garagecluster
+    failurePolicy: Fail
+    name: mgarageclusterv1beta1.kb.io
+    rules:
+      - apiGroups:
+          - garage.rajsingh.info
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - garageclusters
+    sideEffects: None
+  - admissionReviewVersions:
+      - v1
+    clientConfig:
+      service:
+        name: garage-operator-webhook
+        namespace: garage
+        path: /mutate-garage-rajsingh-info-v1beta1-garagekey
+    failurePolicy: Fail
+    name: mgaragekey.kb.io
+    rules:
+      - apiGroups:
+          - garage.rajsingh.info
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - garagekeys
+    sideEffects: None
+  - admissionReviewVersions:
+      - v1
+    clientConfig:
+      service:
+        name: garage-operator-webhook
+        namespace: garage
+        path: /mutate-garage-rajsingh-info-v1beta1-garagenode
+    failurePolicy: Fail
+    name: mgaragenode.kb.io
+    rules:
+      - apiGroups:
+          - garage.rajsingh.info
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - garagenodes
+    sideEffects: None

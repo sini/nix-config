@@ -29,6 +29,7 @@ spec:
             - --metrics-bind-address=:8443
             - --leader-elect=true
             - --health-probe-bind-address=:8081
+            - --webhook-cert-path=/tmp/k8s-webhook-server/serving-certs
           command:
             - /manager
           env:
@@ -56,6 +57,9 @@ spec:
             - containerPort: 8081
               name: health
               protocol: TCP
+            - containerPort: 9443
+              name: webhook
+              protocol: TCP
           readinessProbe:
             httpGet:
               path: /readyz
@@ -75,9 +79,17 @@ spec:
               drop:
                 - ALL
             readOnlyRootFilesystem: true
+          volumeMounts:
+            - mountPath: /tmp/k8s-webhook-server/serving-certs
+              name: webhook-certs
+              readOnly: true
       securityContext:
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
       serviceAccountName: garage-operator
       terminationGracePeriodSeconds: 10
+      volumes:
+        - name: webhook-certs
+          secret:
+            secretName: garage-operator-webhook-cert
