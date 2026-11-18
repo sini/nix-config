@@ -124,7 +124,13 @@ in
             paths = [ ];
             auto_update_enabled = true;
             update_frequency = "24h";
-            server.private_key_path = "${stateDir}/derp_server_private.key";
+            server = {
+              private_key_path = "${stateDir}/derp_server_private.key";
+            }
+            # The WAN address in the DERP map, so clients dial it for STUN and DERP
+            # instead of resolving the name: on the LAN that name is the gateway VIP,
+            # which carries HTTPS but not STUN's UDP (the hairpin rules cover the LAN).
+            // lib.optionalAttrs (environment.dns.publicIPv4 != null) { ipv4 = environment.dns.publicIPv4; };
           };
         };
         hardened = {
