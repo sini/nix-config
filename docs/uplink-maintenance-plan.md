@@ -173,9 +173,14 @@ tiers), so it's the weaker candidate.
        closes the moment it connects (a capture showed SYN, FIN and no bytes),
        so it could never send a PROXY header; PROXY routes are now checked
        passively only (dea41449), and kanidm logs no header errors.
-     - Open: nothing probes kanidm's /status. Under TLS passthrough envoy can
-       only see TCP; checking /status needs the gateway to terminate and
-       re-encrypt idm (BackendTLSPolicy), or an out-of-band probe for alerting.
+     - DONE (2026-11-18): the gateway terminates idm and re-encrypts to kanidm
+       (a2f9f88d, owner's option 1). Envoy health-checks /status on all three
+       replicas, and an idm-backend cookie pins a client to one replica (10 of
+       10 pinned requests hit one replica; 10 without spread over three), so all
+       three serve live traffic. kanidm reads the client from X-Forwarded-For.
+       Measured failover: blocking the pinned replica gave 3 failed requests in
+       the first 6 s, then 200 throughout. The switch itself gave intermittent
+       503s for about a minute, until axon-01 and -02 left PROXY mode.
 2. **headscale: move into the cluster, on a CNPG database (owner, 2026-11-17).**
    - headscale is the control plane only (keys, peer lists, endpoints). Peers
      talk to each other directly over WireGuard, so the LAN keeps its 10 Gbps;
