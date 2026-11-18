@@ -864,4 +864,8 @@ spec:
                 path: events-key
               - key: lookup-secret
                 path: lookup-secret
+              - key: as-client-secret
+                path: as-client-secret
+              - key: liveness-token
+                path: liveness-token
             secretName: xmsg-gateway

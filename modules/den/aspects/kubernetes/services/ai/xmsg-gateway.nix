@@ -1115,16 +1115,22 @@ in
                             name = "secrets";
                             secret = {
                               secretName = name;
-                              items = [
-                                {
-                                  key = "events-key";
-                                  path = "events-key";
-                                }
-                                {
-                                  key = "lookup-secret";
-                                  path = "lookup-secret";
-                                }
-                              ];
+                              items =
+                                map
+                                  (key: {
+                                    inherit key;
+                                    path = key;
+                                  })
+                                  (
+                                    [
+                                      "events-key"
+                                      "lookup-secret"
+                                    ]
+                                    ++ lib.optionals asEnabled [
+                                      "as-client-secret"
+                                      "liveness-token"
+                                    ]
+                                  );
                               defaultMode = 288;
                             };
                           }
