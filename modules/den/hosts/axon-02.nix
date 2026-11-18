@@ -50,8 +50,8 @@ in
       disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-KINGSTON_OM8PGP41024Q-A0_50026B738300BDD8";
       disk.xfs-disk-longhorn.device_id = "/dev/disk/by-id/nvme-Force_MP600_192482300001285610CF";
       services.security.kanidm-server.replication = true;
-      # Joins from uplink, the primary; it must never refresh from a replica.
-      services.security.kanidm-server.refreshFrom = "uplink";
+      # Refreshes from axon-01, the writer, if its database ever diverges.
+      services.security.kanidm-server.refreshFrom = "axon-01";
       core.impermanence = {
         wipeRootOnBoot = true;
         wipeHomeOnBoot = true;
@@ -77,8 +77,9 @@ in
       hardware.cpu.amd
       hardware.gpu.amd
       services.networking.thunderbolt-mesh-of
-      # A kanidm replica (docs/uplink-maintenance-plan.md, Tier 0 item 1).
-      services.security.kanidm-server
+      # A kanidm replica, and the gateway's fallback backend for it
+      # (docs/uplink-maintenance-plan.md, Tier 0 item 1).
+      services.security.kanidm-ingress
     ];
   };
 }

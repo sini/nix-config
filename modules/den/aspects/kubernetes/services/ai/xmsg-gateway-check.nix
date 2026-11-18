@@ -25,7 +25,7 @@ let
       enable = true;
       hub = "cortex";
       extraHubs = [ "bitstream" ];
-      kanidmHost = "uplink";
+      kanidmHost = "axon-01";
       # A stand-in: the real value is measured at cutover.
       subject = "00000000-0000-4000-8000-000000000000";
       inherit tunnel;

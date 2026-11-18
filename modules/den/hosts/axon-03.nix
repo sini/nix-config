@@ -50,8 +50,8 @@ in
       disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-KINGSTON_OM8PGP41024Q-A0_50026B738300CCCC";
       disk.xfs-disk-longhorn.device_id = "/dev/disk/by-id/nvme-Force_MP600_1925823000012856500E";
       services.security.kanidm-server.replication = true;
-      # Joins from uplink, the primary; it must never refresh from a replica.
-      services.security.kanidm-server.refreshFrom = "uplink";
+      # Refreshes from axon-01, the writer, if its database ever diverges.
+      services.security.kanidm-server.refreshFrom = "axon-01";
       core.impermanence = {
         wipeRootOnBoot = true;
         wipeHomeOnBoot = true;

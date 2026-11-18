@@ -677,9 +677,11 @@ let
 in
 {
   den.aspects.services.security.kanidm = {
+    # The writer serves through the cluster gateway like any replica
+    # (services/security/kanidm-ingress.nix), so it needs no nginx of its own.
     includes = [
-      den.aspects.services.networking.nginx
       den.aspects.services.security.kanidm-server
+      den.aspects.services.security.kanidm-ingress
     ];
 
     settings = {
@@ -755,7 +757,6 @@ in
       }:
       let
         domain = environment.getDomainFor "kanidm";
-        topDomain = environment.domain;
 
         extraJsonFile = pkgs.writeText "kanidm-provision-extra.json" (builtins.toJSON extraJson);
 
@@ -908,32 +909,9 @@ in
               };
             };
 
-            nginx.virtualHosts."${domain}" = {
-              forceSSL = true;
-              useACMEHost = topDomain;
-              locations."/" = {
-                proxyPass = "https://127.0.0.1:8443";
-                proxyWebsockets = true;
-                extraConfig = ''
-                  proxy_set_header Host $host;
-                  proxy_set_header X-Real-IP $remote_addr;
-                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                  proxy_set_header X-Forwarded-Proto $scheme;
-
-                  proxy_ssl_server_name on;
-                  proxy_ssl_name $host;
-                  proxy_ssl_verify_depth 2;
-                  proxy_ssl_protocols  TLSv1 TLSv1.1 TLSv1.2;
-                  proxy_ssl_session_reuse off;
-                '';
-              };
-            };
           };
 
-          users.users.kanidm.extraGroups = [
-            config.security.acme.defaults.group
-            config.services.nginx.group
-          ];
+          users.users.kanidm.extraGroups = [ config.security.acme.defaults.group ];
         }
 
         (lib.mkIf (mailSender != null) {

@@ -50,7 +50,7 @@ in
         "uplink-dev"
       ];
       # kanidm's host: the gateway's resource origin and its introspection address.
-      kanidmHost = "uplink";
+      kanidmHost = "axon-01";
       # The OpenAI Secure MCP Tunnel the ChatGPT connector reaches the gateway through (owner
       # approved 2026-11-10). One tunnel id serves one client: the cortex spike is stopped.
       tunnel = {

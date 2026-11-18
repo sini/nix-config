@@ -19,7 +19,8 @@ let
   app = config.flake.nixidyEnvs.x86_64-linux.axon.config.applications.blocky-ui;
   uplink = config.flake.nixosConfigurations.uplink.config;
   domain = config.den.environments.prod.getDomainFor "dns";
-  clients = uplink.services.kanidm.provision.systems.oauth2;
+  # The kanidm writer provisions the OAuth2 clients.
+  clients = config.flake.nixosConfigurations.axon-01.config.services.kanidm.provision.systems.oauth2;
 
   # nixidy's typed resources carry every unset field as null.
   clean =

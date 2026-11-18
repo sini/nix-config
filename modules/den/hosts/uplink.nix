@@ -58,16 +58,8 @@
         username = "infra@json64.dev";
         passwordSecret = "smtp-infra-at-json64-dev.age";
       };
-      # Credential reset / account recovery mail, through the cluster's Postfix
-      # relay to Proton (kubernetes/services/communication/smtp-relay.nix).
-      # The replication primary and writer: no refreshFrom.
+      # A kanidm replica until it retires; the writer is axon-01.
       services.security.kanidm-server.replication = true;
-      services.security.kanidm.mailSender = {
-        relay = "smtp://smtp.json64.dev:587";
-        fromAddress = "infra@json64.dev";
-        replyToAddress = "jason@json64.dev";
-        instanceDisplayName = "json64";
-      };
       # nginx accepts PROXY v2 from the cluster gateway here (kanidm holds
       # 127.0.0.1:8443).
       services.networking.gateway-upstream = {
@@ -95,7 +87,7 @@
       unifi-state-passphrase
       github-state-passphrase
       services.networking.nginx
-      services.security.kanidm
+      services.security.kanidm-server
       services.networking.gateway-upstream
       services.media.jellyfin
       services.web.homepage
