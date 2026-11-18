@@ -136,6 +136,28 @@ tiers), so it's the weaker candidate.
      axon) → envoy backends gain the axons, and LAN DNS points to the VIP → move
      the writer to axon-01 → drop uplink from the partners, the backends and the
      xmsg-gateway list.
+   - Progress (2026-11-17):
+     - DONE: host-upstreams grouping (840c5d2b); replicas on the axons
+       (921d9730); the four-node mesh with uplink as primary (c076198b): every
+       pair replicates, and a group created and deleted on uplink appeared and
+       vanished on every axon.
+     - DONE: the gateway routes idm active/passive (a118f06d, 15d12550): uplink
+       active, axon-01 the fallback. kanidm keeps login sessions in each
+       server's memory (`IdmServer.sessions`), and passthrough gives envoy no
+       cookie, so replicas never share live traffic. Tested: with the gateway's
+       connections to uplink rejected for 30 s, idm answered from axon-01 within
+       about 10 s while uplink's other names were down, then returned to uplink.
+       axon-02 and axon-03 are warm replicas, not routed.
+     - DONE: idm resolves to the gateway VIP (18274d53) for LAN and in-cluster
+       clients, derived from the replica's upstream record.
+     - Incident: the first policy was rejected (a TCP check needs `tcp: {}`), so
+       the route ran without PROXY v2 and idm through the gateway (public
+       sign-in) reset connections for about 6 minutes, until the fix was applied
+       by hand and committed.
+     - Open: the xmsg-gateway still pins uplink's address (`provider_addresses`,
+       a /32 egress), so it doesn't fail over yet; then the writer move and
+       uplink's removal. uplink's pre-pairing ZFS snapshot is
+       `zroot/local/persist@pre-kanidm-replication-20261117`.
 2. **headscale: move into the cluster, on a CNPG database (owner, 2026-11-17).**
    - headscale is the control plane only (keys, peer lists, endpoints). Peers
      talk to each other directly over WireGuard, so the LAN keeps its 10 Gbps;
