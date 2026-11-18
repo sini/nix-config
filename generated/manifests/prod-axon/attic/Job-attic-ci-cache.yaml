@@ -1,0 +1,116 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+  name: attic-ci-cache
+  namespace: attic
+spec:
+  backoffLimit: 6
+  template:
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              url="http://attic.attic.svc:8080/_api/v1/cache-config/ci"
+              auth="Authorization: Bearer $(cat /work/token)"
+              host="Host: attic.json64.dev"
+              if wget -q -O /dev/null --header "$auth" --header "$host" "$url"; then
+                echo "cache ci exists: left unchanged"
+                exit 0
+              fi
+              kp=$(cat /secrets/ci-keypair)
+              body=$(printf '{"keypair":{"Keypair":"%s"},"is_public":true,"store_dir":"/nix/store","priority":41,"upstream_cache_key_names":["cache.nixos.org-1"]}' "$kp")
+              wget -q -O - --header "$auth" --header "$host" \
+                --header "Content-Type: application/json" --post-data "$body" "$url"
+              echo "cache ci created with the stored keypair"
+          image: library/busybox@sha256:a46257e06c82ad85242d0d38077d0a52d9896389ca60a1a59d3463db586e5fa4
+          name: create
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+          volumeMounts:
+            - mountPath: /work
+              name: work
+              readOnly: true
+            - mountPath: /secrets
+              name: keypair
+              readOnly: true
+      initContainers:
+        - args:
+            - -f
+            - /etc/attic/server.toml
+            - make-token
+            - --sub
+            - attic-ci-cache
+            - --validity
+            - 10m
+            - --pull
+            - ci
+            - --push
+            - ci
+            - --create-cache
+            - ci
+            - --configure-cache
+            - ci
+            - --configure-cache-retention
+            - ci
+            - --output
+            - /work/token
+          command:
+            - /bin/atticadm
+          env:
+            - name: ATTIC_SERVER_TOKEN_RS256_SECRET_BASE64
+              valueFrom:
+                secretKeyRef:
+                  key: server-token
+                  name: attic-secrets
+          image: ghcr.io/zhaofengli/attic@sha256:18574aba70fc89d2b695273fbe2e7b2f8ad7e8e786b4cc535124fbe14bada1d0
+          name: token
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+          volumeMounts:
+            - mountPath: /etc/attic
+              name: config
+              readOnly: true
+            - mountPath: /work
+              name: work
+      restartPolicy: OnFailure
+      securityContext:
+        runAsGroup: 65532
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      volumes:
+        - configMap:
+            name: attic-config
+          name: config
+        - emptyDir:
+            medium: Memory
+          name: work
+        - name: keypair
+          secret:
+            defaultMode: 256
+            items:
+              - key: ci-keypair
+                path: ci-keypair
+            secretName: attic-secrets

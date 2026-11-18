@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: attic
+  namespace: attic
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: attic
+  template:
+    metadata:
+      annotations:
+        json64.dev/config-hash: 29a108efbe4953820ee4ceda34bf081e12525682a5491b641584761766387e7d
+      labels:
+        app.kubernetes.io/name: attic
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - args:
+            - -f
+            - /etc/attic/server.toml
+            - --mode
+            - monolithic
+          env:
+            - name: ATTIC_SERVER_TOKEN_RS256_SECRET_BASE64
+              valueFrom:
+                secretKeyRef:
+                  key: server-token
+                  name: attic-secrets
+            - name: ATTIC_SERVER_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  key: dsn
+                  name: attic-secrets
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  key: access-key-id
+                  name: attic-s3
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: secret-access-key
+                  name: attic-s3
+          image: ghcr.io/zhaofengli/attic@sha256:18574aba70fc89d2b695273fbe2e7b2f8ad7e8e786b4cc535124fbe14bada1d0
+          name: attic
+          ports:
+            - containerPort: 8080
+              name: http
+          readinessProbe:
+            periodSeconds: 10
+            tcpSocket:
+              port: http
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+          volumeMounts:
+            - mountPath: /etc/attic
+              name: config
+              readOnly: true
+            - mountPath: /tmp
+              name: tmp
+      enableServiceLinks: false
+      securityContext:
+        runAsGroup: 65532
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: attic
+      volumes:
+        - configMap:
+            name: attic-config
+          name: config
+        - emptyDir: {}
+          name: tmp

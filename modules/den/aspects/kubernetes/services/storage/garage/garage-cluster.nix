@@ -32,7 +32,9 @@
             storage = {
               replicas = 3;
               data = {
-                size = "50Gi";
+                # attic's chunks live here too (dev/attic.nix): about 50 GB at
+                # replication 3 on top of the sites, so 150Gi each.
+                size = "150Gi";
                 storageClassName = dataClass;
               };
               metadata = {

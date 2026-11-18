@@ -1,0 +1,10 @@
+apiVersion: garage.rajsingh.info/v1beta1
+kind: GarageBucket
+metadata:
+  name: attic
+  namespace: attic
+spec:
+  clusterRef:
+    name: garage
+    namespace: garage
+  globalAlias: attic

@@ -1,0 +1,14 @@
+apiVersion: garage.rajsingh.info/v1beta1
+kind: GarageReferenceGrant
+metadata:
+  name: allow-attic
+  namespace: garage
+spec:
+  from:
+    - kind: GarageBucket
+      namespace: attic
+    - kind: GarageKey
+      namespace: attic
+  to:
+    - kind: GarageCluster
+      name: garage

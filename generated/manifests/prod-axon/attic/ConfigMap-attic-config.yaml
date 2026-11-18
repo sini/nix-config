@@ -1,0 +1,29 @@
+apiVersion: v1
+data:
+  server.toml: |
+    allowed-hosts = ["attic.json64.dev"]
+    api-endpoint = "https://attic.json64.dev/"
+    listen = "[::]:8080"
+
+    [chunking]
+    avg-size = 1048576
+    max-size = 4194304
+    min-size = 262144
+    nar-size-threshold = 1048576
+
+    [compression]
+    type = "zstd"
+
+    [garbage-collection]
+    default-retention-period = "90 days"
+    interval = "12 hours"
+
+    [storage]
+    bucket = "attic"
+    endpoint = "http://garage.garage.svc:3900"
+    region = "garage"
+    type = "s3"
+kind: ConfigMap
+metadata:
+  name: attic-config
+  namespace: attic

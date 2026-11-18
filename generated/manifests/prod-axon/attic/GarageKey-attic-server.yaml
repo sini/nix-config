@@ -1,0 +1,17 @@
+apiVersion: garage.rajsingh.info/v1beta1
+kind: GarageKey
+metadata:
+  name: attic-server
+  namespace: attic
+spec:
+  bucketPermissions:
+    - bucketRef:
+        name: attic
+      read: true
+      write: true
+  clusterRef:
+    name: garage
+    namespace: garage
+  neverExpires: true
+  secretTemplate:
+    name: attic-s3

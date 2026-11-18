@@ -1,0 +1,20 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-attic-gateway-ingress
+  namespace: attic
+spec:
+  description: 'attic: the gateway and the cache Job on 8080.'
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: attic
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: gateways
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: attic
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP

@@ -334,6 +334,8 @@ in
       services.documents.paperless
 
       # dev — Coder workspace platform (SP1 control plane)
+      # The fleet's binary cache (dev/attic.nix); uplink serves it until `live`.
+      services.dev.attic
       services.dev.coder.coder-pg
       services.dev.coder.coder
 

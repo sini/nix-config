@@ -1,0 +1,10 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: attic-pg-nightly
+  namespace: attic
+spec:
+  cluster:
+    name: attic-pg
+  method: volumeSnapshot
+  schedule: 0 30 4 * * *
