@@ -18,7 +18,7 @@ spec:
             - |
               set -eu
               url="http://attic.attic.svc:8080/_api/v1/cache-config/ci"
-              auth="Authorization: Bearer $(cat /work/token)"
+              auth="Authorization: Bearer $(cat /secrets/ci-admin-token)"
               host="Host: attic.json64.dev"
               if wget -q -O /dev/null --header "$auth" --header "$host" "$url"; then
                 echo "cache ci exists: left unchanged"
@@ -41,76 +41,24 @@ spec:
             runAsNonRoot: true
             runAsUser: 65532
           volumeMounts:
-            - mountPath: /work
-              name: work
-              readOnly: true
             - mountPath: /secrets
               name: keypair
               readOnly: true
-      initContainers:
-        - args:
-            - -f
-            - /etc/attic/server.toml
-            - make-token
-            - --sub
-            - attic-ci-cache
-            - --validity
-            - 10m
-            - --pull
-            - ci
-            - --push
-            - ci
-            - --create-cache
-            - ci
-            - --configure-cache
-            - ci
-            - --configure-cache-retention
-            - ci
-            - --output
-            - /work/token
-          command:
-            - /bin/atticadm
-          env:
-            - name: ATTIC_SERVER_TOKEN_RS256_SECRET_BASE64
-              valueFrom:
-                secretKeyRef:
-                  key: server-token
-                  name: attic-secrets
-          image: ghcr.io/zhaofengli/attic@sha256:18574aba70fc89d2b695273fbe2e7b2f8ad7e8e786b4cc535124fbe14bada1d0
-          name: token
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
-            readOnlyRootFilesystem: true
-            runAsGroup: 65532
-            runAsNonRoot: true
-            runAsUser: 65532
-          volumeMounts:
-            - mountPath: /etc/attic
-              name: config
-              readOnly: true
-            - mountPath: /work
-              name: work
       restartPolicy: OnFailure
       securityContext:
+        fsGroup: 65532
         runAsGroup: 65532
         runAsNonRoot: true
         runAsUser: 65532
         seccompProfile:
           type: RuntimeDefault
       volumes:
-        - configMap:
-            name: attic-config
-          name: config
-        - emptyDir:
-            medium: Memory
-          name: work
         - name: keypair
           secret:
-            defaultMode: 256
+            defaultMode: 288
             items:
               - key: ci-keypair
                 path: ci-keypair
+              - key: ci-admin-token
+                path: ci-admin-token
             secretName: attic-secrets

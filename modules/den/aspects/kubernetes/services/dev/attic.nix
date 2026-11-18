@@ -55,7 +55,12 @@ in
       );
 
     age-secrets =
-      { environment, config, ... }:
+      {
+        environment,
+        config,
+        lib,
+        ...
+      }:
       {
         age.secrets = {
           attic-pg-attic-password = {
@@ -82,6 +87,48 @@ in
             sopsOutput = {
               file = "attic";
               key = "server-token";
+            };
+          };
+          # The cache Job's token: create and configure `ci` only, minted with the
+          # server's RS256 secret by atticadm (it needs no running server), as
+          # services/nix/attic.nix mints CI's push token.
+          attic-ci-admin-token = {
+            rekeyFile = environment.secretPath + "/attic/ci-admin-token.age";
+            generator = {
+              tags = [ "attic" ];
+              dependencies = [ config.age.secrets.attic-k8s-server-env ];
+              script =
+                {
+                  decrypt,
+                  deps,
+                  pkgs,
+                  ...
+                }:
+                ''
+                  ATTIC_SERVER_TOKEN_RS256_SECRET_BASE64=$(${decrypt} ${lib.escapeShellArg (lib.head deps).file}) \
+                    ${pkgs.attic-server}/bin/atticadm -f ${
+                      (pkgs.formats.toml { }).generate "server.toml" {
+                        # atticadm only signs; it needs a parseable config, not these.
+                        database.url = "sqlite::memory:";
+                        storage = {
+                          type = "local";
+                          path = "/nonexistent";
+                        };
+                        chunking = {
+                          nar-size-threshold = 1;
+                          min-size = 1;
+                          avg-size = 2;
+                          max-size = 4;
+                        };
+                      }
+                    } make-token \
+                    --sub attic-ci-cache --validity 5y --pull ${ciCache} --push ${ciCache} \
+                    --create-cache ${ciCache} --configure-cache ${ciCache} --configure-cache-retention ${ciCache}
+                '';
+            };
+            sopsOutput = {
+              file = "attic";
+              key = "ci-admin-token";
             };
           };
           # The `ci` cache's signing keypair, copied once from uplink's database.
@@ -262,6 +309,7 @@ in
                 server-token = config.age.secrets.attic-k8s-server-env.sopsRef;
                 dsn = config.age.secrets.attic-pg-dsn.sopsRef;
                 ci-keypair = config.age.secrets.attic-ci-keypair.sopsRef;
+                ci-admin-token = config.age.secrets.attic-ci-admin-token.sopsRef;
               };
               "${pgCluster}-attic-password" = {
                 type = "kubernetes.io/basic-auth";
@@ -372,8 +420,8 @@ in
               ];
             };
 
-            # Creates `ci` with uplink's keypair when absent; a no-op otherwise. A
-            # ten-minute token scoped to that one cache, minted by atticadm.
+            # Creates `ci` with uplink's keypair when absent; a no-op otherwise, with
+            # a token scoped to that one cache (attic-ci-admin-token).
             jobs."${name}-ci-cache" = {
               metadata.annotations = {
                 "argocd.argoproj.io/hook" = "PostSync";
@@ -384,44 +432,10 @@ in
                 template.spec = {
                   restartPolicy = "OnFailure";
                   automountServiceAccountToken = false;
-                  securityContext = podSecurity;
-                  initContainers = [
-                    {
-                      name = "token";
-                      inherit image;
-                      command = [ "/bin/atticadm" ];
-                      args = [
-                        "-f"
-                        "${configDir}/server.toml"
-                        "make-token"
-                        "--sub"
-                        "attic-ci-cache"
-                        "--validity"
-                        "10m"
-                        "--pull"
-                        ciCache
-                        "--push"
-                        ciCache
-                        "--create-cache"
-                        ciCache
-                        "--configure-cache"
-                        ciCache
-                        "--configure-cache-retention"
-                        ciCache
-                        "--output"
-                        "/work/token"
-                      ];
-                      env = [ tokenEnv ];
-                      securityContext = hardened;
-                      volumeMounts = [
-                        configMount
-                        {
-                          name = "work";
-                          mountPath = "/work";
-                        }
-                      ];
-                    }
-                  ];
+                  # The Secret's files are root-owned; fsGroup makes them readable (0440).
+                  securityContext = podSecurity // {
+                    fsGroup = uid;
+                  };
                   containers = [
                     {
                       name = "create";
@@ -432,7 +446,7 @@ in
                         ''
                           set -eu
                           url="http://${name}.${namespace}.svc:${toString port}/_api/v1/cache-config/${ciCache}"
-                          auth="Authorization: Bearer $(cat /work/token)"
+                          auth="Authorization: Bearer $(cat /secrets/ci-admin-token)"
                           host="Host: ${domain}"
                           if wget -q -O /dev/null --header "$auth" --header "$host" "$url"; then
                             echo "cache ${ciCache} exists: left unchanged"
@@ -448,11 +462,6 @@ in
                       securityContext = hardened;
                       volumeMounts = [
                         {
-                          name = "work";
-                          mountPath = "/work";
-                          readOnly = true;
-                        }
-                        {
                           name = "keypair";
                           mountPath = "/secrets";
                           readOnly = true;
@@ -461,11 +470,6 @@ in
                     }
                   ];
                   volumes = [
-                    configVolume
-                    {
-                      name = "work";
-                      emptyDir.medium = "Memory";
-                    }
                     {
                       name = "keypair";
                       secret = {
@@ -475,8 +479,12 @@ in
                             key = "ci-keypair";
                             path = "ci-keypair";
                           }
+                          {
+                            key = "ci-admin-token";
+                            path = "ci-admin-token";
+                          }
                         ];
-                        defaultMode = 256;
+                        defaultMode = 288;
                       };
                     }
                   ];
