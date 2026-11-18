@@ -175,6 +175,8 @@ let
               healthCheck = {
                 active = {
                   type = "TCP";
+                  # Required with type TCP (CRD validation); empty: connect only.
+                  tcp = { };
                   interval = "5s";
                   timeout = "2s";
                   unhealthyThreshold = 2;
