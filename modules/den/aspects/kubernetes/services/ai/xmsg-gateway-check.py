@@ -32,10 +32,10 @@ HUBS = {
     ),
 }
 HUB_RIGHTS = ["list", "reply", "send"]
-# Each hub's federation port; uplink (kanidm) on 443; public HTTPS for Events callbacks.
+# Each hub's federation port; public HTTPS for Events callbacks. kanidm is reached at
+# the cluster gateway VIP, inside the cluster, so it needs no CIDR rule.
 EGRESS = {
     *(("cidr", f"{ip}/32", port) for ip, port, _ in HUBS.values()),
-    ("cidr", "10.10.10.1/32", "443"),
     ("entity", "world", "443"),
 }
 NS_KEY = "k8s:io.kubernetes.pod.namespace"

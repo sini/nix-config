@@ -11,6 +11,9 @@ let
   cluster = tunnel: {
     name = "axon";
     environment = "prod";
+    # The gateway VIP, the kanidm pin (axon's own assignment).
+    networks.kubernetes-loadbalancers.assignments.default-gateway =
+      config.den.clusters.axon.networks.kubernetes-loadbalancers.assignments.default-gateway;
     domainFor = svc: if svc == "kanidm" then "idm.json64.dev" else "${svc}.json64.dev";
     # schema/cluster.nix resourceNameOf: the last two labels, hyphenated.
     resourceForDomain =

@@ -415,7 +415,10 @@ in
           port = host.settings.applications.dev.ai.mcp.xmsg.federation.nodes.${host.system-owner}.port;
         }) ([ (hostSetting cfg "hub") ] ++ cfg.extraHubs);
         kanidmHost = den.hosts.x86_64-linux.${hostSetting cfg "kanidmHost"};
-        kanidmIp = lib.head kanidmHost.ipv4;
+        # kanidm is reached through the cluster gateway, which fails over between its
+        # replicas (services/security/kanidm-ingress.nix); the pin is the gateway VIP,
+        # the same address in-cluster DNS answers for kanidm's name.
+        kanidmIp = cluster.networks.kubernetes-loadbalancers.assignments.default-gateway;
         kanidmDomain = cluster.domainFor "kanidm";
         # kanidm.nix's own fallback: the kanidm host's environment domain for the gateway.
         origin =
@@ -498,8 +501,8 @@ in
           introspection_url = "https://${kanidmDomain}/oauth2/token/introspect";
           introspection_client = lookupClient;
           client_secret_file = lookupSecret;
-          # In-cluster DNS answers kanidm's name with the gateway VIP; the pin needs no
-          # DNS and matches the egress rule.
+          # The gateway VIP, which in-cluster DNS also answers for kanidm's name; the
+          # pin needs no DNS.
           provider_addresses = [ kanidmIp ];
           required_scopes = requiredScopes;
           timeout_ms = timeouts.verifier;
@@ -1315,7 +1318,6 @@ in
                 }
               ];
               egress = map (h: egressRule { toCIDR = [ "${h.ip}/32" ]; } h.port) hubs ++ [
-                (egressRule { toCIDR = [ "${kanidmIp}/32" ]; } 443)
                 # Events callbacks go to the subscriber's public HTTPS URL, unknown in
                 # advance (amendment §2.1: "the public callback destination on 443").
                 # This also carries the tunnel sidecar's control plane, api.openai.com.

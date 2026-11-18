@@ -23,12 +23,6 @@ spec:
         - ports:
             - port: "7788"
               protocol: TCP
-    - toCIDR:
-        - 10.10.10.1/32
-      toPorts:
-        - ports:
-            - port: "443"
-              protocol: TCP
     - toEntities:
         - world
       toPorts:
