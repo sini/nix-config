@@ -112,6 +112,9 @@ in
           };
         }
 
+        # The environment wildcard is nginx's certificate, readable by its group only.
+        (lib.mkIf (!ownCert) { users.users.kanidm.extraGroups = [ config.services.nginx.group ]; })
+
         (lib.mkIf ownCert {
           security.acme.certs.${domain} = {
             group = "kanidm";
