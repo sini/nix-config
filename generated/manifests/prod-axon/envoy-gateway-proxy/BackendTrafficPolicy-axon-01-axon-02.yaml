@@ -5,16 +5,6 @@ metadata:
   namespace: gateways
 spec:
   healthCheck:
-    active:
-      healthyThreshold: 2
-      interval: 5s
-      tcp:
-        send:
-          binary: DQoNCgANClFVSVQKIAAAAA==
-          type: Binary
-      timeout: 2s
-      type: TCP
-      unhealthyThreshold: 2
     passive:
       baseEjectionTime: 30s
       consecutiveLocalOriginFailures: 2

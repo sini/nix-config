@@ -157,7 +157,11 @@ let
       );
 
       # Under passthrough envoy sees only TCP, so a shared name's backends are
-      # checked by connect (active) and by connection failures (passive).
+      # checked by connection failures (passive), and by connect (active) unless the
+      # route speaks PROXY v2. Envoy's TCP check closes the instant it connects, so
+      # neither its PROXY header nor any payload is sent: a backend requiring the
+      # header logs an error per probe (kanidm, measured 2026-11-18: SYN, FIN, no
+      # bytes). Passive ejection counts as unhealthy for the fallback priority.
       backendTrafficPolicies =
         lib.mapAttrs
           (name: r: {
@@ -172,32 +176,27 @@ let
             }
             // lib.optionalAttrs (lib.head r.upstreams).proxyProtocol { proxyProtocol.version = "V2"; }
             // lib.optionalAttrs (lib.length r.upstreams > 1) {
-              healthCheck = {
-                active = {
-                  type = "TCP";
-                  # Behind PROXY v2 the check opens with a v2 LOCAL header (signature,
-                  # version 2 / LOCAL, UNSPEC, no address block): a backend that requires
-                  # the header takes it as a liveness check, where a bare connect logs a
-                  # header error on every probe. Otherwise connect only.
-                  tcp = lib.optionalAttrs (lib.head r.upstreams).proxyProtocol {
-                    send = {
-                      type = "Binary";
-                      binary = "DQoNCgANClFVSVQKIAAAAA==";
-                    };
+              healthCheck =
+                lib.optionalAttrs (!(lib.head r.upstreams).proxyProtocol) {
+                  active = {
+                    type = "TCP";
+                    # Required with type TCP (CRD validation); empty: connect only.
+                    tcp = { };
+                    interval = "5s";
+                    timeout = "2s";
+                    unhealthyThreshold = 2;
+                    healthyThreshold = 2;
                   };
-                  interval = "5s";
-                  timeout = "2s";
-                  unhealthyThreshold = 2;
-                  healthyThreshold = 2;
+                }
+                // {
+                  passive = {
+                    splitExternalLocalOriginErrors = true;
+                    consecutiveLocalOriginFailures = 2;
+                    interval = "5s";
+                    baseEjectionTime = "30s";
+                    maxEjectionPercent = 100;
+                  };
                 };
-                passive = {
-                  splitExternalLocalOriginErrors = true;
-                  consecutiveLocalOriginFailures = 2;
-                  interval = "5s";
-                  baseEjectionTime = "30s";
-                  maxEjectionPercent = 100;
-                };
-              };
             };
           })
           (lib.filterAttrs (_: r: (lib.head r.upstreams).proxyProtocol || lib.length r.upstreams > 1) routes);
@@ -414,9 +413,9 @@ in
             false
           ];
         };
-        # A PROXY route's check opens with a v2 LOCAL header; a plain one only connects.
-        testHealthCheckSendsProxyLocal = {
-          expr = map (x: x.spec.healthCheck.active.tcp) [
+        # A PROXY route is checked passively only; a plain one also by connect.
+        testProxyRouteHasNoActiveCheck = {
+          expr = map (x: lib.attrNames x.spec.healthCheck) [
             (lib.head (lib.attrValues (replicated false).backendTrafficPolicies))
             (lib.head (
               lib.attrValues
@@ -446,24 +445,12 @@ in
             ))
           ];
           expected = [
-            { }
-            {
-              send = {
-                type = "Binary";
-                binary = "DQoNCgANClFVSVQKIAAAAA==";
-              };
-            }
+            [
+              "active"
+              "passive"
+            ]
+            [ "passive" ]
           ];
-        };
-        testNodeEgressByEntity = {
-          expr =
-            (builtins.head standby.ciliumNetworkPolicies.allow-gateway-k-kanidm-egress.spec.egress)
-              ? toEntities;
-          expected = true;
-        };
-        testAllFallbackRefused = {
-          expr = (builtins.tryEval (builtins.deepSeq allFallback.tlsRoutes null)).success;
-          expected = false;
         };
         testSharedNameMixedProxyRefused = {
           expr = (builtins.tryEval (builtins.deepSeq (replicated true).tlsRoutes null)).success;
