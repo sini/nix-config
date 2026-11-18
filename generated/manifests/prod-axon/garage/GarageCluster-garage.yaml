@@ -11,9 +11,6 @@ spec:
     bindPort: 3903
   database:
     engine: lmdb
-  discovery:
-    kubernetes:
-      enabled: true
   layoutManagement:
     autoApply: true
     minNodesHealthy: 2

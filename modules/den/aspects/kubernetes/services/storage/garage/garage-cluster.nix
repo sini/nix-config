@@ -1,4 +1,6 @@
-# GarageCluster — 3-node, RF=3, auto-layout, k8s peer discovery, ClusterIP.
+# GarageCluster — 3-node, RF=3, auto-layout, ClusterIP. The operator connects the
+# peers itself; Garage's own Kubernetes discovery is off (it needs RBAC the
+# operator does not grant, and v2.3.0 panicked at start with it on).
 # The operator (garage-operator.nix) reconciles this single CR into the storage
 # StatefulSet, Services, garage.toml, and PodDisruptionBudget.
 #
@@ -44,7 +46,6 @@
             };
             database.engine = "lmdb"; # CRD enum: lmdb (default) | sqlite | fjall.
             replication.factor = 3;
-            discovery.kubernetes.enabled = true;
             layoutManagement = {
               autoApply = true;
               minNodesHealthy = 2;
