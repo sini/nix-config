@@ -106,6 +106,15 @@ in
       ])
     ];
 
+  # Exit nodes to clusters too, for headscale's pod (network/headscale.nix).
+  den.policies.cluster-collect-exit-nodes =
+    { cluster, ... }:
+    [
+      (pipe.from "exit-nodes" [
+        (pipe.collectAll ({ host, ... }: true))
+      ])
+    ];
+
   # IdP identities to hosts, for host services that authorize by kanidm group
   # (services/matrix-xmsg.nix). Consumers filter by environment.
   den.policies.collect-idm-users =
@@ -380,5 +389,6 @@ in
     den.policies.cluster-collect-prometheus-targets
     den.policies.cluster-collect-domain-quirks
     den.policies.cluster-collect-dns-resolvers
+    den.policies.cluster-collect-exit-nodes
   ];
 }

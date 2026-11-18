@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    lbipam.cilium.io/ips: 10.11.0.32
+  name: headscale-stun
+  namespace: headscale
+spec:
+  externalTrafficPolicy: Local
+  ports:
+    - name: stun
+      port: 3478
+      protocol: UDP
+      targetPort: stun
+  selector:
+    app.kubernetes.io/name: headscale
+  type: LoadBalancer

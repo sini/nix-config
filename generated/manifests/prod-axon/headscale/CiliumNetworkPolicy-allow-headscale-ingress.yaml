@@ -1,0 +1,32 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-headscale-ingress
+  namespace: headscale
+spec:
+  description: 'headscale: the gateway on 8080, STUN from anywhere, metrics from Prometheus.'
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: headscale
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: gateways
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+    - fromEntities:
+        - world
+        - cluster
+      toPorts:
+        - ports:
+            - port: "3478"
+              protocol: UDP
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: monitoring
+      toPorts:
+        - ports:
+            - port: "9090"
+              protocol: TCP

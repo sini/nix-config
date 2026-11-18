@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: headscale
+  namespace: headscale
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: headscale
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        json64.dev/config-hash: 5fd7f07f2728ff8bffa534bd027dea7bac39f5d4ab0bad42916af4770ba072fa
+      labels:
+        app.kubernetes.io/name: headscale
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - args:
+            - serve
+            - --config
+            - /etc/headscale/config.yaml
+          image: ghcr.io/juanfont/headscale@sha256:11f81665e842809db9fe3006a38c56a66e968baa5abd4bac498e86445572b970
+          livenessProbe:
+            failureThreshold: 4
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          name: headscale
+          ports:
+            - containerPort: 8080
+              name: http
+            - containerPort: 9090
+              name: metrics
+            - containerPort: 3478
+              name: stun
+              protocol: UDP
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+          volumeMounts:
+            - mountPath: /var/lib/headscale
+              name: data
+            - mountPath: /etc/headscale
+              name: config
+              readOnly: true
+            - mountPath: /run/secrets/headscale
+              name: oidc
+              readOnly: true
+            - mountPath: /var/run/headscale
+              name: run
+      enableServiceLinks: false
+      securityContext:
+        fsGroup: 65532
+        fsGroupChangePolicy: OnRootMismatch
+        runAsGroup: 65532
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: headscale
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: headscale
+        - configMap:
+            name: headscale-config
+          name: config
+        - name: oidc
+          secret:
+            defaultMode: 288
+            secretName: headscale-oidc
+        - emptyDir:
+            medium: Memory
+          name: run

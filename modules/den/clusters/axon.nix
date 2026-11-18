@@ -163,6 +163,10 @@ in
           # (monitoring/ingest.nix), published as ingest.json64.dev.
           monitoring-ingest = "10.11.0.31";
 
+          # headscale's embedded DERP STUN (network/headscale.nix), UDP 3478,
+          # port-forwarded from the WAN. BGP-advertised.
+          headscale-stun = "10.11.0.32";
+
           # CoreDNS for the resolver instances off-cluster
           # (network/coredns/coredns.nix, docs/dns-resolver.md).
           # BGP-advertised, NOT internet-routable.
@@ -253,6 +257,8 @@ in
       services.network.blocky-ui
       # The resolver's replicas behind the blocky LB (docs/dns-resolver.md §2.7).
       services.network.blocky
+      # The tailnet control plane (network/headscale.nix); off until the cutover.
+      services.network.headscale
       services.media.base
       services.media.media-pg
       services.media.api-keys

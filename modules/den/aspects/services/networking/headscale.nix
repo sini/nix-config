@@ -7,7 +7,7 @@ let
     41641
   ];
   portList = lib.concatMapStringsSep "," toString udpPorts;
-  resolvers = import ../../core/network/_resolvers.nix { inherit lib; };
+  hs = import ./_headscale-settings.nix { inherit lib; };
 in
 {
   den.aspects.services.networking.headscale = {
@@ -35,77 +35,13 @@ in
             port = 8085;
 
             settings = {
-              server_url = "https://${domain}";
-              logtail = {
-                enabled = false;
-              };
-              prefixes = {
-                v4 = "100.72.0.0/16";
-                v6 = "fd7a:115c:a1e0::/48";
-                allocation = "random";
-              };
-              derp = {
-                server = {
-                  enabled = true;
-                  region_id = 999;
-                  region_code = config.networking.hostName;
-                  region_name = config.networking.hostName + " DERP";
-                  stun_listen_addr = "0.0.0.0:3478";
-                  auto_update_enabled = true;
-                  automatically_add_embedded_derp_region = true;
-                };
-              };
-
               metrics_listen_addr = "127.0.0.1:8090";
-
-              dns = {
-                magic_dns = true;
-                base_domain = "ts.${environment.domain}";
-                override_local_dns = true;
-                # Roaming devices (docs/dns-resolver.md §2.4c): the filtering
-                # resolvers without the gateway (private, so tailscaled would race
-                # it at once, and unreachable off the LAN), then the environment's
-                # upstreams, which tailscaled upgrades to DoH, so off-LAN clients
-                # and an uplink outage keep DNS.
-                nameservers.global =
-                  lib.optionals (environment.dns.roamingResolvers != [ ]) (
-                    resolvers.resolversFor {
-                      gateway = false;
-                      list = "roamingResolvers";
-                    } environment dns-resolvers
-                  )
-                  ++ resolvers.plainUpstreams environment;
-              };
-
-              oidc = {
-                only_start_if_oidc_is_available = true;
-                issuer = "https://${kanidmDomain}/oauth2/openid/headscale";
-                client_id = "headscale";
-                client_secret_path = config.age.secrets.headscale-oidc-secret.path;
-                scope = [
-                  "openid"
-                  "profile"
-                  "email"
-                ];
-                pkce = {
-                  enabled = true;
-                  method = "S256";
-                };
-              };
-
-              policy.path = pkgs.writeText "policy.json" (
-                builtins.toJSON {
-                  acls = [
-                    {
-                      action = "accept";
-                      src = [ "*" ];
-                      dst = [ "*:*" ];
-                    }
-                  ];
-                  # Each host joins as its own user (tailscale/secrets.nix).
-                  autoApprovers.exitNode = map (n: "${n.hostname}@") exit-nodes;
-                }
-              );
+            }
+            // hs.settings {
+              inherit environment dns-resolvers;
+              regionCode = config.networking.hostName;
+              oidcSecretPath = config.age.secrets.headscale-oidc-secret.path;
+              policyPath = pkgs.writeText "policy.json" (builtins.toJSON (hs.policy exit-nodes));
             };
           };
 
