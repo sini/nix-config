@@ -58,10 +58,7 @@
         username = "infra@json64.dev";
         passwordSecret = "smtp-infra-at-json64-dev.age";
       };
-      # A kanidm replica until it retires; the writer is axon-01.
-      services.security.kanidm-server.replication = true;
-      # nginx accepts PROXY v2 from the cluster gateway here (kanidm holds
-      # 127.0.0.1:8443).
+      # nginx accepts PROXY v2 from the cluster gateway here.
       services.networking.gateway-upstream = {
         proxyProtocolPort = 8444;
         # The gateway sends PROXY v2 there, so nginx logs the client address.
@@ -87,7 +84,6 @@
       unifi-state-passphrase
       github-state-passphrase
       services.networking.nginx
-      services.security.kanidm-server
       services.networking.gateway-upstream
       services.media.jellyfin
       services.web.homepage
