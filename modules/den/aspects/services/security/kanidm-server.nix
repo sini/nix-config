@@ -6,6 +6,18 @@
 { den, lib, ... }:
 let
   replicationPort = 8445; # 8444 is nginx's PROXY listener on uplink
+  settingOf = h: lib.attrByPath [ "settings" "services" "security" "kanidm-server" ] { } h;
+  # A node's replication identity, committed as PEM (`kanidmd
+  # show-replication-certificate` prints its DER as unpadded base64url).
+  certFile = h: h.secretPath + "/kanidm-replication.crt";
+  partnerCert =
+    h:
+    let
+      pem = lib.filter (l: l != "" && !(lib.hasPrefix "-----" l)) (
+        lib.splitString "\n" (builtins.readFile (certFile h))
+      );
+    in
+    lib.replaceStrings [ "+" "/" "=" ] [ "-" "_" "" ] (lib.concatStrings pem);
 in
 {
   den.aspects.services.security.kanidm-server = {
@@ -14,7 +26,24 @@ in
     settings.replication = lib.mkOption {
       type = lib.types.bool;
       default = false;
-      description = "Enable kanidm replication: kanidmd generates its replication identity certificate and listens for partners on the host's default address, port ${toString replicationPort}. Partners are added separately; the port is not opened until they are.";
+      description = ''
+        Enable kanidm replication: kanidmd generates its replication identity
+        certificate and listens on the host's default address, port
+        ${toString replicationPort}. Its partners are every other host of the
+        environment with replication on and a committed
+        `.secrets/hosts/<host>/kanidm-replication.crt`, all mutual-pull.
+      '';
+    };
+
+    settings.refreshFrom = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      example = "uplink";
+      description = ''
+        The partner whose database replaces this node's when their databases
+        diverge (kanidm's automatic_refresh): set on a joining node, toward the
+        primary. Never on the primary itself, and never on the writer.
+      '';
     };
 
     nixos =
@@ -34,6 +63,18 @@ in
         certName = if ownCert then domain else environment.domain;
         certDir = config.security.acme.certs.${certName}.directory;
         address = environment.addressOn "default" host;
+        own = settingOf host;
+        addressOf = h: den.environments.${h.environment}.addressOn "default" h;
+        partners = lib.filter (
+          h:
+          h.name != host.name
+          && h.environment == host.environment
+          && (settingOf h).replication or false
+          && builtins.pathExists (certFile h)
+        ) (lib.attrValues den.hosts.x86_64-linux);
+        replicationHosts = lib.filter (
+          h: h.environment == host.environment && (settingOf h).replication or false
+        ) (lib.attrValues den.hosts.x86_64-linux);
       in
       lib.mkMerge [
         {
@@ -83,11 +124,36 @@ in
           };
         })
 
-        (lib.mkIf host.settings.services.security.kanidm-server.replication {
+        (lib.mkIf own.replication {
+          assertions = [
+            {
+              assertion = own.refreshFrom == null || lib.elem own.refreshFrom (map (h: h.name) replicationHosts);
+              message = "${host.name}: kanidm-server.refreshFrom = ${toString own.refreshFrom} is not a replication host of ${host.environment}";
+            }
+          ];
           services.kanidm.server.settings.replication = {
             origin = "repl://${address}:${toString replicationPort}";
             bindaddress = "${address}:${toString replicationPort}";
-          };
+          }
+          // lib.listToAttrs (
+            map (
+              h:
+              lib.nameValuePair "repl://${addressOf h}:${toString replicationPort}" (
+                {
+                  type = "mutual-pull";
+                  partner_cert = partnerCert h;
+                }
+                // lib.optionalAttrs (own.refreshFrom == h.name) { automatic_refresh = true; }
+              )
+            ) partners
+          );
+          # Mutual TLS pinned to each partner's certificate guards the port; the
+          # firewall (where one runs) also admits the partners only.
+          networking.firewall.extraInputRules = lib.mkIf (partners != [ ]) ''
+            ip saddr { ${
+              lib.concatMapStringsSep ", " addressOf partners
+            } } ip daddr ${address} tcp dport ${toString replicationPort} accept
+          '';
         })
       ];
 

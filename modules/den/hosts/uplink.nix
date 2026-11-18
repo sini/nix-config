@@ -60,6 +60,8 @@
       };
       # Credential reset / account recovery mail, through the cluster's Postfix
       # relay to Proton (kubernetes/services/communication/smtp-relay.nix).
+      # The replication primary and writer: no refreshFrom.
+      services.security.kanidm-server.replication = true;
       services.security.kanidm.mailSender = {
         relay = "smtp://smtp.json64.dev:587";
         fromAddress = "infra@json64.dev";

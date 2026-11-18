@@ -52,6 +52,8 @@ in
       disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-NVMe_CA6-8D1024_00230650035M";
       disk.xfs-disk-longhorn.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_S73WNJ0W310395L";
       services.security.kanidm-server.replication = true;
+      # Joins from uplink, the primary; it must never refresh from a replica.
+      services.security.kanidm-server.refreshFrom = "uplink";
       core.impermanence = {
         wipeRootOnBoot = true;
         wipeHomeOnBoot = true;

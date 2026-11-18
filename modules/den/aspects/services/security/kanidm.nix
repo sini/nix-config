@@ -830,6 +830,11 @@ in
         {
           assertions = [
             {
+              # automatic_refresh would let a partner overwrite the provisioned database.
+              assertion = host.settings.services.security.kanidm-server.refreshFrom == null;
+              message = "kanidm: the writer (${host.name}) must not set kanidm-server.refreshFrom";
+            }
+            {
               assertion = xmsgGatewayDedicated;
               message = "kanidm: the xmsg-gateway OAuth2 client must stay dedicated (its group grants no other client, no other client shares its redirect URIs, confidential, PKCE on): the gateway accepts every token whose aud is its name.";
             }
