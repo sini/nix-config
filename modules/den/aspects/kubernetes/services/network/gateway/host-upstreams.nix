@@ -175,8 +175,16 @@ let
               healthCheck = {
                 active = {
                   type = "TCP";
-                  # Required with type TCP (CRD validation); empty: connect only.
-                  tcp = { };
+                  # Behind PROXY v2 the check opens with a v2 LOCAL header (signature,
+                  # version 2 / LOCAL, UNSPEC, no address block): a backend that requires
+                  # the header takes it as a liveness check, where a bare connect logs a
+                  # header error on every probe. Otherwise connect only.
+                  tcp = lib.optionalAttrs (lib.head r.upstreams).proxyProtocol {
+                    send = {
+                      type = "Binary";
+                      binary = "DQoNCgANClFVSVQKIAAAAA==";
+                    };
+                  };
                   interval = "5s";
                   timeout = "2s";
                   unhealthyThreshold = 2;
@@ -404,6 +412,47 @@ in
           expected.h-k = [
             "TCP"
             false
+          ];
+        };
+        # A PROXY route's check opens with a v2 LOCAL header; a plain one only connects.
+        testHealthCheckSendsProxyLocal = {
+          expr = map (x: x.spec.healthCheck.active.tcp) [
+            (lib.head (lib.attrValues (replicated false).backendTrafficPolicies))
+            (lib.head (
+              lib.attrValues
+                (render {
+                  environment = "e";
+                  gateway-upstreams = [
+                    (upstream "e" [ ] // { proxyProtocol = true; })
+                    (
+                      upstream "e" [ ]
+                      // {
+                        host = "q";
+                        proxyProtocol = true;
+                      }
+                    )
+                  ];
+                  served-domains = [
+                    (served "e" // { domains = [ "s.x" ]; })
+                    (
+                      served "e"
+                      // {
+                        host = "q";
+                        domains = [ "s.x" ];
+                      }
+                    )
+                  ];
+                }).backendTrafficPolicies
+            ))
+          ];
+          expected = [
+            { }
+            {
+              send = {
+                type = "Binary";
+                binary = "DQoNCgANClFVSVQKIAAAAA==";
+              };
+            }
           ];
         };
         testNodeEgressByEntity = {

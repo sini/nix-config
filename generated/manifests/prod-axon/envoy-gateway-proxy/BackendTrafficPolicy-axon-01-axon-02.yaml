@@ -8,7 +8,10 @@ spec:
     active:
       healthyThreshold: 2
       interval: 5s
-      tcp: {}
+      tcp:
+        send:
+          binary: DQoNCgANClFVSVQKIAAAAA==
+          type: Binary
       timeout: 2s
       type: TCP
       unhealthyThreshold: 2
