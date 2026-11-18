@@ -32,11 +32,9 @@
             storage = {
               replicas = 3;
               data = {
-                # Growing this stalls the operator: its resize waits on GarageNode
-                # layout sync, which needs the admission webhooks disabled here
-                # (garage-operator.nix), and the cluster leaves Running (2026-11-18).
-                # storage-0's volume is already 150Gi from that attempt.
-                size = "50Gi";
+                # attic's chunks live here too (dev/attic.nix). A managed volume only
+                # grows (the operator's admission webhook refuses a smaller size).
+                size = "150Gi";
                 storageClassName = dataClass;
               };
               metadata = {
