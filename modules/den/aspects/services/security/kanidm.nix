@@ -18,6 +18,7 @@ let
     ;
 
   groups = config.den.groups;
+  clusters = config.den.clusters or { };
   registry = config.den.users.registry;
 
   # Groups by label for provisioning classification
@@ -816,6 +817,19 @@ in
           && !(gw.public or false);
 
         mailSender = host.settings.services.security.kanidm.mailSender;
+        # The owner of each xmsg gateway whose kanidm is this host: its subject (the
+        # person UUID), which the gateway's liveness reader checks.
+        gatewayOwners = lib.unique (
+          lib.concatMap (
+            c:
+            let
+              g = c.settings.kubernetes.services.ai.xmsg-gateway or { };
+            in
+            lib.optional (
+              (g.enable or false) && (g.kanidmHost or null) == host.name && (g.subject or null) != null
+            ) g.subject
+          ) (lib.attrValues clusters)
+        );
         mailSenderUuid = "794f8210-93f9-4ec6-b89f-24607b41f9e2";
         # Everything but the token, which is prepended at start from the credential.
         mailSenderConfig = (pkgs.formats.toml { }).generate "kanidm-mail-sender.toml" {
@@ -1047,6 +1061,28 @@ in
                 echo "canary validity window"
                 kanidm person validity begin-from xmsg-gateway-liveness-test 2000-01-01T00:00:00Z -D idm_admin
                 kanidm person validity expire-at xmsg-gateway-liveness-test 2099-12-31T00:00:00Z -D idm_admin
+
+                # The owners' sentinels (gateway-authorization-server.md §2.8, D10): the
+                # liveness reader fails closed on an unset account_expire or
+                # account_valid_from, so each owner carries both. Read first and write only
+                # an unset one, so a deploy never undoes an owner's disable.
+                sentinel() {
+                  local who=$1 shown
+                  shown=$(kanidm person validity show "$who" -D idm_admin)
+                  if grep -qx 'valid after: any time' <<<"$shown"; then
+                    echo "$who account_valid_from: unset, writing 2000-01-01T00:00:00Z"
+                    kanidm person validity begin-from "$who" 2000-01-01T00:00:00Z -D idm_admin
+                  else
+                    echo "$who account_valid_from: set, left as is"
+                  fi
+                  if grep -qx 'expire: never' <<<"$shown"; then
+                    echo "$who account_expire: unset, writing 2099-12-31T00:00:00Z"
+                    kanidm person validity expire-at "$who" 2099-12-31T00:00:00Z -D idm_admin
+                  else
+                    echo "$who account_expire: set, left as is"
+                  fi
+                }
+                ${lib.concatMapStrings (o: "sentinel ${o}\n") gatewayOwners}
               '';
             };
             wantedBy = [ "multi-user.target" ];

@@ -83,6 +83,12 @@ let
   # The leaf's node name, from its URI SAN (`<sa>.<ns>`).
   node = "${name}.${namespace}";
   grantId = "chatgpt";
+  # The gateway authorization server's grant and its pre-registered hosted client
+  # (xmsg-design gateway-authorization-server.md §2.8, §2.10; owner 2026-11-18).
+  localGrantId = "chatgpt-as";
+  asClient = "xmsg-chatgpt";
+  # Kanidm's public PKCE client for the AS's upstream login (services/security/kanidm.nix).
+  loginClient = "xmsg-gateway-login";
   # The dedicated hosted client (services/security/kanidm.nix), and its lookup twin.
   hostedClient = "xmsg-gateway";
   lookupClient = "xmsg-gateway-lookup";
@@ -111,6 +117,8 @@ let
   gatewayBin = "${gatewayBinDir}/xmsg-mcp-gateway";
   eventsKey = "${keysDir}/events.key";
   lookupSecret = "${keysDir}/lookup-secret";
+  asClientSecret = "${keysDir}/as-client-secret";
+  livenessToken = "${keysDir}/liveness-token";
 
   # The node limits the gateway's manifest must equal. They are xmsg's defaults
   # (xmsg src/main.rs ServeArgs at 27429b7: --reply-ttl 604800, --idempotency-ttl 86400,
@@ -257,6 +265,21 @@ in
         '';
       };
 
+      authorizationServer.redirectUris = lib.mkOption {
+        type = lib.types.nullOr (lib.types.nonEmptyListOf lib.types.str);
+        default = null;
+        example = [ "https://chatgpt.com/connector/oauth/<id>" ];
+        description = ''
+          The exact per-connector redirect URIs of the hosted client the gateway's own
+          authorization server serves (`authorization_server.client.redirect_uris`),
+          copied from the new connector as ChatGPT shows them. null keeps the gateway
+          on the single Kanidm verifier. Set, it serves both profiles: Kanidm hidden
+          (advertised false) and the local AS as opaque_default, with Events still on
+          the old grant (cutover §2.10 step 3). The local grant must already be
+          enrolled and enabled in the store: that is the maintenance window's step.
+        '';
+      };
+
       tunnel = {
         enable = lib.mkOption {
           type = lib.types.bool;
@@ -329,6 +352,26 @@ in
             sopsOutput = {
               file = "oidc";
               key = lookupClient;
+            };
+          };
+          # The downstream client's secret (`authorization_server.client.secret_file`).
+          # The owner enters the same value in the new ChatGPT connector.
+          xmsg-gateway-as-client-secret = {
+            rekeyFile = environment.secretPath + "/xmsg-gateway/as-client-secret.age";
+            generator.script = "oauth-client-secret";
+            sopsOutput = {
+              file = "xmsg-gateway";
+              key = "as-client-secret";
+            };
+          };
+          # The liveness reader's Kanidm API token: a placed secret, minted by the
+          # writer's kanidm-xmsg-gateway-liveness (services/security/kanidm.nix) and copied
+          # here once, so the gateway's copy doesn't depend on that host's state directory.
+          xmsg-gateway-liveness-token = {
+            rekeyFile = environment.secretPath + "/xmsg-gateway/liveness-token.age";
+            sopsOutput = {
+              file = "xmsg-gateway";
+              key = "liveness-token";
             };
           };
           # The runtime key cortex's tunnel-client uses (services/ai/openai-tunnel.nix):
@@ -411,63 +454,136 @@ in
           hosted_client = hostedClient;
         };
 
-        serving = checkBudgets {
-          bind = "0.0.0.0:${toString port}";
-          allow_non_loopback_bind = true;
-          grant_store = grantStore;
-          request_timeout_ms = timeouts.request;
-          allowed_hosts = [
-            "127.0.0.1"
-            "localhost"
-            (lib.removePrefix "https://" origin)
-          ];
-          allowed_origins = [ ];
-          verifier = {
-            inherit service resource;
-            inherit (binding) issuer subject hosted_client;
-            # Kanidm sets aud to the client name (provider-setup.md "Direct Kanidm").
-            audience = hostedClient;
-            introspection_url = "https://${kanidmDomain}/oauth2/token/introspect";
-            introspection_client = lookupClient;
-            client_secret_file = lookupSecret;
-            # In-cluster DNS answers kanidm's name with this host's address too
-            # (coredns served-domains); the pin needs no DNS and matches the egress rule.
-            provider_addresses = [ kanidmIp ];
-            required_scopes = [
-              "identity:read"
-              "events:subscribe"
-              "xmsg:send"
-              "xmsg:reply"
-            ];
-            timeout_ms = timeouts.verifier;
+        # The gateway's own authorization server (cutover §2.10 step 3), on when the new
+        # connector's redirect URIs are set: both profiles, Kanidm hidden.
+        asRedirectUris = (cfg.authorizationServer or { }).redirectUris or null;
+        asEnabled = asRedirectUris != null;
+        # The local grant's enrollment document. The AS issuer is the gateway's public
+        # origin, distinct from the resource <origin>/mcp (§2.8 `issuer != R`).
+        localBinding = {
+          inherit service resource;
+          issuer = origin;
+          subject = cfg.subject;
+          hosted_client = asClient;
+        };
+        requiredScopes = [
+          "identity:read"
+          "events:subscribe"
+          "xmsg:send"
+          "xmsg:reply"
+        ];
+        kanidmVerifier = {
+          inherit service resource;
+          inherit (binding) issuer subject hosted_client;
+          # Kanidm sets aud to the client name (provider-setup.md "Direct Kanidm").
+          audience = hostedClient;
+          introspection_url = "https://${kanidmDomain}/oauth2/token/introspect";
+          introspection_client = lookupClient;
+          client_secret_file = lookupSecret;
+          # In-cluster DNS answers kanidm's name with the gateway VIP; the pin needs no
+          # DNS and matches the egress rule.
+          provider_addresses = [ kanidmIp ];
+          required_scopes = requiredScopes;
+          timeout_ms = timeouts.verifier;
+        };
+        authorizationServer = {
+          issuer = origin;
+          client = {
+            id = asClient;
+            secret_file = asClientSecret;
+            redirect_uris = asRedirectUris;
           };
-          messaging = {
-            xmsg = {
-              inherit service;
-              expected_node = node;
-              daemon_uid = uid;
-              register_socket = "${runtimeDir}/xmsg/register.sock";
-              agent_socket = "${runtimeDir}/xmsg/agent.sock";
-              operation_timeout_ms = timeouts.operation;
+          upstream = {
+            authorization_endpoint = "https://${kanidmDomain}/ui/oauth2";
+            token_endpoint = "https://${kanidmDomain}/oauth2/token";
+            client_id = loginClient;
+            redirect_uri = "${origin}/oauth/callback";
+            # The upstream login token, introspected like the hosted one: the lookup
+            # client, the same pin, the owner's subject, scope openid only.
+            verify = kanidmVerifier // {
+              issuer = "https://${kanidmDomain}/oauth2/openid/${loginClient}";
+              audience = loginClient;
+              hosted_client = loginClient;
+              required_scopes = [ "openid" ];
             };
-            manifest = {
-              reply_ttl_secs = node-limits.reply-ttl;
-              idempotency_ttl_secs = node-limits.idempotency-ttl;
-              svc_queue_cap = node-limits.svc-queue-cap;
-              # Half the node's idempotency window: a retry always lands well inside it.
-              dedup_lifetime_secs = node-limits.idempotency-ttl / 2;
-              max_framed_bytes = node-limits.max-body;
-            };
-            submission_timeout_ms = timeouts.submission;
-            max_reservations = 1000;
-            max_retained_bytes = 67108864;
           };
-          events = {
-            key_file = eventsKey;
-            grant_id = grantId;
-            dispatch_timeout_ms = timeouts.dispatch;
+          liveness = {
+            api_url = "https://${kanidmDomain}";
+            person = cfg.subject;
+            # memberof's SPN shape (kanidm idm/oauth2.rs, the `groups` claim).
+            group = "${loginClient}.access@${den.environments.${kanidmHost.environment}.domain}";
+            canary_person = "xmsg-gateway-liveness-test";
+            token_file = livenessToken;
           };
         };
+
+        serving =
+          checkBudgets {
+            bind = "0.0.0.0:${toString port}";
+            allow_non_loopback_bind = true;
+            grant_store = grantStore;
+            request_timeout_ms = timeouts.request;
+            allowed_hosts = [
+              "127.0.0.1"
+              "localhost"
+              (lib.removePrefix "https://" origin)
+            ];
+            allowed_origins = [ ];
+            messaging = {
+              xmsg = {
+                inherit service;
+                expected_node = node;
+                daemon_uid = uid;
+                register_socket = "${runtimeDir}/xmsg/register.sock";
+                agent_socket = "${runtimeDir}/xmsg/agent.sock";
+                operation_timeout_ms = timeouts.operation;
+              };
+              manifest = {
+                reply_ttl_secs = node-limits.reply-ttl;
+                idempotency_ttl_secs = node-limits.idempotency-ttl;
+                svc_queue_cap = node-limits.svc-queue-cap;
+                # Half the node's idempotency window: a retry always lands well inside it.
+                dedup_lifetime_secs = node-limits.idempotency-ttl / 2;
+                max_framed_bytes = node-limits.max-body;
+              };
+              submission_timeout_ms = timeouts.submission;
+              max_reservations = 1000;
+              max_retained_bytes = 67108864;
+            };
+            # Events stays on the OLD grant until the drain and cutover-events (§2.10
+            # steps 4-6).
+            events = {
+              key_file = eventsKey;
+              grant_id = grantId;
+              dispatch_timeout_ms = timeouts.dispatch;
+            };
+          }
+          // (
+            if asEnabled then
+              {
+                verifier_profiles = [
+                  (
+                    kanidmVerifier
+                    // {
+                      advertised = false;
+                      opaque_default = false;
+                    }
+                  )
+                  (
+                    localBinding
+                    // {
+                      local = true;
+                      opaque_default = true;
+                      advertised = true;
+                      required_scopes = requiredScopes;
+                    }
+                  )
+                ];
+                authorization_server = authorizationServer;
+              }
+            else
+              { verifier = kanidmVerifier; }
+          );
 
         mount = vol: path: {
           name = vol;
@@ -517,7 +633,15 @@ in
             # "Deploying file exchange", gateway 9cd91bc). Writers are stopped: the
             # Deployment is Recreate, and store-backup runs first.
             [ "migrate-attachments" ]
-          ];
+          ]
+          # Hash-only OAuth state; with the AS on only, so the owner's maintenance
+          # window (not a routine restart) is what first runs it (§2.10 step 3).
+          ++ lib.optional asEnabled (
+            storeStep prefix store [
+              "migrate-authorization-server"
+              "--if-needed"
+            ]
+          );
 
         prepareScript = ''
           set -eu
@@ -532,6 +656,12 @@ in
           base64 -d ${secretsDir}/events-key > ${eventsKey}
           chmod 0600 ${eventsKey}
           [ "$(wc -c < ${eventsKey})" -eq 32 ] || { echo "events key is not 32 bytes" >&2; exit 1; }
+        ''
+        + lib.optionalString asEnabled ''
+          rm -f ${asClientSecret} ${livenessToken}
+          cp ${secretsDir}/as-client-secret ${asClientSecret}
+          cp ${secretsDir}/liveness-token ${livenessToken}
+          chmod 0400 ${asClientSecret} ${livenessToken}
         '';
 
         installScript = ''
@@ -723,12 +853,17 @@ in
               "serving.json" = builtins.toJSON serving;
               "binding.json" = builtins.toJSON binding;
               "policy.json" = policy;
-            };
+            }
+            // lib.optionalAttrs asEnabled { "local-binding.json" = builtins.toJSON localBinding; };
 
             secrets.${name}.stringData = {
               events-key = config.age.secrets.xmsg-gateway-events-key.sopsRef;
               lookup-secret = config.age.secrets.xmsg-gateway-lookup-oidc-client-secret.sopsRef;
               tunnel-runtime-key = config.age.secrets.xmsg-gateway-tunnel-runtime-key.sopsRef;
+            }
+            // lib.optionalAttrs asEnabled {
+              as-client-secret = config.age.secrets.xmsg-gateway-as-client-secret.sopsRef;
+              liveness-token = config.age.secrets.xmsg-gateway-liveness-token.sopsRef;
             };
 
             # SQLite grant store, custody and the leaf's db. The media-config label
@@ -804,6 +939,16 @@ in
                             grantId
                             "${configDir}/binding.json"
                           ])
+                        ]
+                        # A fresh store gets the local grant too, disabled like the first.
+                        ++ lib.optional asEnabled (
+                          storeStep "staged-local" stagedStore [
+                            "enroll"
+                            localGrantId
+                            "${configDir}/local-binding.json"
+                          ]
+                        )
+                        ++ [
                           {
                             name = "store-install";
                             image = busybox;
@@ -841,7 +986,18 @@ in
                             "--policy"
                             "${configDir}/policy.json"
                           ])
-                        ];
+                        ]
+                        # The same outbound policy on the local grant, which the window
+                        # enrolled; a missing grant fails the pod, as for the first.
+                        ++ lib.optional asEnabled (
+                          storeStep "store-local" grantStore [
+                            "apply"
+                            "--id"
+                            localGrantId
+                            "--policy"
+                            "${configDir}/policy.json"
+                          ]
+                        );
                         containers = [
                           {
                             name = "xmsg";
@@ -1022,6 +1178,13 @@ in
                 # Its own route so the rate limit below covers this path alone; the
                 # longer prefix wins over /oauth.
                 "${name}-authorize" = route [ (path "PathPrefix" "/oauth/authorize") ];
+              }
+              # Route B (ingress-route amendment, ng1.32): the MCP endpoint itself over
+              # direct HTTPS, for the connector the gateway's AS serves; route A, the
+              # tunnel, keeps serving the old one. /mcp/.well-known/* (PRM) rides the
+              # prefix. With the AS only: before it, only the tunnel carries MCP.
+              // lib.optionalAttrs asEnabled {
+                "${name}-mcp" = route [ (path "PathPrefix" "/mcp") ];
               };
 
             # Per client address, as envoy-gateway detects it: Cloudflare's forwarded
@@ -1055,6 +1218,40 @@ in
                     "0.0.0.0/0"
                     "::/0"
                   ];
+            };
+
+            # Route B's unauthenticated-traffic bound per client address (§2.5): ten times
+            # the authorize bound, for a client's normal tool-call bursts; 429 beyond it.
+            backendTrafficPolicies."${name}-mcp-rate-limit" = lib.mkIf asEnabled {
+              spec = {
+                targetRefs = [
+                  {
+                    group = "gateway.networking.k8s.io";
+                    kind = "HTTPRoute";
+                    name = "${name}-mcp";
+                  }
+                ];
+                rateLimit.local.rules =
+                  map
+                    (value: {
+                      clientSelectors = [
+                        {
+                          sourceCIDR = {
+                            type = "Distinct";
+                            inherit value;
+                          };
+                        }
+                      ];
+                      limit = {
+                        requests = 300;
+                        unit = "Minute";
+                      };
+                    })
+                    [
+                      "0.0.0.0/0"
+                      "::/0"
+                    ];
+              };
             };
 
             # Declaring an ingress rule puts the pod in ingress default-deny: only envoy

@@ -61,6 +61,9 @@ in
       # anonymously 2026-11-10), which kanidm issues as the OIDC `sub`. Acceptance step 1
       # checks it against the first real token's introspection before the grant is enabled.
       subject = "b01ebf55-9b81-4d78-a308-8c2b9e5b46c0";
+      # The new connector for the gateway's own authorization server, created by the
+      # owner 2026-11-18 (cutover §2.10 step 2); its exact per-connector redirect.
+      authorizationServer.redirectUris = [ "https://chatgpt.com/connector/oauth/44LD9UTXVNyp" ];
     };
 
     # Pin Cilium's datapath devices to the physical NICs: enp2s0 (WAN
