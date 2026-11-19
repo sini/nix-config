@@ -29,7 +29,6 @@
             email = (environment.email or { }).adminEmail or "admin@${topDomain}";
             inherit ((environment.acme or { })) dnsProvider;
             inherit ((environment.acme or { })) dnsResolver;
-            dnsPropagationCheck = true;
             credentialFiles =
               let
                 domainConfig = lib.findFirst (d: d.domain == topDomain) null certificate-domains;
