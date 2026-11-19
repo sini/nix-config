@@ -273,10 +273,10 @@ tiers), so it's the weaker candidate.
      `/dev/dri` mount outside the device plugin, and make sure llama-cpp can't
      take it. Also VA-API for Jellyfin on Phoenix (mesa radeonsi) replacing
      uplink's Intel QSV, and the hardware-acceleration settings to match.
-10. **open-webui / ollama:** left on uplink for now (owner, 2026-11-19): uplink
-    comes back after the window, so they stay down with it. retire, or move
-    open-webui into the cluster pointed at the cluster's llama-cpp. ollama isn't
-    serving anything.
+10. **open-webui / ollama:** left on uplink (owner, 2026-11-19). uplink comes
+    back after the window, so they are down for it and nothing else. (Moving
+    open-webui into the cluster against its llama-cpp stays an option; ollama
+    serves nothing.)
 11. **homepage, oauth2-proxy, den-docs-mirror, gen-status:** homepage and glance
     already run in the cluster, so retire uplink's homepage. Move the two static
     sites to the cluster. oauth2-proxy retires with the UIs it fronts (envoy
