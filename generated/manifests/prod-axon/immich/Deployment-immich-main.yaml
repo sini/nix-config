@@ -56,7 +56,7 @@ spec:
                   name: immich
             - name: TZ
               value: America/Los_Angeles
-          image: ghcr.io/immich-app/immich-server@sha256:e1981983b1c13f6024b57d72e7ecae3342eed1581201ab09fb248932d86c593a
+          image: ghcr.io/immich-app/immich-server@sha256:fc880c1bf665b4aab1e74c15e56ab871225989cd546536e6b77e771869af06bd
           name: main
           volumeMounts:
             - mountPath: /config/immich.json

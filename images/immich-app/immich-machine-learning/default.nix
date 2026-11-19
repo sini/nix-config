@@ -1,9 +1,9 @@
 {
   imageName = "ghcr.io/immich-app/immich-machine-learning";
-  imageTag = "v3.3.6";
-  imageDigest = "sha256:14367bfb374b8576ddf49abd67c5ca0190a4c7fcf6303cdad65d7f7bf1a50bc2";
-  imageHash = "sha256-FUoA2HgRwX2z/Dk6Rdp6EM/sv+yz0AeDBMxZ4ZoOt2s=";
+  imageTag = "release";
+  imageDigest = "sha256:739405742a79bd7447227c553bb62ed5491aa36acf00bc667af7f9c93b6fae91";
+  imageHash = "sha256-pgUYxWdpi6Dn+1W0IDWGQoyTOLtFZ+w13ImI3u2tuRE=";
   arch = "amd64";
   os = "linux";
-  pinned = true;
+  pinned = false;
 }
