@@ -196,7 +196,10 @@ in
             type = "s3";
             region = "garage";
             bucket = name;
-            endpoint = "http://garage.garage.svc:3900";
+            # The public name, not the in-cluster Service: atticd answers a NAR fetch
+            # with a 307 to a presigned URL on this endpoint, which CI runners and
+            # off-LAN hosts must resolve. In-cluster it resolves to the gateway VIP.
+            endpoint = "https://${cluster.domainFor "garage-s3"}";
           };
           compression.type = "zstd";
           # As uplink's: coarse chunks, fewer dedup lookups per NAR.

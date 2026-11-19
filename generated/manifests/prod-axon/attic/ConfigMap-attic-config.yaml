@@ -22,7 +22,7 @@ data:
 
     [storage]
     bucket = "attic"
-    endpoint = "http://garage.garage.svc:3900"
+    endpoint = "https://s3.json64.dev"
     region = "garage"
     type = "s3"
 kind: ConfigMap
