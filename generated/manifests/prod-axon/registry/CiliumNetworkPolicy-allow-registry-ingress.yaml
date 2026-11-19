@@ -1,0 +1,25 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-registry-ingress
+  namespace: registry
+spec:
+  description: 'registry: the gateway on 5000, metrics from Prometheus on 5001.'
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: registry
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: gateways
+      toPorts:
+        - ports:
+            - port: "5000"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: monitoring
+      toPorts:
+        - ports:
+            - port: "5001"
+              protocol: TCP

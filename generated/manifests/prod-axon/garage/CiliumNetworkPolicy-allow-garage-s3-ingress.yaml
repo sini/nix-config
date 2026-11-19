@@ -13,6 +13,8 @@ spec:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: attic
         - matchLabels:
+            k8s:io.kubernetes.pod.namespace: registry
+        - matchLabels:
             k8s:io.kubernetes.pod.namespace: gateways
       toPorts:
         - ports:

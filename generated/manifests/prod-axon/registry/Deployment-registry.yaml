@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: registry
+  namespace: registry
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: registry
+  template:
+    metadata:
+      annotations:
+        json64.dev/config-hash: 8b5f306c3a0e78b6505baa31c8bd3d7f870dab8fd6f5f2ebf6c460273d9448a2
+      labels:
+        app.kubernetes.io/name: registry
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - args:
+            - /etc/distribution/config.yml
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  key: access-key-id
+                  name: registry-s3
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: secret-access-key
+                  name: registry-s3
+            - name: REGISTRY_HTTP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: http-secret
+                  name: registry-auth
+          image: library/registry@sha256:82f6ff4a7f982960c8aa51617fea3aabc485df6e55cce80d22deb1de36f1bc3c
+          livenessProbe:
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            tcpSocket:
+              port: http
+          name: registry
+          ports:
+            - containerPort: 5000
+              name: http
+            - containerPort: 5001
+              name: debug
+          readinessProbe:
+            httpGet:
+              path: /debug/health
+              port: debug
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+          volumeMounts:
+            - mountPath: /etc/distribution
+              name: config
+              readOnly: true
+            - mountPath: /auth
+              name: auth
+              readOnly: true
+            - mountPath: /tmp
+              name: tmp
+      enableServiceLinks: false
+      securityContext:
+        fsGroup: 65532
+        runAsGroup: 65532
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: registry
+      topologySpreadConstraints:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: registry
+          maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+      volumes:
+        - configMap:
+            name: registry-config
+          name: config
+        - name: auth
+          secret:
+            defaultMode: 288
+            items:
+              - key: htpasswd
+                path: htpasswd
+            secretName: registry-auth
+        - emptyDir: {}
+          name: tmp

@@ -1,0 +1,17 @@
+apiVersion: garage.rajsingh.info/v1beta1
+kind: GarageKey
+metadata:
+  name: registry-server
+  namespace: registry
+spec:
+  bucketPermissions:
+    - bucketRef:
+        name: registry
+      read: true
+      write: true
+  clusterRef:
+    name: garage
+    namespace: garage
+  neverExpires: true
+  secretTemplate:
+    name: registry-s3
