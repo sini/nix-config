@@ -74,6 +74,8 @@
                 fromEndpoints = [
                   { matchLabels."k8s:io.kubernetes.pod.namespace" = "gateways"; }
                   { matchLabels."k8s:io.kubernetes.pod.namespace" = "burrito"; }
+                  # The fleet's binary cache (dev/attic.nix), its chunk store.
+                  { matchLabels."k8s:io.kubernetes.pod.namespace" = "attic"; }
                 ];
                 toPorts = [
                   {
