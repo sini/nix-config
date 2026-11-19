@@ -10,6 +10,9 @@ let
 in
 {
   den.aspects.kubernetes.services.storage.garage.routes = {
+    # The gateway serves the public S3 endpoint below.
+    s3-clients = _: { namespace = "gateways"; };
+
     # Grey: proxied mode's 100 MB upload cap breaks S3 multipart.
     served-domains =
       { cluster, ... }:

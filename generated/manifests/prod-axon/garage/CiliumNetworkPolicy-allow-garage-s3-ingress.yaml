@@ -11,11 +11,9 @@ spec:
   ingress:
     - fromEndpoints:
         - matchLabels:
-            k8s:io.kubernetes.pod.namespace: gateways
-        - matchLabels:
-            k8s:io.kubernetes.pod.namespace: burrito
-        - matchLabels:
             k8s:io.kubernetes.pod.namespace: attic
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: gateways
       toPorts:
         - ports:
             - port: "3900"

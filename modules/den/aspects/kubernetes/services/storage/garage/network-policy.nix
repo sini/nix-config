@@ -4,7 +4,7 @@
 {
   den.aspects.kubernetes.services.storage.garage.network-policy = {
     k8s-manifests =
-      { ... }:
+      { s3-clients, lib, ... }:
       {
         applications.garage.resources.ciliumNetworkPolicies = {
           # RPC mesh: Garage pods talk to each other on 3901 (ingress + egress).
@@ -64,19 +64,17 @@
             ];
           };
 
-          # S3 ingress on 3900 from the gateways namespace (public route backend)
-          # and in-cluster consumer namespaces (burrito).
+          # S3 ingress on 3900 from each namespace that declares itself an S3 client
+          # (the s3-clients quirk): the gateways (the public route, routes.nix) and
+          # in-cluster consumers.
           allow-garage-s3-ingress.spec = {
             description = "S3 API (3900) ingress from gateways + consumer namespaces.";
             endpointSelector.matchLabels."app.kubernetes.io/name" = "garage";
             ingress = [
               {
-                fromEndpoints = [
-                  { matchLabels."k8s:io.kubernetes.pod.namespace" = "gateways"; }
-                  { matchLabels."k8s:io.kubernetes.pod.namespace" = "burrito"; }
-                  # The fleet's binary cache (dev/attic.nix), its chunk store.
-                  { matchLabels."k8s:io.kubernetes.pod.namespace" = "attic"; }
-                ];
+                fromEndpoints = map (namespace: {
+                  matchLabels."k8s:io.kubernetes.pod.namespace" = namespace;
+                }) (lib.unique (map (c: c.namespace) s3-clients));
                 toPorts = [
                   {
                     ports = [

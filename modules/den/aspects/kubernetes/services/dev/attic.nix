@@ -66,6 +66,9 @@ let
 in
 {
   den.aspects.kubernetes.services.dev.attic = {
+    # Its chunk store is a Garage bucket.
+    s3-clients = _: { inherit namespace; };
+
     settings.live = lib.mkOption {
       type = lib.types.bool;
       default = false;
