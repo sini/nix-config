@@ -226,8 +226,16 @@ tiers), so it's the weaker candidate.
 5. **container-registry → cluster** (registry:2 on Garage S3). Cleared to move
    (owner, 2026-11-17): its consumers are CI (xmsg's images) and nix-config's
    custom container builds.
-6. **Host alertmanager → the cluster's** (kube-prometheus-stack already runs
-   one). Route host alerts and the SMTP receiver there, and retire uplink's.
+6. **Host alertmanager: stays on uplink (owner, 2026-11-19).** Host alerts
+   already go through the cluster: uplink runs no Prometheus, and host health
+   (HostSilent and the rest) is the cluster's rules and Alertmanager. uplink's
+   Alertmanager is only the cluster's dead-man's switch: it receives the
+   always-firing Watchdog and mails ClusterWatchdogMissing when it stops. It has
+   to live outside the cluster, so during the window the cluster's alerting goes
+   unwatched; accepted.
+   - End goal: an external heartbeat service (e.g. healthchecks.io) fed the
+     Watchdog by webhook, which also covers the whole site going down. Then
+     retire uplink's Alertmanager.
 7. **Nix builders:** accept. bitstream stays a builder, and hosts build locally.
    No axon builders, to keep the nodes light.
 8. **BGP hub: accepted. TESTED (2026-11-17).** uplink's four sessions (the UDM
