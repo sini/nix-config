@@ -1,9 +1,9 @@
 {
   imageName = "docker.io/homeylab/tdarr-exporter";
-  imageTag = "3.0.0";
-  imageDigest = "sha256:07bfc1b72ecec73a343be2007c22373b6e15acbdbecdd29545ab5a03ca21ca69";
-  imageHash = "sha256-XDrey2PhSTbYNto9oM81VPJ5oGy32LyJYkK2XioAtHY=";
+  imageTag = "latest";
+  imageDigest = "sha256:c72fd0ecf4aa5207d4f609d09fbb6470bac9e4dc5d9524303cd7169f5751bf62";
+  imageHash = "sha256-6YRGayOMzBE5wDi+1pxFy8m38hRJh+5FsSu/MiD40T0=";
   arch = "amd64";
   os = "linux";
-  pinned = true;
+  pinned = false;
 }
