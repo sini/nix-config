@@ -223,9 +223,17 @@ tiers), so it's the weaker candidate.
      Garage's own Kubernetes discovery is off. The v2.3.0 image was a default
      written onto the live object and in no file; it was removed, so Garage
      follows the operator's pinned default, which helmupdater moves.
-5. **container-registry → cluster** (registry:2 on Garage S3). Cleared to move
-   (owner, 2026-11-17): its consumers are CI (xmsg's images) and nix-config's
-   custom container builds.
+5. **container-registry: in the cluster. DONE (2026-11-19).**
+   - Docker distribution 3 (kubernetes/services/dev/registry.nix: 01dfef5e,
+     f61c052e, 057cb04e), two replicas on a Garage bucket, sharing an http
+     secret so an upload can continue on either. Auth is the existing bcrypt
+     hash of the shared registry-password (user `builder`), so the workstations'
+     push login and the k3s nodes' pull login are unchanged. The nodes now take
+     the registry record from the cluster.
+   - uplink's two images (tdarr-node:av1, validation/busybox:roundtrip) were
+     copied with their digests preserved. uplink's registry is gone; its data is
+     left in /persist/var/lib/docker-registry (2.0G). Its consumers are
+     nix-config's container builds; xmsg's CI does not push here.
 6. **Host alertmanager: stays on uplink (owner, 2026-11-19).** Host alerts
    already go through the cluster: uplink runs no Prometheus, and host health
    (HostSilent and the rest) is the cluster's rules and Alertmanager. uplink's
