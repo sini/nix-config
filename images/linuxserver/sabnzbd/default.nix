@@ -1,8 +1,8 @@
 {
   imageName = "linuxserver/sabnzbd";
   imageTag = "latest";
-  imageDigest = "sha256:693c208f697d0b411410edd92a98b52c8c754c01f5c078a975cbc892044260f5";
-  imageHash = "sha256-/qC7YkQggWkJGDRN9MGUpmnAgcqGsVVAVaDiInNXRUA=";
+  imageDigest = "sha256:b356d0a9b22db584e9005364ec4e752dfc081ce501b7145e9a5c0bb38e4d1ba4";
+  imageHash = "sha256-jtCwx0A9VjL4JA7yTsn8297T6S154NVtGYjGg8cbkDE=";
   arch = "amd64";
   os = "linux";
   pinned = false;

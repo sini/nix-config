@@ -94,7 +94,7 @@ spec:
                 secretKeyRef:
                   key: secret-key
                   name: grafana-secret-key
-          image: docker.io/grafana/grafana:13.3.0-distroless
+          image: docker.io/grafana/grafana:13.3.1-distroless
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 10

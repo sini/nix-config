@@ -64,7 +64,7 @@ spec:
               value: localhost
             - name: KUBERNETES_SERVICE_PORT
               value: "6443"
-          image: quay.io/cilium/operator-generic:v1.20.4@sha256:7a7a3489dc66ad67e420d285c8a8d2e169b0957ad15e120f593d27081bf38d82
+          image: quay.io/cilium/operator-generic:v1.20.5@sha256:c6e7de6665aa9701db86c4fe46828a75a0d167afe084a9ffb5bce34b2c4fa8c4
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
@@ -118,6 +118,8 @@ spec:
         - key: node-role.kubernetes.io/control-plane
           operator: Exists
         - key: node-role.kubernetes.io/master
+          operator: Exists
+        - key: node-role.kubernetes.io/etcd
           operator: Exists
         - key: node.kubernetes.io/not-ready
           operator: Exists

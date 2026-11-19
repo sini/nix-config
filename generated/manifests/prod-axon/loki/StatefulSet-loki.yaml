@@ -52,7 +52,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
-          image: docker.io/grafana/loki:3.7.9
+          image: docker.io/grafana/loki:3.7.10
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 10
