@@ -74,7 +74,7 @@ spec:
               value: "6"
             - name: PYTHONPATH
               value: /opt/hindsight-write-gate
-          image: ghcr.io/vectorize-io/hindsight-api@sha256:7b14a1f4062252992d0176758753615e0a2071d9a269995be007be223ab01812
+          image: ghcr.io/vectorize-io/hindsight-api@sha256:662109ece429871a81e036427fb93fbb09ba9dc4b01d320d356f114c0e1aedd8
           livenessProbe:
             failureThreshold: 3
             httpGet:
@@ -139,7 +139,7 @@ spec:
                 secretKeyRef:
                   key: url
                   name: hindsight-pg-dsn
-          image: ghcr.io/vectorize-io/hindsight-api@sha256:7b14a1f4062252992d0176758753615e0a2071d9a269995be007be223ab01812
+          image: ghcr.io/vectorize-io/hindsight-api@sha256:662109ece429871a81e036427fb93fbb09ba9dc4b01d320d356f114c0e1aedd8
           name: release-stale-tasks
           volumeMounts:
             - mountPath: /home/hindsight/.cache

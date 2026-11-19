@@ -41,7 +41,7 @@ spec:
               value: "3000"
             - name: NODE_ENV
               value: production
-          image: ghcr.io/vectorize-io/hindsight-control-plane@sha256:d9bf57083f7cb0a53ee5011bdfde6aae2490dbf5c360d2d1bff10473b45eb112
+          image: ghcr.io/vectorize-io/hindsight-control-plane@sha256:74a113e1f02ace9e8feed954e6b42282e9e3d33b7e0b6d528158d05902552a9a
           livenessProbe:
             initialDelaySeconds: 30
             periodSeconds: 10
