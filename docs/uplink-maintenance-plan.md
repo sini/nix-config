@@ -231,9 +231,9 @@ tiers), so it's the weaker candidate.
      push login and the k3s nodes' pull login are unchanged. The nodes now take
      the registry record from the cluster.
    - uplink's two images (tdarr-node:av1, validation/busybox:roundtrip) were
-     copied with their digests preserved. uplink's registry is gone; its data is
-     left in /persist/var/lib/docker-registry (2.0G). Its consumers are
-     nix-config's container builds; xmsg's CI does not push here.
+     copied with their digests preserved. uplink's registry and its data are
+     gone. Its consumers are nix-config's container builds; xmsg's CI does not
+     push here.
 6. **Host alertmanager: stays on uplink (owner, 2026-11-19).** Host alerts
    already go through the cluster: uplink runs no Prometheus, and host health
    (HostSilent and the rest) is the cluster's rules and Alertmanager. uplink's
@@ -273,8 +273,10 @@ tiers), so it's the weaker candidate.
      `/dev/dri` mount outside the device plugin, and make sure llama-cpp can't
      take it. Also VA-API for Jellyfin on Phoenix (mesa radeonsi) replacing
      uplink's Intel QSV, and the hardware-acceleration settings to match.
-10. **open-webui / ollama:** retire, or move open-webui into the cluster pointed
-    at the cluster's llama-cpp. ollama isn't serving anything.
+10. **open-webui / ollama:** left on uplink for now (owner, 2026-11-19): uplink
+    comes back after the window, so they stay down with it. retire, or move
+    open-webui into the cluster pointed at the cluster's llama-cpp. ollama isn't
+    serving anything.
 11. **homepage, oauth2-proxy, den-docs-mirror, gen-status:** homepage and glance
     already run in the cluster, so retire uplink's homepage. Move the two static
     sites to the cluster. oauth2-proxy retires with the UIs it fronts (envoy
