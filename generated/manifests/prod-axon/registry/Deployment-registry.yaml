@@ -11,7 +11,7 @@ spec:
   template:
     metadata:
       annotations:
-        json64.dev/config-hash: 8b5f306c3a0e78b6505baa31c8bd3d7f870dab8fd6f5f2ebf6c460273d9448a2
+        json64.dev/config-hash: b5fa62226f2883a19bbd034fa5cc960f149aa0f7854a959b1840f5b0513cebd3
       labels:
         app.kubernetes.io/name: registry
     spec:

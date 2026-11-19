@@ -102,8 +102,9 @@ in
           log.level = "info";
           http = {
             addr = ":${toString port}";
-            # Behind the gateway, which terminates TLS.
-            host = "https://${domain}";
+            # Relative upload locations, with no `host`: an absolute one names a single
+            # address, so clients that reach the pod another way (a port-forward)
+            # would be sent elsewhere mid-upload.
             relativeurls = true;
             debug = {
               addr = ":5001";
