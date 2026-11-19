@@ -1,8 +1,8 @@
 {
   imageName = "searxng/searxng";
   imageTag = "latest";
-  imageDigest = "sha256:71a410e383ea1c1f973a0c38e566757c1f0c5f3976a33be2c70918fcd93bdcc7";
-  imageHash = "sha256-SAnlQCqHvqyRnpomPEJlbEKUY9lXDaKBIJTyxdvkLx8=";
+  imageDigest = "sha256:0b9f3ddd85efc8df189e6543d65702abfa8f3ed1c32229a53f7707cd12b554ef";
+  imageHash = "sha256-s3tP5J41rrP9Ib+6vjwD2LuNJLsnJBubY9Gse9N0XNE=";
   arch = "amd64";
   os = "linux";
   pinned = false;

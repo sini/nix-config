@@ -1,6 +1,6 @@
 {
   repo = "oci://ghcr.io/littleoffice/charts";
   chart = "searxng";
-  version = "2.0.12";
-  chartHash = "sha256-L94Adgy0NXy3GoXnMVOba1uERMSI8VcSe491S3IOOSc=";
+  version = "2.1.1";
+  chartHash = "sha256-usedBAVK0zttk235ZbFXSY6woBzv/Kcbkjq9unPgO/I=";
 }

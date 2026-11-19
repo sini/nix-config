@@ -1,8 +1,8 @@
 {
   imageName = "qmcgaw/gluetun";
   imageTag = "latest";
-  imageDigest = "sha256:75df789dea20551fa973f808133a712700bf198518f9d49ed581287777508556";
-  imageHash = "sha256-1opaCVt6b3fxCQn/l/Z8eT6Vw3p1o9667dX/g9zSILw=";
+  imageDigest = "sha256:cbafe0945d0fe5a3c55ca64d43a85c5db270458f4c645ee65797b527f6f57a64";
+  imageHash = "sha256-uxU0Vghb60nev+3/6tvEIH9lzj8Sgd78l/3HArcbk7M=";
   arch = "amd64";
   os = "linux";
   pinned = false;

@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
+    app.kubernetes.io/component: valkey
     app.kubernetes.io/instance: immich-redis
     app.kubernetes.io/name: valkey
   name: immich-redis
@@ -13,40 +14,56 @@ spec:
       app.kubernetes.io/instance: immich-redis
       app.kubernetes.io/name: valkey
   strategy:
-    type: RollingUpdate
+    type: Recreate
   template:
     metadata:
       annotations:
-        checksum/initconfig: 495cc05957cae2b4d1eac2a05045f0ac
+        checksum/initconfig: fa134d87648681485db334c1c4532815
       labels:
+        app.kubernetes.io/component: valkey
         app.kubernetes.io/instance: immich-redis
         app.kubernetes.io/name: valkey
     spec:
       automountServiceAccountToken: false
       containers:
         - args:
-            - /data/conf/valkey.conf
+            - /valkey-conf/valkey.conf
           command:
             - valkey-server
           env:
-            - name: VALKEY_LOG_LEVEL
-              value: notice
+            - name: VALKEY_PROBE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: redis-password
+                  name: immich
           image: docker.io/valkey/valkey:9.1.3
           imagePullPolicy: IfNotPresent
           livenessProbe:
             exec:
               command:
-                - valkey-cli
-                - ping
+                - sh
+                - -c
+                - VALKEYCLI_AUTH="${VALKEY_PROBE_PASSWORD:-${VALKEY_PROBE_PASSWORD_INLINE:-}}"; export VALKEYCLI_AUTH; r=$('valkey-cli' '-p' '6379' 'ping' 2>&1); case "$r" in PONG|LOADING*) exit 0;; esac; echo "$r"; exit 1
             failureThreshold: 3
             initialDelaySeconds: 0
             periodSeconds: 10
             timeoutSeconds: 1
-          name: immich-redis
+          name: valkey
           ports:
             - containerPort: 6379
               name: tcp
               protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - VALKEYCLI_AUTH="${VALKEY_PROBE_PASSWORD:-${VALKEY_PROBE_PASSWORD_INLINE:-}}"; export VALKEYCLI_AUTH; r=$('valkey-cli' '-p' '6379' 'ping' 2>&1); case "$r" in PONG) exit 0;; esac; echo "$r"; exit 1
+            failureThreshold: 3
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
           resources: {}
           securityContext:
             allowPrivilegeEscalation: false
@@ -59,8 +76,9 @@ spec:
           startupProbe:
             exec:
               command:
-                - valkey-cli
-                - ping
+                - sh
+                - -c
+                - VALKEYCLI_AUTH="${VALKEY_PROBE_PASSWORD:-${VALKEY_PROBE_PASSWORD_INLINE:-}}"; export VALKEYCLI_AUTH; r=$('valkey-cli' '-p' '6379' 'ping' 2>&1); case "$r" in PONG|LOADING*) exit 0;; esac; echo "$r"; exit 1
             failureThreshold: 3
             initialDelaySeconds: 0
             periodSeconds: 10
@@ -68,14 +86,14 @@ spec:
           volumeMounts:
             - mountPath: /data
               name: valkey-data
-            - mountPath: /etc/valkey
-              name: valkey-acl
+            - mountPath: /valkey-conf
+              name: valkey-conf
       initContainers:
         - command:
             - /scripts/init.sh
           image: docker.io/valkey/valkey:9.1.3
           imagePullPolicy: IfNotPresent
-          name: immich-redis-init
+          name: init
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -87,10 +105,10 @@ spec:
           volumeMounts:
             - mountPath: /data
               name: valkey-data
+            - mountPath: /valkey-conf
+              name: valkey-conf
             - mountPath: /scripts
               name: scripts
-            - mountPath: /etc/valkey
-              name: valkey-acl
             - mountPath: /valkey-users-secret
               name: valkey-users-secret
               readOnly: true
@@ -101,14 +119,15 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       serviceAccountName: immich-redis
+      terminationGracePeriodSeconds: 30
       volumes:
+        - emptyDir:
+            medium: Memory
+          name: valkey-conf
         - configMap:
             defaultMode: 365
             name: immich-redis-init-scripts
           name: scripts
-        - emptyDir:
-            medium: Memory
-          name: valkey-acl
         - name: valkey-users-secret
           secret:
             defaultMode: 256

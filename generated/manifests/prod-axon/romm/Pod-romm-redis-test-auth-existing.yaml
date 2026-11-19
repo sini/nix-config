@@ -10,6 +10,7 @@ metadata:
   name: romm-redis-test-auth-existing
   namespace: media
 spec:
+  automountServiceAccountToken: false
   containers:
     - command:
         - sh
@@ -31,12 +32,27 @@ spec:
           echo "⚠ Manual verification recommended for usersExistingSecret configuration"
           exit 0
       image: docker.io/valkey/valkey:9.1.3
+      imagePullPolicy: IfNotPresent
       name: test-auth
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 1000
       volumeMounts:
         - mountPath: /valkey-users-secret
           name: valkey-users-secret
           readOnly: true
   restartPolicy: Never
+  securityContext:
+    fsGroup: 1000
+    runAsGroup: 1000
+    runAsUser: 1000
+    seccompProfile:
+      type: RuntimeDefault
   volumes:
     - name: valkey-users-secret
       secret:
