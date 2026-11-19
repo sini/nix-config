@@ -94,7 +94,6 @@
       core.network.syncthing.hub
       services.web.den-docs-mirror
       services.web.gen-status
-      services.web.container-registry
       # The admin panel runs in the cluster (kubernetes.services.network.blocky-ui).
       #services.networking.blocky-ui
       virtualization.podman

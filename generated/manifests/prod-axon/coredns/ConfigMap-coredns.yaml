@@ -41,7 +41,7 @@ data:
             10.11.0.1 prometheus.json64.dev
             10.11.0.1 prowlarr.json64.dev
             10.11.0.1 radarr.json64.dev
-            10.10.10.1 registry.json64.dev
+            10.11.0.1 registry.json64.dev
             10.11.0.1 romm.json64.dev
             10.11.0.1 s3.json64.dev
             10.11.0.1 search.json64.dev

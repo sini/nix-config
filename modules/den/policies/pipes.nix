@@ -46,6 +46,10 @@ in
       (pipe.from "container-registries" [
         (pipe.collect ({ host, ... }: true))
       ])
+      # A cluster-served registry (kubernetes/services/dev/registry.nix).
+      (pipe.from "container-registries" [
+        (pipe.collectAll ({ cluster, ... }: true))
+      ])
     ];
 
   den.policies.collect-thunderbolt-mesh-peers =

@@ -82,6 +82,8 @@ in
     settings.kubernetes.services.network.headscale.live = true;
     # attic serves from the cluster (dev/attic.nix); uplink's atticd is gone.
     settings.kubernetes.services.dev.attic.live = true;
+    # The registry serves from the cluster (dev/registry.nix); uplink's is gone.
+    settings.kubernetes.services.dev.registry.live = true;
 
     # RomM initial full-library scan: the ~100k-ROM first pass far exceeds RomM's
     # 4h default scan window, so give the scan job a 14-day timeout and raise the
@@ -338,7 +340,7 @@ in
       # dev — Coder workspace platform (SP1 control plane)
       # The fleet's binary cache (dev/attic.nix); uplink serves it until `live`.
       services.dev.attic
-      # The container registry (dev/registry.nix); uplink serves it until `live`.
+      # The container registry (dev/registry.nix).
       services.dev.registry
       services.dev.coder.coder-pg
       services.dev.coder.coder
