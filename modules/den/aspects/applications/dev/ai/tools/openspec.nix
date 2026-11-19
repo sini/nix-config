@@ -1,6 +1,6 @@
 # OpenSpec (github:Fission-AI/OpenSpec): Spec-Driven Development (SDD) framework
 # for AI coding assistants. Provides `openspec` CLI, `openspecui` Web UI, and full
-# suite of 12 workflow skills built statically via sandboxed CLI execution.
+# suite of 12 workflow skills generated at build time by its own skill generator.
 {
   den.aspects.applications.dev.ai.tools.openspec = {
     agent-extensions =
@@ -31,40 +31,31 @@
           "openspec-verify-change"
         ];
 
-        # Sandboxed execution of `openspec init` to produce the full 12 skills
+        # The skills, written by openspec's own generator. `openspec init` fetches them
+        # from GitHub with git (2.x), which the sandbox cannot reach, and then checks
+        # each fetched SKILL.md equals what expectedSkillContents generates; this
+        # writes that content directly.
         openspecBundle =
           pkgs.runCommand "openspec-bundle"
             {
               nativeBuildInputs = [
-                openspecPkg
                 pkgs.nodejs
                 pkgs.coreutils
               ];
+              pkgDir = "${openspecPkg}/lib/node_modules/@fission-ai/openspec";
             }
             ''
-              work=$(mktemp -d)
-              proj="$work/proj"
-              home="$work/home"
-              xdg="$work/xdg"
-              mkdir -p "$proj" "$home" "$xdg/openspec" "$out"
-
-              cat > "$xdg/openspec/config.json" << 'JSON'
-              {
-                "featureFlags": {},
-                "profile": "custom",
-                "delivery": "skills",
-                "workflows": ["propose","explore","new","continue","apply","update","ff","sync","archive","bulk-archive","verify","onboard"]
-              }
-              JSON
-
-              (
-                cd "$proj"
-                HOME="$home" XDG_CONFIG_HOME="$xdg" CI=true OPENSPEC_TELEMETRY=0 \
-                OPENSPEC_NO_COMPLETIONS=1 DO_NOT_TRACK=1 \
-                openspec init --tools claude --force --profile custom </dev/null
-              )
-
-              cp -r "$proj/.claude/skills"/* "$out/"
+              mkdir -p "$out"
+              node --input-type=module -e '
+                import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
+                const dir = process.env.pkgDir, out = process.env.out;
+                const { version } = JSON.parse(readFileSync(dir + "/package.json", "utf8"));
+                const { expectedSkillContents } = await import(dir + "/dist/core/skill-installer.js");
+                for (const [name, content] of expectedSkillContents(version)) {
+                  mkdirSync(out + "/" + name, { recursive: true });
+                  writeFileSync(out + "/" + name + "/SKILL.md", content);
+                }
+              '
 
               actual=$(cd "$out" && for d in */; do [ -f "$d/SKILL.md" ] && echo "''${d%/}"; done | sort)
               expected=$(printf '%s\n' ${lib.escapeShellArgs skillNames} | sort)
