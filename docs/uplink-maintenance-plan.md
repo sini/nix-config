@@ -208,12 +208,21 @@ tiers), so it's the weaker candidate.
 
 ### Tier 1: degraded, but survivable. Do before the window if time allows.
 
-4. **attic → cluster, on Garage S3 and CNPG Postgres.**
-   - This also fixes the SQLite single-connection bottleneck we diagnosed today.
-   - Hosts keep working without it (`fallback = true`), just slower, and CI's
-     publish steps fail as warnings (xmsg-5dzj.5).
-   - Migration: either re-seed the cache or carry the 25 GB of chunks over.
-     Re-seeding is simpler; CI rebuilds what it needs.
+4. **attic: in the cluster. DONE (2026-11-18).**
+   - Stateless atticd on CNPG Postgres (attic-pg) and a Garage bucket (3e43578b,
+     a1ce09fc); attic.json64.dev is on the gateway's HTTPS listener, unproxied.
+     The ci cache was re-seeded (owner) with uplink's signing keypair: a pushed
+     path's narinfo verifies against ci:1i+3fr... and fails against a control
+     key. CI's push token is unchanged (same RS256 secret). The token generators
+     moved into the cluster aspect; uplink's atticd is gone, its data left in
+     /var/lib/private/atticd.
+   - Garage first needed its operator fixed (d0cffe79, e5f8bca7, ec7fa93f): the
+     admission webhooks were off, so every GarageNode had failed since
+     2026-08-27 and no change could roll out. With them on, the volumes grew to
+     150Gi, the storage pods rolled to v2.4.1 one at a time (quorum held), and
+     Garage's own Kubernetes discovery is off. The v2.3.0 image was a default
+     written onto the live object and in no file; it was removed, so Garage
+     follows the operator's pinned default, which helmupdater moves.
 5. **container-registry → cluster** (registry:2 on Garage S3). Cleared to move
    (owner, 2026-11-17): its consumers are CI (xmsg's images) and nix-config's
    custom container builds.
