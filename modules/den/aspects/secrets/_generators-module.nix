@@ -511,17 +511,18 @@ in
       let
         template = secret.settings.template or (builtins.readFile secret.settings.templateFile);
       in
+      # Each dependency is decrypted first and must be non-empty: a failed decrypt
+      # (a YubiKey that would not open) otherwise substituted an empty value.
       ''
+        set -euo pipefail
+        ${lib.concatImapStrings (i: dep: ''
+          v${toString i}=$(${decrypt} ${lib.escapeShellArg dep.file})
+          [ -n "$v${toString i}" ] || { echo "template-file: ${dep.name} decrypted empty" >&2; exit 1; }
+        '') deps}
         printf '%s' ${lib.escapeShellArg template} \
-          ${lib.strings.concatStringsSep " " (
-            map (dep: ''
-              | ${pkgs.replace}/bin/replace-literal \
-                -e \
-                -f \
-                "%${lib.escapeShellArg dep.name}%" \
-                "$(${decrypt} ${lib.escapeShellArg dep.file})" \
-            '') deps
-          )}
+          ${lib.concatImapStrings (i: dep: ''
+            | ${pkgs.replace}/bin/replace-literal -e -f "%${lib.escapeShellArg dep.name}%" "$v${toString i}" \
+          '') deps}
       '';
 
     timestamp = _: ''

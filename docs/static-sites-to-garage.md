@@ -75,7 +75,7 @@ copies it by hand and no publishing host needs cluster access.
    `services.web.gen-status-publisher`, makes the host a recipient of the same
    two rekeyFiles (the shared-secret pattern registry-password uses) and renders
    one env file from them:
-   - path: `/run/agenix/gen-status-publish.env`, owned by sini, mode 0400;
+   - path: `/run/agenix/gen-status-publish-env`, owned by sini, mode 0400;
    - contents: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
      `AWS_DEFAULT_REGION=garage` and
      `GEN_STATUS_S3_ENDPOINT=https://s3.json64.dev`.
@@ -88,7 +88,7 @@ copies it by hand and no publishing host needs cluster access.
 4. **The publish command** (den-ag-design's change, ci/devshell.nix): keep the
    build and its self-check, then replace the rsync with
 
-       set -a; . /run/agenix/gen-status-publish.env; set +a
+       set -a; . /run/agenix/gen-status-publish-env; set +a
        aws s3 sync --delete "$out_dir/" s3://gen-status.json64.dev/ \
          --endpoint-url "$GEN_STATUS_S3_ENDPOINT"
 

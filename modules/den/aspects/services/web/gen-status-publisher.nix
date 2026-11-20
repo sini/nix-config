@@ -4,7 +4,7 @@
 # (kubernetes/services/web/static-sites.nix), and gets them as one env file,
 # readable only by the system owner:
 #
-#   /run/agenix/gen-status-publish.env
+#   /run/agenix/gen-status-publish-env
 #     AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION=garage,
 #     GEN_STATUS_S3_ENDPOINT=https://s3.<domain>, GEN_STATUS_BUCKET
 #
@@ -46,7 +46,6 @@ in
               GEN_STATUS_S3_ENDPOINT=https://${prodEnv.getDomainFor "garage-s3"}
               GEN_STATUS_BUCKET=${prodEnv.getDomainFor "gen-status"}
             '';
-            path = "/run/agenix/gen-status-publish.env";
             owner = host.system-owner;
             mode = "0400";
           };
