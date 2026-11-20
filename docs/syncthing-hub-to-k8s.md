@@ -7,12 +7,8 @@ Status: draft for the owner, 2026-11-19. Part of the uplink plan
 
 Move uplink's always-on Syncthing hub (core/network/syncthing/hub.nix) into a
 single-replica cluster pod on a Longhorn volume, keeping its device identity so
-no member re-pairs. **Garage S3 can't back it.** Syncthing needs a POSIX
-directory: it watches files, keeps a local index database, renames temp files
-into place, and keeps `.stversions`. An S3 bucket provides none of that, and a
-FUSE mount of one would corrupt it under load. So the folders live on a Longhorn
-PVC. Longhorn's nightly backup copies that volume off the cluster to the NAS, as
-it does for headscale.
+no member re-pairs. The folders live on the Longhorn volume, which Longhorn's
+nightly backup copies off the cluster to the NAS, as it does for headscale.
 
 ## What runs today (measured 2026-11-19)
 
