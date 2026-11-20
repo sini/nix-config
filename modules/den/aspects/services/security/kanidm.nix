@@ -419,34 +419,6 @@ let
         ];
       };
 
-      oauth2-proxy = {
-        displayName = "OAuth2-Proxy";
-        originUrl = "https://${domain "oauth2-proxy"}/oauth2/callback";
-        originLanding = "https://${domain "oauth2-proxy"}/";
-        basicSecretFile = secretPaths.oauth2-proxy-oidc-client-secret;
-        preferShortUsername = true;
-        scopeMaps = {
-          "media.access" = [
-            "openid"
-            "email"
-            "profile"
-            "groups"
-          ];
-          "media.admins" = [
-            "openid"
-            "email"
-            "profile"
-            "groups"
-          ];
-          "admins" = [
-            "openid"
-            "email"
-            "profile"
-            "groups"
-          ];
-        };
-      };
-
       # RomM uses its NATIVE OIDC (not the gateway SecurityPolicy that the generic
       # mkMediaClients entries get), so it needs a bespoke callback + role claim.
       # Callback is RomM's own /api/oauth/openid. RomM requests scope
@@ -650,11 +622,8 @@ let
       displayName = "Tdarr";
       group = "media.admins";
     };
-    # The k8s utility dashboard is named "dash" (NOT "homepage"): the uplink host
-    # already serves "homepage" (homepage.json64.dev, its served-domains) via its NixOS
-    # homepage-dashboard aspect (modules/den/aspects/services/web/homepage.nix,
-    # behind oauth2-proxy). Reusing "homepage" here would collide on that domain.
-    # "dash" -> dash.json64.dev keeps the two dashboards on distinct hosts/domains.
+    # The k8s utility dashboard, dash.json64.dev. homepage.json64.dev (uplink's
+    # retired dashboard) 301s here (kubernetes/services/web/static-sites.nix).
     dash = {
       displayName = "Dashboard";
       group = "media.access";

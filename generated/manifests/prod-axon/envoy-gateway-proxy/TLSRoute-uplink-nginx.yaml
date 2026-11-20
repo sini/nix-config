@@ -6,10 +6,7 @@ metadata:
 spec:
   hostnames:
     - jellyfin.json64.dev
-    - homepage.json64.dev
-    - oauth2-proxy.json64.dev
     - open-webui.json64.dev
-    - den.json64.dev
     - gen-status.json64.dev
   parentRefs:
     - group: gateway.networking.k8s.io

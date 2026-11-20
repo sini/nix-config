@@ -23,7 +23,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: cd4b81afe08d383c1dac39aa31e7de1b5901683ce30880d69998303aaab131ae
+        checksum/config: 0edf02dbc65d8da45127164c6014f670ae47ba4e962dfa087e84c40d4ab73c66
       labels:
         app.kubernetes.io/controller: main
         app.kubernetes.io/instance: blocky

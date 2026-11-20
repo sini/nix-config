@@ -73,7 +73,6 @@
       loki.domain = "loki.json64.dev";
       minio.domain = "minio.json64.dev";
       minio-console.domain = "minio-console.json64.dev";
-      oauth2-proxy.domain = "oauth2-proxy.json64.dev";
       open-webui.domain = "open-webui.json64.dev";
       prometheus.domain = "prometheus.json64.dev";
       # qBittorrent routes on torrent.* (not the default qbittorrent.*); the

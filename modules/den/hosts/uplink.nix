@@ -85,17 +85,12 @@
       services.networking.nginx
       services.networking.gateway-upstream
       services.media.jellyfin
-      services.web.homepage
-      services.security.oauth2-proxy
       services.ai.ollama
       services.ai.open-webui
       core.network.tailscale
       core.network.tailscale.exit-node
       core.network.syncthing.hub
-      services.web.den-docs-mirror
       services.web.gen-status
-      # The admin panel runs in the cluster (kubernetes.services.network.blocky-ui).
-      #services.networking.blocky-ui
       virtualization.podman
       virtualization.microvm-host
       hardware.cpu.amd

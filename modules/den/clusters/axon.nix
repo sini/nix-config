@@ -84,6 +84,12 @@ in
     settings.kubernetes.services.dev.attic.live = true;
     # The registry serves from the cluster (dev/registry.nix); uplink's is gone.
     settings.kubernetes.services.dev.registry.live = true;
+    # uplink's static sites from Garage buckets (web/static-sites.nix), and its
+    # retired homepage's name redirected to the cluster's dash.
+    settings.kubernetes.services.web.static-sites = {
+      den.live = true;
+      homepageRedirect = true;
+    };
 
     # RomM initial full-library scan: the ~100k-ROM first pass far exceeds RomM's
     # 4h default scan window, so give the scan job a 14-day timeout and raise the

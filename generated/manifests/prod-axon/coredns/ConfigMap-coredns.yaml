@@ -14,14 +14,14 @@ data:
             10.11.0.1 bazarr.json64.dev
             10.11.0.1 chat.json64.dev
             10.11.0.1 dash.json64.dev
-            10.10.10.1 den.json64.dev
+            10.11.0.1 den.json64.dev
             10.11.0.1 dns.json64.dev
             10.11.0.1 garage.json64.dev
             10.10.10.1 gen-status.json64.dev
             10.11.0.1 glance.json64.dev
             10.11.0.1 grafana.json64.dev
             10.11.0.1 hindsight.json64.dev
-            10.10.10.1 homepage.json64.dev
+            10.11.0.1 homepage.json64.dev
             10.11.0.1 hs.json64.dev
             10.11.0.1 idm.json64.dev
             10.11.0.1 immich.json64.dev
@@ -34,7 +34,6 @@ data:
             10.11.0.1 matrix.gen.wtf
             10.11.0.1 matrix.json64.dev
             10.11.0.1 nzb.json64.dev
-            10.10.10.1 oauth2-proxy.json64.dev
             10.10.10.1 open-webui.json64.dev
             10.11.0.1 paperless.json64.dev
             10.11.0.1 profilarr.json64.dev

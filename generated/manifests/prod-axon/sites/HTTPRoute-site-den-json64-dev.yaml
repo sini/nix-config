@@ -1,0 +1,17 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: site-den-json64-dev
+  namespace: garage
+spec:
+  hostnames:
+    - den.json64.dev
+  parentRefs:
+    - name: default-gateway
+      namespace: gateways
+      sectionName: json64-dev-https
+  rules:
+    - backendRefs:
+        - name: garage
+          port: 3902
+      name: site

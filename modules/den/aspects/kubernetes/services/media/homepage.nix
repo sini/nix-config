@@ -1,12 +1,10 @@
 # Homepage (gethomepage) — the utility dashboard for the media stack.
 #
 # == Naming: "dash", not "homepage" ==
-# The uplink host already runs a NixOS homepage-dashboard on homepage.json64.dev
-# (modules/den/aspects/services/web/homepage.nix, behind oauth2-proxy) and owns
-# the served-domains entry "homepage". To avoid a hard domain collision this k8s dashboard
-# is named "dash" -> dash.json64.dev (prod.nix services.dash.domain). The Kanidm
-# OAuth2 client is "dash" too (kanidm.nix mediaClientDefs.dash), so clientID =
-# "dash" and the domain + OIDC contract line up.
+# Served as "dash" -> dash.json64.dev (prod.nix services.dash.domain); uplink's
+# retired homepage.json64.dev 301s here (web/static-sites.nix). The Kanidm OAuth2
+# client is "dash" too (kanidm.nix mediaClientDefs.dash), so clientID = "dash" and
+# the domain + OIDC contract line up.
 #
 # == Chart vs raw ==
 # nixhelm carries no gethomepage chart, so this is the bjw-s app-template on the

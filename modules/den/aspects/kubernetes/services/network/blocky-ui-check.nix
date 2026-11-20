@@ -4,7 +4,7 @@
 #            targets it; controls: the policy without oidc, the policy aimed at
 #            another route, a second route on the name
 #   admins   the policy's client is blocky-ui, whose only scope map is admins;
-#            controls: a media.access map added, the oauth2-proxy client
+#            controls: a media.access map added, another client (dash)
 #   egress   the pod's one egress policy allows exactly 10.10.10.1/32 TCP 4000
 #            (uplink's Blocky API) and the cluster's blocky pods on TCP 4000 (its LB
 #            address is translated to them before policy), and the panel's servers
@@ -146,9 +146,9 @@ let
       !(adminsOk res (
         lib.recursiveUpdate clients { blocky-ui.scopeMaps."media.access" = [ "openid" ]; }
       ));
-    adminsOauth2ProxyFails =
+    adminsOtherClientFails =
       !(adminsOk (at [ "securityPolicies" "blocky-ui-oidc" "spec" "oidc" "clientID" ] (
-        _: "oauth2-proxy"
+        _: "dash"
       )) clients);
     egress = egressOk res;
     egressWorldFails = !(egressOk (egressAt (e: e ++ [ { toEntities = [ "world" ]; } ])));
