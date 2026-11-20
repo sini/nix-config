@@ -1,6 +1,9 @@
 # Plan: the Syncthing hub into the cluster
 
-Status: draft for the owner, 2026-11-19. Part of the uplink plan
+Status: LIVE 2026-11-20 (f4de2175, 2b968b50, 81a0b082). The cluster hub serves
+cortex, bitstream and uplink-dev at 100% completion; blade switches when its
+build finishes; patch waits on its own session. uplink's /var/lib/syncthing
+stays until 2026-11-27 with no conflicts, then is wiped. Part of the uplink plan
 (docs/uplink-maintenance-plan.md, Tier 2 item 13).
 
 ## Summary
@@ -109,6 +112,15 @@ nightly backup copies off the cluster to the NAS, as it does for headscale.
 
 Rollback before step 5: unset `live`, put `isHub` back on uplink, and redeploy.
 The identity is the same, so members reconnect to uplink.
+
+## Found at cutover
+
+- The Service needs `externalTrafficPolicy: Local`. With Cluster, a connection
+  reaching another node arrives SNATed to that node's pod-range address, Cilium
+  labels it world, and the LAN-range ingress rule drops it (81a0b082).
+- uplink's `var-lib-syncthing.mount` fails to stop on switch: the bind shares
+  the persist dataset uplink-dev's virtiofsd holds. Harmless; it clears at
+  uplink's next reboot.
 
 ## Decided (owner, 2026-11-19)
 

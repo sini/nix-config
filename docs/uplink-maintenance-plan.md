@@ -284,8 +284,9 @@ tiers), so it's the weaker candidate.
     oauth2-proxy and its kanidm client are retired.
 12. **uplink-dev microVM:** down for the window (owner, 2026-11-16). It's not
     migrated, and den-ag-design work on it pauses.
-13. **syncthing:** check whether uplink is the only always-on peer for any
-    folder before the window.
+13. **syncthing: in the cluster. DONE (2026-11-20).** The hub runs in the
+    cluster on a Longhorn volume with uplink's identity, LAN-only at 10.11.0.33
+    (docs/syncthing-hub-to-k8s.md). uplink no longer runs it.
 
 ## Scoping required before kanidm and headscale move (owner, 2026-11-16)
 
