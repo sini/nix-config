@@ -1,0 +1,16 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: BackendTrafficPolicy
+metadata:
+  name: jellyfin
+  namespace: media
+spec:
+  httpUpgrade:
+    - type: websocket
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: jellyfin
+  timeout:
+    http:
+      connectionIdleTimeout: 3600s
+      requestTimeout: 0s

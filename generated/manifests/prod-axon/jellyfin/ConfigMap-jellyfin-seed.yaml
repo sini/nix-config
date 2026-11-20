@@ -1,0 +1,27 @@
+apiVersion: v1
+data:
+  seed-api-key.py: |
+    import os, sqlite3, sys, datetime
+    db = "/config/data/jellyfin.db"
+    if not os.path.exists(db):
+        print("no jellyfin.db yet (first start); the key is seeded at the next pod start")
+        sys.exit(0)
+    token = open("/run/secrets/jellyfin/api-key").read().strip()
+    want = ["Id", "DateCreated", "DateLastActivity", "Name", "AccessToken"]
+    con = sqlite3.connect(db)
+    cols = [r[1] for r in con.execute("PRAGMA table_info(ApiKeys)")]
+    if cols != want:
+        sys.exit(f"ApiKeys schema is {cols}, expected {want}: not seeding")
+    now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S.%f")
+    with con:
+        con.execute("DELETE FROM ApiKeys WHERE Name = 'jellarr' AND AccessToken != ?", (token,))
+        if not con.execute("SELECT 1 FROM ApiKeys WHERE AccessToken = ?", (token,)).fetchone():
+            con.execute(
+                "INSERT INTO ApiKeys (DateCreated, DateLastActivity, Name, AccessToken) VALUES (?, ?, 'jellarr', ?)",
+                (now, now, token),
+            )
+    print("api key seeded")
+kind: ConfigMap
+metadata:
+  name: jellyfin-seed
+  namespace: media

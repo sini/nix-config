@@ -45,7 +45,7 @@ spec:
             - name: HINDSIGHT_API_LLM_BASE_URL
               value: http://llama-cpp-gpt-oss.ai.svc.cluster.local:8080/v1
             - name: HINDSIGHT_API_LLM_MAX_CONCURRENT
-              value: "6"
+              value: "4"
             - name: HINDSIGHT_API_LLM_MODEL
               value: gpt-oss-20b
             - name: HINDSIGHT_API_LLM_PROVIDER
@@ -71,7 +71,7 @@ spec:
             - name: HINDSIGHT_API_WORKER_ID
               value: hindsight
             - name: HINDSIGHT_API_WORKER_MAX_SLOTS
-              value: "6"
+              value: "4"
             - name: PYTHONPATH
               value: /opt/hindsight-write-gate
           image: ghcr.io/vectorize-io/hindsight-api@sha256:662109ece429871a81e036427fb93fbb09ba9dc4b01d320d356f114c0e1aedd8

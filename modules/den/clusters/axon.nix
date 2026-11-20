@@ -296,6 +296,8 @@ in
       services.media.unpackerr
       services.media.profilarr
       services.media.shoko
+      # Jellyfin (media/jellyfin.nix), staged at jellyfin-next until the migration.
+      services.media.jellyfin
       services.media.network-policy
       services.media.glance
       services.media.dash

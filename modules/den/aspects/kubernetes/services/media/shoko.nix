@@ -318,6 +318,13 @@ in
                   {
                     fromEndpoints = [
                       { matchLabels."k8s:io.kubernetes.pod.namespace" = "gateways"; }
+                      # Shokofin in the cluster's Jellyfin (media/jellyfin.nix).
+                      {
+                        matchLabels = {
+                          "k8s:io.kubernetes.pod.namespace" = "media";
+                          "app.kubernetes.io/name" = "jellyfin";
+                        };
+                      }
                     ];
                     toPorts = [
                       {

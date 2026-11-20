@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jellyfin
+  namespace: media
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: jellyfin
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: jellyfin
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: JELLYFIN_PublishedServerUrl
+              value: https://jellyfin-next.json64.dev
+          image: jellyfin/jellyfin@sha256:aefb67e6a7ff1debdd154a78a7bbb780fd0c873d8639210a7f6a2016ad2b35db
+          livenessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          name: jellyfin
+          ports:
+            - containerPort: 8096
+              name: http
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+          resources:
+            limits:
+              amd.com/gpu: 1
+            requests:
+              amd.com/gpu: 1
+              cpu: 500m
+              memory: 1Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /cache
+              name: cache
+            - mountPath: /mnt/data
+              name: media
+              readOnly: true
+      enableServiceLinks: false
+      initContainers:
+        - command:
+            - python3
+            - /seed/seed-api-key.py
+          image: library/python@sha256:0f9552bb28711333da16915ec146f5e6bb44a7fdac9ced15dc17c2e0206346dd
+          name: api-key
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /seed
+              name: seed
+              readOnly: true
+            - mountPath: /run/secrets/jellyfin
+              name: secrets
+              readOnly: true
+      securityContext:
+        fsGroup: 1027
+        fsGroupChangePolicy: OnRootMismatch
+        runAsGroup: 1027
+        runAsNonRoot: true
+        runAsUser: 1027
+        seccompProfile:
+          type: RuntimeDefault
+        supplementalGroups:
+          - 303
+      serviceAccountName: jellyfin
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: jellyfin-config
+        - name: cache
+          persistentVolumeClaim:
+            claimName: jellyfin-cache
+        - name: media
+          persistentVolumeClaim:
+            claimName: media-data-nfs
+            readOnly: true
+        - configMap:
+            name: jellyfin-seed
+          name: seed
+        - name: secrets
+          secret:
+            defaultMode: 288
+            secretName: jellyfin-secrets

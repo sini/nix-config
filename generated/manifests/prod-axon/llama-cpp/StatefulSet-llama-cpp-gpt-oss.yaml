@@ -9,7 +9,7 @@ metadata:
   namespace: ai
 spec:
   podManagementPolicy: Parallel
-  replicas: 3
+  replicas: 2
   revisionHistoryLimit: 3
   selector:
     matchLabels:

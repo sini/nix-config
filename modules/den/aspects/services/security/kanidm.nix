@@ -293,7 +293,11 @@ let
 
       jellyfin = {
         displayName = "Jellyfin";
-        originUrl = "https://${domain "jellyfin"}/sso/OID/redirect/kanidm";
+        # jellyfin-next is the cluster's staged clean install (media/jellyfin.nix).
+        originUrl = [
+          "https://${domain "jellyfin"}/sso/OID/redirect/kanidm"
+          "https://${domain "jellyfin-next"}/sso/OID/redirect/kanidm"
+        ];
         originLanding = "https://${domain "jellyfin"}";
         basicSecretFile = secretPaths.jellyfin-oidc-client-secret;
         preferShortUsername = true;

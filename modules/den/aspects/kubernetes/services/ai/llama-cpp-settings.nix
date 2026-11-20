@@ -184,10 +184,11 @@
         # advantage over it.
         memoryLimit = "40Gi";
 
-        # One per GPU node. Sole instance, so the whole budget is available:
-        # three separate memory buses at full per-stream rate, which is where
-        # the throughput is on this hardware (see parallelSlots).
-        replicas = 3;
+        # One per GPU node, minus the node whose iGPU Jellyfin holds (owner,
+        # 2026-11-20; media/jellyfin.nix): two memory buses at full per-stream
+        # rate, which is where the throughput is on this hardware (see
+        # parallelSlots).
+        replicas = 2;
       };
     };
 
