@@ -181,6 +181,10 @@ in
           # port-forwarded from the WAN. BGP-advertised.
           headscale-stun = "10.11.0.32";
 
+          # The Syncthing hub (network/syncthing-hub.nix), TCP 22000. BGP-advertised,
+          # NOT internet-routable: the hub is LAN-only.
+          syncthing-hub = "10.11.0.33";
+
           # CoreDNS for the resolver instances off-cluster
           # (network/coredns/coredns.nix, docs/dns-resolver.md).
           # BGP-advertised, NOT internet-routable.
@@ -361,6 +365,8 @@ in
       services.storage.garage.routes
       services.storage.garage.garage-ui
       services.storage.garage.sites
+      # The Syncthing hub (network/syncthing-hub.nix); uplink's serves until `live`.
+      services.network.syncthing-hub
       # uplink's static sites in Garage buckets (web/static-sites.nix).
       services.web.static-sites
     ];

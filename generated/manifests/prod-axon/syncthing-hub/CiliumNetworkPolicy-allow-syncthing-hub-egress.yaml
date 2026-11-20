@@ -1,0 +1,18 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-syncthing-hub-egress
+  namespace: syncthing
+spec:
+  description: 'syncthing-hub: the members'' sync ports on the LAN.'
+  egress:
+    - toCIDR:
+        - 10.0.0.0/8
+      toPorts:
+        - ports:
+            - endPort: 22099
+              port: "22000"
+              protocol: TCP
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: syncthing-hub

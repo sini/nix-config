@@ -6,6 +6,8 @@
 { den, lib, ... }:
 let
   inherit (den.lib.policy) pipe;
+  # A cluster that runs the Syncthing hub (kubernetes/services/network/syncthing-hub.nix).
+  clusterHub = cluster: cluster.settings.kubernetes.services.network.syncthing-hub.live or false;
 in
 {
   den.policies.collect-host-addrs =
@@ -307,6 +309,27 @@ in
       ])
     ];
 
+  # A cluster hub's own device record to every member, as broadcast-hub-peer does
+  # for a host hub. A broadcaster sends only its own emits, not the member records
+  # it received.
+  # A cluster hub collects what a host hub is broadcast: every member's device
+  # record and dirs (both carry their user). A user's broadcast doesn't reach a
+  # cluster, so the cluster gathers them.
+  den.policies.cluster-collect-syncthing-hub-inputs =
+    { cluster, ... }:
+    lib.optionals (clusterHub cluster) [
+      (pipe.from "syncthing-peers" [ (pipe.collectAll ({ user, ... }: true)) ])
+      (pipe.from "replicateHome" [ (pipe.collectAll ({ user, ... }: true)) ])
+    ];
+
+  den.policies.cluster-broadcast-syncthing-hub-peer =
+    { cluster, ... }:
+    lib.optionals (clusterHub cluster) [
+      (pipe.from "syncthing-peers" [
+        (pipe.broadcast ({ user, ... }: true))
+      ])
+    ];
+
   # The hub advertises its OWN device record (its host-scope `syncthing-peers`
   # emit; received member records are not re-broadcast) to every member so members
   # add it and share their folders with it.
@@ -394,5 +417,7 @@ in
     den.policies.cluster-collect-domain-quirks
     den.policies.cluster-collect-dns-resolvers
     den.policies.cluster-collect-exit-nodes
+    den.policies.cluster-collect-syncthing-hub-inputs
+    den.policies.cluster-broadcast-syncthing-hub-peer
   ];
 }

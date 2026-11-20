@@ -1,0 +1,26 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-syncthing-hub-ingress
+  namespace: syncthing
+spec:
+  description: 'syncthing-hub: sync from the LAN and the tailnet on 22000.'
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: syncthing-hub
+  ingress:
+    - fromCIDR:
+        - 10.0.0.0/8
+        - 100.64.0.0/10
+      toPorts:
+        - ports:
+            - port: "22000"
+              protocol: TCP
+    - fromEntities:
+        - cluster
+        - remote-node
+        - host
+      toPorts:
+        - ports:
+            - port: "22000"
+              protocol: TCP

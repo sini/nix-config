@@ -1236,9 +1236,15 @@
       ];
     };
 
-    replicateHome.directories = [
-      ".claude/memory"
-      ".claude/projects"
-    ];
+    # Tagged with the user, so a cluster hub can group the dirs it collects.
+    replicateHome =
+      { user, ... }:
+      {
+        user = user.name;
+        directories = [
+          ".claude/memory"
+          ".claude/projects"
+        ];
+      };
   };
 }

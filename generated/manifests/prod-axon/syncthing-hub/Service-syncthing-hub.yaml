@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    lbipam.cilium.io/ips: 10.11.0.33
+  name: syncthing-hub
+  namespace: syncthing
+spec:
+  ports:
+    - name: sync
+      port: 22000
+      protocol: TCP
+      targetPort: sync
+  selector:
+    app.kubernetes.io/name: syncthing-hub
+  type: LoadBalancer

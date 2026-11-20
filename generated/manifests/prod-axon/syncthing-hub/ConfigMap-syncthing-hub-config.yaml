@@ -1,0 +1,19 @@
+apiVersion: v1
+data:
+  cert.pem: |
+    -----BEGIN CERTIFICATE-----
+    MIIBnjCCAVCgAwIBAgIHBplXS/vDVzAFBgMrZXAwSjESMBAGA1UEChMJU3luY3Ro
+    aW5nMSAwHgYDVQQLExdBdXRvbWF0aWNhbGx5IEdlbmVyYXRlZDESMBAGA1UEAxMJ
+    c3luY3RoaW5nMB4XDTI2MDYyNzAwMDAwMFoXDTQ2MDYyMjAwMDAwMFowSjESMBAG
+    A1UEChMJU3luY3RoaW5nMSAwHgYDVQQLExdBdXRvbWF0aWNhbGx5IEdlbmVyYXRl
+    ZDESMBAGA1UEAxMJc3luY3RoaW5nMCowBQYDK2VwAyEAIKBdmvCkgkZ7j39K8m6y
+    HmD+0iwkAHkB924NR1P3z2GjVTBTMA4GA1UdDwEB/wQEAwIFoDAdBgNVHSUEFjAU
+    BggrBgEFBQcDAQYIKwYBBQUHAwIwDAYDVR0TAQH/BAIwADAUBgNVHREEDTALgglz
+    eW5jdGhpbmcwBQYDK2VwA0EAZZSfXLzrgbDd0ObJsqYEJ6VQf1RqhAOFq9qAkaE+
+    OGpK24A/LaMwA8QaUJ09675Fi6OH40NvfDdPM4LHMPajAg==
+    -----END CERTIFICATE-----
+  config.xml: <configuration version="52"><gui enabled="true" tls="false"><address>127.0.0.1:8384</address></gui><options><listenAddress>tcp://0.0.0.0:22000</listenAddress><globalAnnounceEnabled>false</globalAnnounceEnabled><localAnnounceEnabled>false</localAnnounceEnabled><relaysEnabled>false</relaysEnabled><natEnabled>false</natEnabled><urAccepted>-1</urAccepted><crashReportingEnabled>false</crashReportingEnabled><autoUpgradeIntervalH>0</autoUpgradeIntervalH><startBrowser>false</startBrowser></options></configuration>
+kind: ConfigMap
+metadata:
+  name: syncthing-hub-config
+  namespace: syncthing

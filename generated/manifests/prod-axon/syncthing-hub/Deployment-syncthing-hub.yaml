@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: syncthing-hub
+  namespace: syncthing
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: syncthing-hub
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        json64.dev/config-hash: 98c2447346cb69c417b49e7c699475915990c2bef4c2ad7ff58a384408e49814
+      labels:
+        app.kubernetes.io/name: syncthing-hub
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - command:
+            - /bin/syncthing
+            - serve
+            - --home=/var/syncthing/config
+            - --no-browser
+            - --no-upgrade
+          env:
+            - name: STNOUPGRADE
+              value: "1"
+          image: syncthing/syncthing@sha256:2b71da7c0d0a91a6ae5285ad079226fecc0a365d08b27720e1f7037b018f7546
+          livenessProbe:
+            failureThreshold: 4
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            tcpSocket:
+              port: sync
+          name: syncthing
+          ports:
+            - containerPort: 22000
+              name: sync
+          readinessProbe:
+            periodSeconds: 10
+            tcpSocket:
+              port: sync
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+          volumeMounts:
+            - mountPath: /var/syncthing
+              name: data
+            - mountPath: /tmp
+              name: tmp
+      enableServiceLinks: false
+      initContainers:
+        - command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              mkdir -p /var/syncthing/config /var/syncthing/data
+              cp /nix-config/config.xml /nix-config/cert.pem /var/syncthing/config/
+              cp /nix-key/key.pem /var/syncthing/config/key.pem
+              chmod 0600 /var/syncthing/config/key.pem
+          image: syncthing/syncthing@sha256:2b71da7c0d0a91a6ae5285ad079226fecc0a365d08b27720e1f7037b018f7546
+          name: config
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+          volumeMounts:
+            - mountPath: /var/syncthing
+              name: data
+            - mountPath: /nix-config
+              name: config
+              readOnly: true
+            - mountPath: /nix-key
+              name: key
+              readOnly: true
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: syncthing-hub
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: syncthing-hub
+        - configMap:
+            name: syncthing-hub-config
+          name: config
+        - name: key
+          secret:
+            defaultMode: 288
+            secretName: syncthing-hub-key
+        - emptyDir: {}
+          name: tmp
