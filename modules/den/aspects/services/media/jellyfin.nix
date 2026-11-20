@@ -13,21 +13,23 @@ in
     # for every instance (docs/jellyfin-to-k8s.md): uplink reads it as
     # host.settings.services.media.jellyfin.jellarr, the cluster as
     # cluster.settings.services.media.jellyfin.jellarr. Call it with what differs per
-    # instance; it returns the config with every string's `$` escaped as `$$` (jellarr
-    # expands `${VAR}` in string values after parsing, and `$$` is its literal `$`), so
-    # builtins.toJSON of the result is the file for --configFile. A secret goes in as
+    # instance; it returns the config with every `${` in a string escaped as `$${`
+    # (jellarr expands `${VAR}` in string values after parsing; `$${` is its literal
+    # `${`, and any other `$` stays as written), so builtins.toJSON of the result is
+    # the file for --configFile. A secret goes in as
     # { _file = path; }, which jellarr replaces with the file's contents.
     settings.jellarr = lib.mkOption {
       type = lib.types.functionTo lib.types.attrs;
       description = "Instance values -> jellarr's config (escaped).";
       default =
         let
-          # Every string, at any depth, with `$` doubled. Attribute names are left alone:
-          # jellarr expands values only.
+          # Every string, at any depth, with `${` written as `$${`, jellarr's escape for a
+          # literal `${`. Any other `$` passes through jellarr unchanged, so nothing else
+          # needs escaping. Attribute names are left alone: jellarr expands values only.
           escape =
             v:
             if builtins.isString v then
-              lib.replaceStrings [ "$" ] [ "$$" ] v
+              lib.replaceStrings [ "\${" ] [ "$\${" ] v
             else if builtins.isList v then
               map escape v
             else if builtins.isAttrs v then

@@ -1,7 +1,7 @@
 # The Jellyfin aspect's jellarr setting (services.media.jellyfin.settings.jellarr),
 # read from uplink's settings and called for a sample instance, against what jellarr and both instances rely on:
-#   escape     every `$` in a string is `$$` (the CSS below carries one), and a file
-#              reference survives as { _file = path; }
+#   escape     a `${` in a rendered value becomes `$${` (jellarr's literal `${`), and
+#              any other `$` is left as written
 #   libraries  the 8 declared names, matching uplink's virtual folders
 #   admin      the only declared user, with a passwordFile and no inline password
 #   pins       the plugins are pinned to uplink's installed versions
@@ -22,13 +22,14 @@ let
     ];
   };
   cfg = jellarr args;
-  # A `$` in a value the setting renders (the domain reaches the SSO button).
-  dollar = jellarr (args // { domain = "jf$5.example.test"; });
+  # Values the setting renders (the domain reaches the SSO button): one with `${`,
+  # one with a lone `$` and a `$$`, which must pass through untouched.
+  brace = jellarr (args // { domain = "jf\${x}.example.test"; });
+  plain = jellarr (args // { domain = "jf$5$$6.example.test"; });
   names = map (f: f.name) cfg.library.virtualFolders;
   checks = {
-    escape = lib.hasInfix "https://jf$$5.example.test/sso" dollar.branding.loginDisclaimer;
-    # No unescaped `$` left anywhere in the rendered file.
-    noBareDollar = builtins.match ".*[^$]\\$[^$].*" (builtins.toJSON dollar) == null;
+    escape = lib.hasInfix "https://jf$\${x}.example.test/sso" brace.branding.loginDisclaimer;
+    untouched = lib.hasInfix "https://jf$5$$6.example.test/sso" plain.branding.loginDisclaimer;
     libraries =
       names == [
         "Movies"
