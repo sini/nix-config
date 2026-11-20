@@ -4,7 +4,7 @@ metadata:
   name: sites-compression
   namespace: garage
 spec:
-  compressor:
+  compression:
     - type: Brotli
     - type: Gzip
   targetRefs:

@@ -207,7 +207,9 @@ in
                   kind = "HTTPRoute";
                   name = bucketName s;
                 }) liveSites;
-                compressor = [
+                # `compression`, not its successor `compressor`: the v1.10.0
+                # controller ignores `compressor` (accepted, never reaches Envoy).
+                compression = [
                   { type = "Brotli"; }
                   { type = "Gzip"; }
                 ];
