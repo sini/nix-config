@@ -338,7 +338,7 @@ in
             exit 1
           fi
           # The image follows upstream `latest`, so it can run ahead of uplink's
-          # nixpkgs Blocky while both render _settings.nix: the config must
+          # nixpkgs Blocky while both render the blocky aspect's `render` setting: the config must
           # validate under both binaries. The image's own is /app/blocky.
           mkdir image app
           tar -xf ${image} -C image

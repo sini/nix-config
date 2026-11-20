@@ -58,9 +58,9 @@ nightly backup copies off the cluster to the NAS, as it does for headscale.
    moves from uplink's host secret to the cluster's SOPS output (the same
    rekeyFile, plus `sopsOutput`). Because the device ID is unchanged, members
    only see a new address.
-4. **Shared logic.** The folder and device logic moves to a `_syncthing-hub.nix`
-   helper that both hub.nix and the cluster aspect import, as
-   `_headscale-settings.nix` is shared. The two can't drift.
+4. **Shared logic.** The folder and device logic is the hub aspect's `mesh`
+   setting (`core.network.syncthing.hub.settings.mesh`), which both hub.nix and
+   the cluster aspect read. The two can't drift.
 5. **Addressing.**
    - A LoadBalancer Service on a new `syncthing-hub` assignment (10.11.0.x,
      BGP-advertised, LAN-routable), port 22000/tcp.

@@ -1,7 +1,7 @@
 # The always-on Syncthing hub in the cluster (docs/syncthing-hub-to-k8s.md), taking
 # over from uplink's (core/network/syncthing/hub.nix). One replica on a Longhorn
 # volume backs up every replicating user's dirs under /var/syncthing/data/<user>/,
-# with the same devices, folders and versioning as uplink's (_hub-settings.nix).
+# with the same devices, folders and versioning as uplink's (core.network.syncthing.hub.settings.mesh).
 #
 # It keeps uplink's hub identity (syncthing-uplink: the committed .crt and .id, and
 # the key, shared with uplink's host secret), so members see a known device at a
@@ -29,7 +29,6 @@ let
   # uplink's hub identity, kept so the device id doesn't change.
   identity = rootPath + "/.secrets/hosts/uplink/syncthing-uplink";
   deviceId = builtins.readFile (identity + ".id");
-  hubSettings = import ../../../core/network/syncthing/_hub-settings.nix { inherit lib; };
 
   esc = lib.escapeXML;
   versioningXml =
@@ -118,7 +117,7 @@ in
       let
         live = cluster.settings.kubernetes.services.network.syncthing-hub.live;
         xml = configXml (
-          hubSettings.settings {
+          cluster.settings.core.network.syncthing.hub.mesh {
             inherit syncthing-peers replicateHome dataDir;
             self = name;
           }

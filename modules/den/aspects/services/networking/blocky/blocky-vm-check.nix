@@ -1,5 +1,5 @@
 # The resolver's VM tests (docs/dns-resolver.md §3), on uplink's nixpkgs and the
-# shared definition (_settings.nix, _unit.nix):
+# shared definition (the blocky aspect's `render` setting, _unit.nix):
 #   blocky-boot   test 5: the LAN address arrives after Blocky's first start; with
 #                 the restart guard it recovers (NRestarts >= 1), and the control
 #                 without it ends failed with start-limit-hit
@@ -13,7 +13,7 @@
 let
   nixos = config.flake.nixosConfigurations.uplink;
   inherit (nixos) pkgs;
-  render = import ./_settings.nix { inherit lib; };
+  render = config.den.hosts.x86_64-linux.uplink.settings.services.networking.blocky.render;
   base = {
     upstreams = [ "192.0.2.1#resolver.invalid" ];
     internalNames = [ ];

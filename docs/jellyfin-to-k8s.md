@@ -19,11 +19,11 @@ The move becomes three steps, each verified before the next:
    from the same settings, so this is a copy of `/var/lib/jellyfin` (§4), not a
    reconfiguration.
 
-The settings are written once, in a shared helper
-(`services/media/_jellyfin-settings.nix`, as `_headscale-settings.nix` is), and
-rendered into jellarr's YAML for both uplink's NixOS module and the cluster's
-Job. The cluster's staged clean install at jellyfin-next (1bc7cb84) stays for
-validating the cluster side against the same settings.
+The settings are written once, in a shared helper (the Jellyfin aspect's
+`settings.jellarr`), and rendered into jellarr's YAML for both uplink's NixOS
+module and the cluster's Job. The cluster's staged clean install at
+jellyfin-next (1bc7cb84) stays for validating the cluster side against the same
+settings.
 
 ## Roles (owner, 2026-11-20)
 

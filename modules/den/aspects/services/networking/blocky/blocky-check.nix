@@ -20,7 +20,7 @@ let
   rendered = blocky.settings;
   prod = config.den.environments.prod;
   hosts = config.den.hosts.x86_64-linux;
-  render = import ./_settings.nix { inherit lib; };
+  render = config.den.hosts.x86_64-linux.uplink.settings.services.networking.blocky.render;
 
   # §2.4(a): the ULA and Blocky's address in it.
   ula = prod.networks.default.ipv6_cidr;

@@ -1,7 +1,7 @@
 # The environment's filtering resolver in the cluster (docs/dns-resolver.md
 # §2.7): three Blocky replicas, one per node, behind two LoadBalancer addresses:
 # `blocky-lan` on the prod LAN (Cilium L2, the clients' DNS) and `blocky` (BGP,
-# the API, and DNS for routed clients). The config renders from the same _settings.nix as uplink's instance;
+# the API, and DNS for routed clients). The config renders from the same the blocky aspect's `render` setting as uplink's instance;
 # this instance supplies its listeners, the CoreDNS ClusterIP and an emptyDir
 # list cache. The replicas share blocking state through a Valkey in the same
 # namespace (Blocky's redis sync), so one disable through the LB reaches all.
@@ -11,7 +11,6 @@ let
   name = "blocky";
   redisName = "blocky-redis";
   httpPort = 4000;
-  render = import ../../../services/networking/blocky/_settings.nix { inherit lib; };
   pod."app.kubernetes.io/name" = name;
   # The valkey chart labels its pods app.kubernetes.io/instance=<release>.
   redisPod."app.kubernetes.io/instance" = redisName;
@@ -58,7 +57,7 @@ in
       let
         lb = lbOf cluster;
         settings =
-          render {
+          cluster.settings.services.networking.blocky.render {
             upstreams = environment.networks.default.dnsServers;
             # The names CoreDNS's hosts plugin answers (coredns.nix reads the same records).
             internalNames = lib.unique (

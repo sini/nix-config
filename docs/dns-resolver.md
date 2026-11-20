@@ -127,25 +127,25 @@ that one setting through one helper.
 
 ### 2.1 Den shape
 
-| Piece                                       | Kind                | Holds                                                                                   |
-| ------------------------------------------- | ------------------- | --------------------------------------------------------------------------------------- |
-| `environment.dns.resolvers`                 | env option          | Ordered instance names (host or cluster). `[ ]` = today's behaviour                     |
-| `environment.dns.dhcpResolvers`             | env option          | The controller network's DHCP list; defaults to `dns.resolvers` (§7 Q2)                 |
-| `environment.dns.roamingResolvers`          | env option          | headscale's roaming list; defaults to `dns.resolvers` (§7 Q2)                           |
-| `environment.dns.filter`                    | env option          | `denylists`, `allowlist` (list URLs and inline domains): the same for every instance    |
-| `environment.dns.internal`                  | env option          | Cluster whose `dns-internal` record is the conditional upstream (`"axon"`), or `null`   |
-| `dns-internal` quirk                        | quirk               | `{ cluster; address; }`, emitted by the CoreDNS cluster aspect (§2.3)                   |
-| `environment.networks.default.unifiNetwork` | env option          | The controller network name this environment's LAN is (`"Default"`, `"dev"`)            |
-| `environment.networks.default.dnsServers`   | existing env option | Unchanged, and now **Blocky's upstreams** (§2.2)                                        |
-| `environment.networks.default.staticCidr`   | env option          | The static-services block, by default the LAN's first /24 (§2.4(a))                     |
-| `environment.networks.default.dhcpRange`    | env option, derived | `{ start; stop; }`: the LAN after `staticCidr`, without the broadcast address (§2.4(a)) |
-| `dns-resolvers` quirk                       | quirk               | `{ name; environment; dns; api; }` per running instance; `environment` is the env name  |
-| `services.networking.blocky`                | host aspect         | The NixOS service; emits `dns-resolvers` and `prometheus-targets`                       |
-| `kubernetes.services.network.blocky`        | cluster aspect      | Phase 2 Deployment; emits `dns-resolvers`                                               |
-| `services/networking/blocky/_settings.nix`  | helper              | The shared definition: a function from instance inputs to Blocky's settings attrset     |
-| `core/network/_resolvers.nix`               | helper              | `resolversFor environment dns-resolvers` → addresses, then `networks.default.gatewayIp` |
-| `services.networking.blocky.cli`            | host aspect         | `dns-filter`, built in the aspect because it needs den data (§2.5)                      |
-| `core.network.tailscale`                    | existing aspect     | `--accept-dns=false` on non-roaming NixOS hosts (§2.4b)                                 |
+| Piece                                        | Kind                | Holds                                                                                   |
+| -------------------------------------------- | ------------------- | --------------------------------------------------------------------------------------- |
+| `environment.dns.resolvers`                  | env option          | Ordered instance names (host or cluster). `[ ]` = today's behaviour                     |
+| `environment.dns.dhcpResolvers`              | env option          | The controller network's DHCP list; defaults to `dns.resolvers` (§7 Q2)                 |
+| `environment.dns.roamingResolvers`           | env option          | headscale's roaming list; defaults to `dns.resolvers` (§7 Q2)                           |
+| `environment.dns.filter`                     | env option          | `denylists`, `allowlist` (list URLs and inline domains): the same for every instance    |
+| `environment.dns.internal`                   | env option          | Cluster whose `dns-internal` record is the conditional upstream (`"axon"`), or `null`   |
+| `dns-internal` quirk                         | quirk               | `{ cluster; address; }`, emitted by the CoreDNS cluster aspect (§2.3)                   |
+| `environment.networks.default.unifiNetwork`  | env option          | The controller network name this environment's LAN is (`"Default"`, `"dev"`)            |
+| `environment.networks.default.dnsServers`    | existing env option | Unchanged, and now **Blocky's upstreams** (§2.2)                                        |
+| `environment.networks.default.staticCidr`    | env option          | The static-services block, by default the LAN's first /24 (§2.4(a))                     |
+| `environment.networks.default.dhcpRange`     | env option, derived | `{ start; stop; }`: the LAN after `staticCidr`, without the broadcast address (§2.4(a)) |
+| `dns-resolvers` quirk                        | quirk               | `{ name; environment; dns; api; }` per running instance; `environment` is the env name  |
+| `services.networking.blocky`                 | host aspect         | The NixOS service; emits `dns-resolvers` and `prometheus-targets`                       |
+| `kubernetes.services.network.blocky`         | cluster aspect      | Phase 2 Deployment; emits `dns-resolvers`                                               |
+| `services.networking.blocky.settings.render` | helper              | The shared definition: a function from instance inputs to Blocky's settings attrset     |
+| `core/network/_resolvers.nix`                | helper              | `resolversFor environment dns-resolvers` → addresses, then `networks.default.gatewayIp` |
+| `services.networking.blocky.cli`             | host aspect         | `dns-filter`, built in the aspect because it needs den data (§2.5)                      |
+| `core.network.tailscale`                     | existing aspect     | `--accept-dns=false` on non-roaming NixOS hosts (§2.4b)                                 |
 
 This mirrors `monitoring.ingest`. The environment names an instance, and the
 instance announces its own address through a quirk. No host file names another
@@ -249,7 +249,7 @@ file sets it").
 ### 2.2 Phase 1: the service on uplink
 
 ```nix
-# services/networking/blocky/_settings.nix (sketch)
+# services.networking.blocky.settings.render (sketch)
 { lib }:
 { upstreams, internalNames, internalResolver, tailnetDomain, cachePath, filter, dnsListen, httpListen }:
 {
@@ -743,10 +743,10 @@ oauth2-proxy) is kept but included by no host.
   `/api/blocking/{status,enable,disable}`, `/api/cache/flush`,
   `/api/lists/refresh`, `/api/query` and `/api/stats` (`src/server/blocky/*.ts`
   at v2.2.0). All seven routes are in Blocky 0.35.0's `api_server.gen.go`.
-  `/api/stats` answers 503 unless `statistics.enable`, so `_settings.nix` sets
-  it (in memory, a rolling 24h). Query-log history needs a database or
-  VictoriaLogs, and uplink logs to the console, so the panel shows only the 24h
-  statistics.
+  `/api/stats` answers 503 unless `statistics.enable`, so
+  `services.networking.blocky.settings.render` sets it (in memory, a rolling
+  24h). Query-log history needs a database or VictoriaLogs, and uplink logs to
+  the console, so the panel shows only the 24h statistics.
 - **Where it runs.** A Deployment (bjw-s `app-template`, the `matrix-admin`
   shape) in namespace `blocky-ui`, as the image's `nextjs` user (1001:65533),
   every capability dropped, no privilege escalation, `HOSTNAME=0.0.0.0` (the
@@ -785,7 +785,8 @@ oauth2-proxy) is kept but included by no host.
 
 ### 2.7 Phase 2: Kubernetes replicas behind a load-balancer address
 
-`kubernetes.services.network.blocky` calls the same `_settings.nix` with:
+`kubernetes.services.network.blocky` calls the same
+`services.networking.blocky.settings.render` with:
 
 - `dnsListen = [ ":53" ]` and `httpListen = [ ":4000" ]`;
 - `internalResolver` = the CoreDNS ClusterIP
@@ -810,14 +811,14 @@ The rest:
   binds `:53` with every capability dropped. On 2026-11-11 `latest` is `v0.36.0`
   (digest `sha256:191c0f1e…54b2`, built 2026-11-09), one release ahead of
   uplink's nixpkgs Blocky `0.35.0`.
-- **Version drift:** both instances render from one `_settings.nix`, but they
-  can run different Blocky releases, so a key that one release adds, renames or
-  drops can break the other. `checks.x86_64-linux.blocky-k8s` runs
-  `blocky validate` on the rendered cluster config twice, with the image's own
-  `/app/blocky` (unpacked from the pinned digest) and with uplink's package. A
-  digest bump that the config doesn't pass fails the check. Validation doesn't
-  cover behaviour: a release that changes a default without changing the schema
-  passes it.
+- **Version drift:** both instances render from one
+  `services.networking.blocky.settings.render`, but they can run different
+  Blocky releases, so a key that one release adds, renames or drops can break
+  the other. `checks.x86_64-linux.blocky-k8s` runs `blocky validate` on the
+  rendered cluster config twice, with the image's own `/app/blocky` (unpacked
+  from the pinned digest) and with uplink's package. A digest bump that the
+  config doesn't pass fails the check. Validation doesn't cover behaviour: a
+  release that changes a default without changing the schema passes it.
 - **Deployment:** 3 replicas, one per node (required pod anti-affinity on
   `kubernetes.io/hostname`), rolled one at a time with no surge (a fourth pod
   has no node).
@@ -926,13 +927,14 @@ can change. The gateway stays the last resort.
 
 ### 2.9 Rollout
 
-1. `_settings.nix`, the `services.networking.blocky` aspect with uplink
-   including it and setting `isResolver = true`, `dns.internal = "axon"` and
-   `dns.filter` in prod.nix (§2.1), the four alerts, and the `coredns-internal`
-   LB, `dns-internal` record and policy. No client changes yet, since
-   `dns.resolvers = [ ]`; the resolver-host guard is the setting, not that list
-   (§2.1), so uplink already collects `served-domains` and `dns-internal`. Tests
-   1–3, 6, 8 and 9 run against `@10.10.10.1` directly.
+1. `services.networking.blocky.settings.render`, the
+   `services.networking.blocky` aspect with uplink including it and setting
+   `isResolver = true`, `dns.internal = "axon"` and `dns.filter` in prod.nix
+   (§2.1), the four alerts, and the `coredns-internal` LB, `dns-internal` record
+   and policy. No client changes yet, since `dns.resolvers = [ ]`; the
+   resolver-host guard is the setting, not that list (§2.1), so uplink already
+   collects `served-domains` and `dns-internal`. Tests 1–3, 6, 8 and 9 run
+   against `@10.10.10.1` directly.
 2. `dns.resolvers = [ "uplink" ]` in both environments, plus the (b) and (c)
    consumers (including `accept-dns=false`, owner Q13 decided) and the D10
    cleanup. Tests 5, 7 and 11. If test 5 shows a link on the gateway, the

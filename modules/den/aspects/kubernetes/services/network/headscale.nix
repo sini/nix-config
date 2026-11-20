@@ -2,7 +2,7 @@
 # Tier 0 item 2, owner 2026-11-18). One replica (one instance owns the netmap) on
 # SQLite in a Longhorn volume, which Longhorn replicates across nodes; upstream
 # discourages Postgres (config-example.yaml at v0.29.7). Settings are the host
-# aspect's (services/networking/_headscale-settings.nix).
+# aspect's (services.networking.headscale.settings.shared).
 #
 # Ingress: the control protocol (POST /ts2021) and the embedded DERP relay
 # (GET /derp) are HTTP upgrades, served on the gateway's HTTPS listener with the
@@ -17,7 +17,6 @@
 let
   name = "headscale";
   namespace = "headscale";
-  hs = import ../../../services/networking/_headscale-settings.nix { inherit lib; };
   uid = 65532;
   httpPort = 8080;
   metricsPort = 9090;
@@ -93,6 +92,7 @@ in
         ...
       }:
       let
+        hs = cluster.settings.services.networking.headscale.shared;
         live = cluster.settings.kubernetes.services.network.headscale.live;
         domain = cluster.domainFor "headscale";
         settings =
