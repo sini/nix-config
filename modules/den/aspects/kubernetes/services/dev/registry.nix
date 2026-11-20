@@ -142,7 +142,6 @@ in
       {
         applications.${name} = {
           inherit namespace;
-          createNamespace = true;
 
           objects = [
             {

@@ -145,7 +145,6 @@ in
       {
         applications.${name} = {
           inherit namespace;
-          createNamespace = true;
 
           resources = {
             serviceAccounts.${name}.automountServiceAccountToken = false;
