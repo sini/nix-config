@@ -1022,7 +1022,10 @@ in
                         containers = [
                           {
                             name = "xmsg";
-                            image = ref images."sini/xmsg";
+                            # Held at xmsg fcd6821 (xmsg-44z0): the gateway's SDK can't
+                            # decode the new list response from its own daemon. Moves
+                            # back to images."sini/xmsg" together with the gateway image.
+                            image = "ghcr.io/sini/xmsg@sha256:afdeafe10ffe82a456a97d107a42346711b341e1eb790fd3d932795c8e5d99c8";
                             args = [
                               "serve"
                               "--leaf"
