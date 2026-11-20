@@ -49,43 +49,99 @@ Both are public, with no auth.
    - `Cache-Control` on gen-status `/data/`: an HTTPRoute rule for the `/data/`
      prefix with a `ResponseHeaderModifier`, so it doesn't depend on Garage
      returning stored object metadata.
-5. **Publishing.**
-   - Each site gets its own write key (a GarageKey with write on that bucket
-     only, like `sites-publisher`), so a publisher can't touch the landing
-     sites.
-   - gen-status: `publish-gen-status` changes from rsync to
-     `aws s3 sync --delete` against `https://s3.json64.dev`, as `publish-sites`
-     does. That change is in den-ag-design, so it's theirs to make. Open
-     question 2 covers where their credential comes from.
-   - den: a one-time `aws s3 sync` of uplink's `/var/lib/den-docs`, through a
-     copy on cortex.
+5. **Publishing.** Each site has its own write key, with write on that bucket
+   only, so a publisher can't touch the other sites. den is a one-time upload
+   from cortex; gen-status is published repeatedly by den-ag-design, which needs
+   the coordination below.
+
+### gen-status's publisher credential
+
+The key is generated once in nix-config and delivered to both sides, so nobody
+copies it by hand and no publishing host needs cluster access.
+
+1. **One source.** Two agenix secrets in the prod environment's secrets:
+   - `gen-status-publisher-key-id`: `GK` plus 24 hex characters;
+   - `gen-status-publisher-secret`: 64 hex characters.
+
+   That's Garage's key format; v2.4.1 accepts any format, but this one is safe
+   across versions. A new generator script, `garage-key`, makes both.
+
+2. **Into the cluster.** Both secrets have a `sopsOutput`, so a SopsSecret
+   renders them into a Secret in the garage namespace. The publisher's GarageKey
+   imports them (`spec.importKey.secretRef`) instead of minting its own, with
+   write on the gen-status bucket only. The operator registers that exact key
+   with Garage.
+3. **Onto the publishing hosts.** A host aspect,
+   `services.web.gen-status-publisher`, makes the host a recipient of the same
+   two rekeyFiles (the shared-secret pattern registry-password uses) and renders
+   one env file from them:
+   - path: `/run/agenix/gen-status-publish.env`, owned by sini, mode 0400;
+   - contents: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
+     `AWS_DEFAULT_REGION=garage` and
+     `GEN_STATUS_S3_ENDPOINT=https://s3.json64.dev`.
+
+   It goes on bitstream and uplink-dev, where den-ag-design's sessions run.
+   uplink-dev is a guest, so the deploy that adds the aspect changes its runner
+   and restarts it: it waits for den-ag-design's stopping point, as every
+   uplink-dev restart does.
+
+4. **The publish command** (den-ag-design's change, ci/devshell.nix): keep the
+   build and its self-check, then replace the rsync with
+
+       set -a; . /run/agenix/gen-status-publish.env; set +a
+       aws s3 sync --delete "$out_dir/" s3://gen-status.json64.dev/ \
+         --endpoint-url "$GEN_STATUS_S3_ENDPOINT"
+
+   It fails if the env file is missing, so a session on a host without the
+   aspect gets a clear error rather than a partial publish. The spec's D2 ruling
+   ("manual rsync to uplink") is amended to match; that edit is den-ag-design's.
+
+5. **The agent's handling.** The publishing agent runs as sini and needs only to
+   source the file. It never prints or copies the credentials: the command
+   sources the file in its own shell, and nothing echoes them. I'll give
+   den-ag-design that rule, together with the path, the bucket, the endpoint and
+   the command, in one message when step 3 is deployed.
+6. **Rotation.** Regenerate the two agenix secrets, `agenix sops-rekey`, push,
+   then deploy bitstream and uplink-dev. Until both sides have the new key,
+   publishing fails with 403, and nothing is half-written, because the sync
+   fails at its first request.
 
 ## Rollout
 
-1. Land the buckets, keys and routes with each site's route off (a `live`
-   setting per site, as attic and registry had). uplink keeps serving.
-2. Upload: den from uplink's copy; gen-status by a publish run (den-ag-design)
-   or a one-time copy of uplink's tree.
-3. Check each site with `curl --resolve` against the gateway VIP: front page,
-   one deep page, a bare-directory URL, the 404, a `/data/` file's headers and
-   gzip on `app.js`.
-4. Set `live` and remove the three aspects from uplink. Deploy uplink, after
-   checking uplink-dev's runner doesn't change.
-5. Wipe `/var/lib/den-docs` and `/var/lib/gen-status` from uplink's persist.
+1. **Land the plumbing.**
+   - Buckets, keys and routes go in with each site's route off: a `live` setting
+     per site, as attic and registry had. uplink keeps serving.
+   - The publisher secrets and the `gen-status-publisher` aspect land too.
+     Deploy bitstream, and uplink-dev at its next agreed restart.
+2. **Hand over the publisher** to den-ag-design (step 5 above). They change
+   `publish-gen-status` and run it once. The first run fills the bucket while
+   uplink still serves the site.
+3. **Upload den** from cortex: copy uplink's `/var/lib/den-docs` to cortex with
+   `rsync`, then `aws s3 sync` it with den's key, read from the cluster as
+   `publish-sites` does.
+4. **Check each site** with `curl --resolve` against the gateway VIP:
+   - the front page and one deep page;
+   - a bare-directory URL;
+   - the 404 page;
+   - the headers of a `/data/` file;
+   - gzip on `app.js`.
+5. **Cut over.** Set `live` and remove the three aspects from uplink. Deploy
+   uplink, after checking uplink-dev's runner doesn't change.
+6. **Clean up.** Wipe `/var/lib/den-docs` and `/var/lib/gen-status` from
+   uplink's persist.
 
-Rollback before step 5: unset `live` and re-include the aspects on uplink.
+Rollback before step 6: unset `live` and re-include the aspects on uplink. Until
+den-ag-design's command changes, its old rsync keeps working, because uplink
+still serves.
 
-## Open questions for the owner
+## Decided (owner, 2026-11-19)
 
-1. Is den.json64.dev still wanted? It's a hand-copied mirror that hasn't changed
-   since 2026-09-29. If den has a published docs site upstream, retire it
-   instead of moving it.
-2. gen-status's publisher credential. `publish-sites` reads its key from the
-   cluster with kubectl. den-ag-design publishes from bitstream or uplink-dev.
-   Either the publishing user gets read access to that one Secret, or the key is
-   copied into an agenix secret on the publishing host. I'd recommend a kubectl
-   role scoped to that single Secret.
-3. oauth2-proxy: which UIs does it still front on uplink? It retires with them.
+- den.json64.dev moves.
+- The gen-status publisher gets its key from nix-config, as above.
+
+## Open questions
+
+1. oauth2-proxy: which UIs does it still front on uplink? It retires with them.
    I haven't enumerated this yet.
 
 ## Not covered

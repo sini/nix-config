@@ -110,16 +110,12 @@ nightly backup copies off the cluster to the NAS, as it does for headscale.
 Rollback before step 5: unset `live`, put `isHub` back on uplink, and redeploy.
 The identity is the same, so members reconnect to uplink.
 
-## Open questions for the owner
+## Decided (owner, 2026-11-19)
 
-1. Seed empty and lose the hub's `.stversions`, or copy them over? I'd recommend
-   seeding empty: the members hold every live file.
-2. Is a LAN-only hub acceptable, with off-LAN members syncing through bitstream
-   and cortex? The alternative is a WAN port-forward of 22000. Syncthing
-   authenticates devices by certificate, so that's defensible, but it's new
-   public surface.
-3. vic has a single member, bitstream. Should the hub also be vic's second copy
-   outside the window? It already is; this only changes where the hub runs.
+- Seed the hub empty. The hub's own `.stversions` history is not carried over.
+- The hub is LAN-only. Off-LAN members sync through bitstream and cortex over
+  the tailnet; no WAN port-forward.
+- vic keeps the hub as a second copy, from its new home.
 
 ## Not covered
 
