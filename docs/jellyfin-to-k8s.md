@@ -232,10 +232,9 @@ fresh cluster. Shoko 5.3.3's API covers this (read from its swagger):
   needs no hand steps for this. Shoko's own library setup (AniDB login, import
   folders) is out of scope here; that's a separate declarative-Shoko question.
 
-## 4b. PostgreSQL (owner, 2026-11-20: scope it): not now
+## 4b. Database backend: SQLite (owner, 2026-11-20: decided)
 
-**Recommendation: keep SQLite through this migration, and move to PostgreSQL
-once Jellyfin supports it officially.**
+**SQLite through this migration (decided below).**
 
 **Why:**
 
@@ -262,6 +261,36 @@ once Jellyfin supports it officially.**
   success.
 - That's the opposite of what the reordered plan is for.
 
+**Other candidates, also rejected (read 2026-11-20):**
+
+- **BORNIOS/Jellyfin-Database-Providers-Postgres** (v3.1.0, 2026-10-19). It's
+  the better-built Postgres provider: a plugin with no core changes, a two-way
+  SQLite ⇄ PostgreSQL migration tab, and a one-click rollback. It was rejected
+  because:
+  - it trails Jellyfin: its 3.x targets 12.1, while Jellyfin is at 12.4
+    (2026-10-26);
+  - 10.11 → 12 is a manual round trip: export to SQLite on 2.0.1, upgrade
+    Jellyfin, re-import on 3.x;
+  - it has one maintainer;
+  - issue #5 (open since 2026-09-18): it needs the PostgreSQL client tools
+    inside the Jellyfin image, so the stock image won't do;
+  - #9 (fixed in 3.0.4) dropped migration history on our exact path.
+
+  The first to try once the cluster move is done, if it has a release for the
+  Jellyfin we run.
+
+- **tursodatabase/turso** (v0.8.4, 2026-11-20): a Rust rewrite of SQLite,
+  pre-1.0, with SQL and C API compatibility both "partial" by its own COMPAT.md.
+  Rejected because:
+  - Jellyfin reaches SQLite through EF Core and `Microsoft.Data.Sqlite`, and
+    Turso's .NET package is a separate ADO.NET library with no EF Core provider;
+  - its gain is concurrent writes, and Jellyfin is one writer;
+  - partial compatibility puts the risk inside Jellyfin's EF migrations.
+
+**Decision (owner, 2026-11-20): SQLite.** Revisit only when Jellyfin supports
+another backend officially, or when the BORNIOS provider is current for the
+version we run and works on the stock image.
+
 **What SQLite costs instead:**
 
 - One writer, which fits a single replica.
@@ -287,8 +316,6 @@ once Jellyfin supports it officially.**
   uplink's `/var/lib/jellyfin` after a week.
 
 ## 6. Open decisions for the owner
-
-0. PostgreSQL: accept SQLite now and revisit on official support (§4b)?
 
 1. GPU: A (dedicate one node) or B (share `/dev/dri`). I'd recommend A: it's
    exclusive and predictable, and needs no device-mount exception.
