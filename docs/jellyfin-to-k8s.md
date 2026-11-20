@@ -87,8 +87,10 @@ Interface from jellarr-0c (typedrat/jellarr main @603a5a68, the fork's base):
   - The SSO secret goes inside plugin config, which needs the fork's `${VAR}` or
     file-reference form (pending jellarr-0c's syntax).
 - **Running it:** a one-shot Job as an Argo PostSync hook, from the fork's ghcr
-  image pinned by digest. It re-runs on every sync; jellarr is idempotent and
-  never deletes.
+  image pinned by digest. It re-runs on every sync; jellarr is idempotent. Users
+  and libraries are created and updated, never purged, and unlisted ones are
+  left alone. The one deletion is of superseded copies of a managed plugin,
+  which jellarr-0c is narrowing before release.
 - **The API key (owner, 2026-11-20: a generated agenix secret).** Jellyfin's API
   can't take a chosen key value (`POST /Auth/Keys` mints its own), so nix seeds
   it:
@@ -100,7 +102,12 @@ Interface from jellarr-0c (typedrat/jellarr main @603a5a68, the fork's base):
     `ApiKeys(Id, DateCreated, DateLastActivity, Name, AccessToken UNIQUE)`, read
     from uplink's 10.11 database. Seeding before start means the database is
     never written under a running Jellyfin;
-  - rotation is regenerate, `agenix sops-rekey`, and roll the pod;
+  - it checks the exact columns and fails loudly on a mismatch (a Jellyfin 12
+    migration could change them), and upserts by `Name = "jellarr"`, so a
+    rotated token replaces the old one;
+  - rotation is regenerate, `agenix sops-rekey`, and roll the pod. A restart
+    through Jellyfin's API restarts the container, not the pod, so it doesn't
+    re-run the seed;
   - the jellarr Job always gets `JELLARR_API_KEY` from that Secret.
   - uplink's database has no API keys (measured), so the migration carries none;
     the seed supplies it.
@@ -120,6 +127,22 @@ Interface from jellarr-0c (typedrat/jellarr main @603a5a68, the fork's base):
     read fails the run instead of being skipped.
   - **Secret references** in plugin config, `${VAR}` or a file form; nix
     provides both.
+- **The admin password** is declarative: an agenix secret, mounted as
+  `passwordFile`. uplink's Admin carries a declarative-jellyfin PBKDF2 hash, so
+  jellarr reconciles an existing user's `passwordFile`: it tries the login, and
+  when that fails, sets the password using the seeded key. The first in-cluster
+  run moves Admin to the agenix password. Password authentication remains only
+  the fallback for a pristine volume, and when the key is rejected (logged as a
+  warning).
+- **Network:**
+  - The Jellyfin pod needs world egress (443) for its plugin repositories, the
+    catalog and metadata providers.
+  - The Job needs only the Jellyfin Service (it reads the catalog through
+    `/Packages`, and waits on `/health` before its first call).
+- **Versions:** one jellarr release for 10.11 and 12. It sends
+  `Authorization: MediaBrowser Token=…`, proven on 10.11 in the fork's VM test
+  before tagging.
+
 - **The integration test:** a throwaway instance (empty volume, no route), run
   before uplink's data is touched. It must reach a converged state from empty,
   and a second run must report no changes.
