@@ -7,6 +7,17 @@
         default = null;
         description = "Override email address for Bitwarden rbw configuration";
       };
+      unattendedUnlock = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = ''
+          Unlock the vault at boot from the user's agenix master password
+          (.secrets/users/<user>/bitwarden-master-password.age). Per host: it puts the
+          decrypted master password on that host's tmpfs, so set it only where the
+          trade is worth it. No host sets it (owner, 2026-11-20: the master password
+          gates every password, not only infrastructure's).
+        '';
+      };
     };
 
     homeManager =
@@ -52,7 +63,11 @@
         # mintable. Create it with:
         #   agenix edit .secrets/users/<user>/bitwarden-master-password.age
         masterPasswordFile = user.secretPath + "/bitwarden-master-password.age";
-        hasMasterPassword = builtins.pathExists masterPasswordFile;
+        # Both the file and the host's opt-in: the file is per user, but whether its
+        # plaintext may live on a host is that host's call.
+        hasMasterPassword =
+          (host.settings.applications.dev.security.bitwarden.unattendedUnlock or false)
+          && builtins.pathExists masterPasswordFile;
         masterPasswordPath = config.age.secrets.bitwarden-master-password.path or "";
 
         # Where a graphical session exists, pinentry-gnome3 can draw a prompt and

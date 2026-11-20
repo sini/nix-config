@@ -54,6 +54,7 @@
       applications.dev.security.bitwarden
       applications.dev.security.ssh-agent-mux
       applications.dev.security.signing-key
+      applications.dev.security.github-ssh-key
 
       applications.dev.shell.bat
       applications.dev.shell.bottom
