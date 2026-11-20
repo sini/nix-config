@@ -4,7 +4,7 @@ metadata:
   name: syncthing-hub
   namespace: syncthing
 spec:
-  replicas: 0
+  replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: syncthing-hub
@@ -13,7 +13,7 @@ spec:
   template:
     metadata:
       annotations:
-        json64.dev/config-hash: 98c2447346cb69c417b49e7c699475915990c2bef4c2ad7ff58a384408e49814
+        json64.dev/config-hash: 13f617cf2321dd97aba71955ed80b995e8ed4884b5f3f42ac841caa9d6f7b590
       labels:
         app.kubernetes.io/name: syncthing-hub
     spec:

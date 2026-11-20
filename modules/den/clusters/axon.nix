@@ -84,6 +84,8 @@ in
     settings.kubernetes.services.dev.attic.live = true;
     # The registry serves from the cluster (dev/registry.nix); uplink's is gone.
     settings.kubernetes.services.dev.registry.live = true;
+    # The Syncthing hub runs here (network/syncthing-hub.nix); uplink's is retired.
+    settings.kubernetes.services.network.syncthing-hub.live = true;
     # uplink's static sites from Garage buckets (web/static-sites.nix), and its
     # retired homepage's name redirected to the cluster's dash.
     settings.kubernetes.services.web.static-sites = {
@@ -365,7 +367,7 @@ in
       services.storage.garage.routes
       services.storage.garage.garage-ui
       services.storage.garage.sites
-      # The Syncthing hub (network/syncthing-hub.nix); uplink's serves until `live`.
+      # The Syncthing hub (network/syncthing-hub.nix).
       services.network.syncthing-hub
       # uplink's static sites in Garage buckets (web/static-sites.nix).
       services.web.static-sites

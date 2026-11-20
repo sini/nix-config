@@ -47,9 +47,6 @@
         wipeRootOnBoot = true;
         wipeHomeOnBoot = true;
       };
-      # Always-on Syncthing hub for replicated home dirs (the bgp pattern: the
-      # aspect declares the option, the host file sets it).
-      core.network.syncthing.isHub = true;
       # The prod resolver instance (Blocky, docs/dns-resolver.md), the same pattern.
       services.networking.blocky.isResolver = true;
       # Fleet alerting, mailed straight to Proton (not via the cluster relay).
@@ -89,7 +86,6 @@
       services.ai.open-webui
       core.network.tailscale
       core.network.tailscale.exit-node
-      core.network.syncthing.hub
       virtualization.podman
       virtualization.microvm-host
       hardware.cpu.amd
