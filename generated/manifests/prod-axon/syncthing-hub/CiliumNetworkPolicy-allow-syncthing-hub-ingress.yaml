@@ -16,11 +16,3 @@ spec:
         - ports:
             - port: "22000"
               protocol: TCP
-    - fromEntities:
-        - cluster
-        - remote-node
-        - host
-      toPorts:
-        - ports:
-            - port: "22000"
-              protocol: TCP

@@ -6,6 +6,7 @@ metadata:
   name: syncthing-hub
   namespace: syncthing
 spec:
+  externalTrafficPolicy: Local
   ports:
     - name: sync
       port: 22000

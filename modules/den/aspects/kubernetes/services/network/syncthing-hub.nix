@@ -225,6 +225,8 @@ in
                       command = [
                         "/bin/syncthing"
                         "serve"
+                        # The image's environment sets 0.0.0.0:8384; the GUI is unused.
+                        "--gui-address=127.0.0.1:8384"
                         "--home=${configDir}"
                         "--no-browser"
                         "--no-upgrade"
@@ -297,6 +299,10 @@ in
               metadata.annotations."lbipam.cilium.io/ips" = cluster.getAssignment name;
               spec = {
                 type = "LoadBalancer";
+                # Keeps the client's address, which the ingress rule matches. With
+                # Cluster, a connection reaching another node arrives SNATed to that
+                # node's pod-range address and Cilium sees it as world.
+                externalTrafficPolicy = "Local";
                 selector = pod;
                 ports = [
                   {
@@ -318,15 +324,6 @@ in
                     fromCIDR = [
                       "10.0.0.0/8"
                       "100.64.0.0/10"
-                    ];
-                    toPorts = [ { ports = [ (tcp port) ]; } ];
-                  }
-                  # A LoadBalancer connection SNATed to a node address.
-                  {
-                    fromEntities = [
-                      "cluster"
-                      "remote-node"
-                      "host"
                     ];
                     toPorts = [ { ports = [ (tcp port) ]; } ];
                   }

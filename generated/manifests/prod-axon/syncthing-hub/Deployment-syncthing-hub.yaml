@@ -22,6 +22,7 @@ spec:
         - command:
             - /bin/syncthing
             - serve
+            - --gui-address=127.0.0.1:8384
             - --home=/var/syncthing/config
             - --no-browser
             - --no-upgrade
