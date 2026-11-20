@@ -4,12 +4,34 @@ Status: draft v0.1, 2026-11-20. Part of the uplink plan
 (docs/uplink-maintenance-plan.md, Tier 2 item 9). Not yet reviewed, and two
 owner decisions are open (§6).
 
+## Order (owner, 2026-11-20, revised)
+
+The move becomes three steps, each verified before the next:
+
+1. **uplink: declarative-jellyfin to jellarr, on Jellyfin 10.11.** uplink's
+   aspect moves to nixpkgs' `services.jellyfin` configured by jellarr's NixOS
+   module, with the same settings, against the existing database. This tests and
+   validates jellarr's NixOS module for the community, and our aspect stays. Its
+   steps become the migration guide upstream asks for (venkyr77/jellarr#84).
+2. **uplink: Jellyfin 10.11 to 12**, through jellarr, with a ZFS snapshot of
+   `/var/lib/jellyfin` first.
+3. **uplink to the cluster: data only.** Both ends run Jellyfin 12, configured
+   from the same settings, so this is a copy of `/var/lib/jellyfin` (§4), not a
+   reconfiguration.
+
+The settings are written once, in a shared helper
+(`services/media/_jellyfin-settings.nix`, as `_headscale-settings.nix` is), and
+rendered into jellarr's YAML for both uplink's NixOS module and the cluster's
+Job. The cluster's staged clean install at jellyfin-next (1bc7cb84) stays for
+validating the cluster side against the same settings.
+
 ## Roles (owner, 2026-11-20)
 
-- **jellarr-0c** owns jellarr: the sini/jellarr fork, its features, upstream
-  consolidation and its image. It is responsible for jellarr being able to
-  manage our instances. A capability gap found here (first-boot API key, restart
-  after plugin install, secret references) is its to close.
+- **jellarr-0c** owns jellarr: the sini/jellarr fork, its features (the NixOS
+  module included), upstream consolidation, its image, and the migration guide
+  (#84), written from step 1. It is responsible for jellarr being able to manage
+  our instances. A capability gap found here (first-boot API key, restart after
+  plugin install, secret references) is its to close.
 - **nix-config** (this plan) owns the rest: the cluster aspect, bootstrapping,
   the Jellyfin settings our aspect renders into jellarr's config, and the live
   migration from uplink.
