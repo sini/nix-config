@@ -84,8 +84,8 @@ Interface from jellarr-0c (typedrat/jellarr main @603a5a68, the fork's base):
   - The admin password is a `passwordFile`. Jellyfin's API takes plaintext, so
     the nix-declared PBKDF2 hash can't be reused; the admin password becomes an
     agenix secret.
-  - The SSO secret goes inside plugin config, which needs the fork's `${VAR}` or
-    file-reference form (pending jellarr-0c's syntax).
+  - The SSO secret goes inside plugin config as a mounted file, named by a
+    structured file reference.
 - **Running it:** a one-shot Job as an Argo PostSync hook, from the fork's ghcr
   image pinned by digest. It re-runs on every sync; jellarr is idempotent. Users
   and libraries are created and updated, never purged, and unlisted ones are
@@ -125,8 +125,11 @@ Interface from jellarr-0c (typedrat/jellarr main @603a5a68, the fork's base):
     jellarr POSTs /System/Restart, waits for /health, and re-runs the
     plugin-config pass, all in one Job. A declared plugin whose config can't be
     read fails the run instead of being skipped.
-  - **Secret references** in plugin config, `${VAR}` or a file form; nix
-    provides both.
+  - **Secret references** in plugin config: a structured file reference,
+    `{ _file: "/path" }`, replaced after parsing by the file's trimmed contents
+    (a missing file is an error). No env substitution: it pasted values into raw
+    YAML, where a secret could alter the config. The key name is final with the
+    release.
 - **The admin password** is declarative: an agenix secret, mounted as
   `passwordFile`. uplink's Admin carries a declarative-jellyfin PBKDF2 hash, so
   jellarr reconciles an existing user's `passwordFile`: it tries the login, and
