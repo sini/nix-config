@@ -89,6 +89,25 @@ Interface from jellarr-0c (typedrat/jellarr main @603a5a68, the fork's base):
 - **Running it:** a one-shot Job as an Argo PostSync hook, from the fork's ghcr
   image pinned by digest. It re-runs on every sync; jellarr is idempotent and
   never deletes.
+- **The API key (owner, 2026-11-20: a generated agenix secret).** Jellyfin's API
+  can't take a chosen key value (`POST /Auth/Keys` mints its own), so nix seeds
+  it:
+  - an agenix secret `jellyfin-api-key` with a generator (32 hex characters,
+    Jellyfin's format), delivered to the namespace through SOPS;
+  - an init container (sqlite3), before Jellyfin starts, that leaves exactly one
+    `ApiKeys` row named `jellarr` carrying that token: it deletes stale
+    `jellarr` rows and inserts the current one. The schema is
+    `ApiKeys(Id, DateCreated, DateLastActivity, Name, AccessToken UNIQUE)`, read
+    from uplink's 10.11 database. Seeding before start means the database is
+    never written under a running Jellyfin;
+  - rotation is regenerate, `agenix sops-rekey`, and roll the pod;
+  - the jellarr Job always gets `JELLARR_API_KEY` from that Secret.
+  - uplink's database has no API keys (measured), so the migration carries none;
+    the seed supplies it.
+  - First boot on an empty volume has no database to seed until Jellyfin has run
+    once. That one run uses jellarr's password authentication (below), and the
+    key is seeded at the next pod start.
+
 - **jellarr features this needs (requested from jellarr-0c, 2026-11-20):**
   - **Password authentication and first boot.** With no `JELLARR_API_KEY`,
     jellarr authenticates as the admin (name plus `passwordFile`). On a pristine
