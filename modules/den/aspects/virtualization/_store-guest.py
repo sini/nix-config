@@ -326,13 +326,15 @@ def cmd_reconcile(a):
         survived = sorted(set(half) - invalid(half))
         if survived:
             raise Failed(f"half-deleted host paths survived the guest GC: {survived}")
-    if m:
-        # The ro-store share passes file handles, so a dentry cached before the host deleted
-        # the path answers ESTALE, not ENOENT, and nix-store --verify aborts on it (measured
-        # 2026-11-10: 1595 missing rows, "Stale file handle" every run). Dropping the
-        # unused dentries makes the next lookup go to virtiofsd and see ENOENT.
-        with open("/proc/sys/vm/drop_caches", "w") as f:
-            f.write("2\n")
+    # Every run, not only with missing rows: the ro-store share passes file handles, so a
+    # dentry cached before the host deleted the path answers ESTALE, not ENOENT, and
+    # nix-store --verify aborts on it (measured 2026-11-10: 1595 missing rows, "Stale file
+    # handle" every run); and OverlayFS keeps a negative dentry for a path the host added
+    # after the guest looked (docs/microvm-lower-store-staleness.md). Dropping the unused
+    # dentries makes the next lookup go to virtiofsd. This is the floor under the
+    # per-registration drop (nix-store-dentry-drop).
+    with open("/proc/sys/vm/drop_caches", "w") as f:
+        f.write("2\n")
     run(["nix-store", "--verify"])
     return 0
 

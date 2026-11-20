@@ -200,7 +200,34 @@ rec {
         };
       }
       // export.units
-      // reconcile.units;
+      // reconcile.units
+      // {
+        # docs/microvm-lower-store-staleness.md: OverlayFS caches a negative dentry for
+        # a lookup into a lower path the host is still writing, and never revalidates it
+        # (measured 2026-11-20: `bin/ci` ENOENT in the overlay 60 s after the host wrote
+        # it). A registration is when a lower path becomes the guest's, so drop the
+        # dentry cache (level 2, not the page cache) right after one. The wait lets the
+        # registration finish; the hold makes a burst cost one drop.
+        nix-store-dentry-drop = {
+          description = "Drop stale overlay dentries after the guest registers store paths";
+          serviceConfig = {
+            Type = "oneshot";
+            ExecStart = "${pkgs.writeShellScript "nix-store-dentry-drop" ''
+              sleep 5
+              echo 2 > /proc/sys/vm/drop_caches
+              sleep 25
+            ''}";
+          };
+        };
+      };
+      systemd.paths.nix-store-dentry-drop = {
+        wantedBy = [ "paths.target" ];
+        # The database and its WAL change on every registration.
+        pathConfig.PathChanged = [
+          "/nix/var/nix/db/db.sqlite"
+          "/nix/var/nix/db/db.sqlite-wal"
+        ];
+      };
       systemd.timers = {
         nix-store-roots-export = {
           wantedBy = [ "timers.target" ];
