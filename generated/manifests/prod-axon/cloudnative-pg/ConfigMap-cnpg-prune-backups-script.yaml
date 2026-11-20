@@ -17,11 +17,27 @@ data:
     import os
     import ssl
     import sys
+    import time
     import urllib.error
     import urllib.request
     from collections import defaultdict
 
     SCHEDULE_LABEL = "cnpg.io/scheduled-backup"
+    # The apiserver's priority and fairness answers 429 when it is busy (it did at
+    # 06:00, two hours after the nightly backups), and a restarting apiserver 5xx.
+    RETRYABLE = {429, 500, 502, 503, 504}
+    ATTEMPTS = 6
+
+
+    def retry_delay(attempt, retry_after):
+        """Seconds to wait before retry `attempt` (1-based): the server's Retry-After
+        when it sends a number of seconds, else 2, 4, 8, ... capped at 60."""
+        try:
+            if retry_after is not None:
+                return min(max(float(retry_after), 1.0), 60.0)
+        except ValueError:
+            pass
+        return float(min(2**attempt, 60))
 
 
     def plan(backups, keep):
@@ -75,6 +91,12 @@ data:
         # A failed run never counts towards the kept set.
         backups.append(b("a", "n10-failed", "2026-10-10T04:00:00Z", phase="failed"))
         assert plan(backups, 7) == want, plan(backups, 7)
+        assert retry_delay(1, "3") == 3.0
+        assert retry_delay(1, "0") == 1.0
+        assert retry_delay(1, "999") == 60.0
+        assert retry_delay(2, None) == 4.0
+        assert retry_delay(9, None) == 60.0
+        assert retry_delay(3, "Wed, 21 Oct 2015 07:28:00 GMT") == 8.0
         print("ok")
 
 
@@ -95,13 +117,21 @@ data:
                 method=method,
                 headers={"Authorization": f"Bearer {self.token}"},
             )
-            try:
-                with urllib.request.urlopen(req, context=self.ctx) as resp:
-                    return json.load(resp)
-            except urllib.error.HTTPError as e:
-                if method == "DELETE" and e.code == 404:
-                    return None
-                raise
+            for attempt in range(1, ATTEMPTS + 1):
+                try:
+                    with urllib.request.urlopen(req, context=self.ctx) as resp:
+                        return json.load(resp)
+                except urllib.error.HTTPError as e:
+                    if method == "DELETE" and e.code == 404:
+                        return None
+                    if e.code not in RETRYABLE or attempt == ATTEMPTS:
+                        raise
+                    wait = retry_delay(attempt, e.headers.get("Retry-After"))
+                    print(
+                        f"{method} {path}: HTTP {e.code}, retry {attempt} in {wait:g}s",
+                        flush=True,
+                    )
+                    time.sleep(wait)
 
 
     def main():
