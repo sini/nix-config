@@ -221,6 +221,13 @@ fresh cluster. Shoko 5.3.3's API covers this (read from its swagger):
   in as `jellyfin` with `device = "shokofin"` and writes the returned key to a
   file. jellarr's config sets Shokofin's `Username` = `jellyfin` and `ApiKey` =
   `{ _file: … }`.
+  - jellarr diffs the resolved value, so a key that changes on every run would
+    re-post Shokofin's config each run (jellarr-0c). To check when the
+    `jellyfin` user exists: does `POST /api/auth` with the same `device` return
+    the same key? If it does, the step stays as written. If it doesn't, the step
+    first tries the key Shokofin already holds (read through Jellyfin's
+    `/Plugins/{id}/Configuration`) against Shoko, and mints a new one only when
+    that fails.
 - **On a new cluster:** everything above re-runs from empty, so a fresh deploy
   needs no hand steps for this. Shoko's own library setup (AniDB login, import
   folders) is out of scope here; that's a separate declarative-Shoko question.
