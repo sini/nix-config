@@ -1,7 +1,8 @@
 # Scope: stale lower-store views in persistent-store guests
 
-Status: scoping, 2026-11-20. Extends docs/microvm-persistent-store.md §4 ("A
-path that appears in the lower layer can stay hidden").
+Status: mechanism measured 2026-11-20 (OverlayFS); fix pending the owner.
+Extends docs/microvm-persistent-store.md §4 ("A path that appears in the lower
+layer can stay hidden").
 
 ## Problem
 
@@ -70,6 +71,25 @@ The test writes one unregistered directory into the host's store and removes it.
 Nix's database and every real path are untouched. It needs the owner's OK, since
 it writes to `/nix/store` outside Nix.
 
+## Step 1 result (measured on uplink-dev, 2026-11-20)
+
+Probes were written to uplink's `/nix/store` from a private mount namespace
+(`unshare -m`, bind-remounted rw there only), never registered, then removed.
+
+| Probe                                                                      | `/nix/.ro-store` (virtiofs) | `/nix/store` (overlay)          |
+| -------------------------------------------------------------------------- | --------------------------- | ------------------------------- |
+| Directory listed while empty, then filled (mtimes reset to 1, as Nix does) | shows `bin` at 2 s          | shows `bin` at 2 s              |
+| `bin/ci` opened while the directory was empty, then filled                 | `bin/ci` readable at 2 s    | `bin/ci` ENOENT at 2 s and 60 s |
+| Path name looked up before it existed, then created                        | present at 2 s              | ENOENT at 2 s and 30 s          |
+
+After `echo 2 > /proc/sys/vm/drop_caches`, every overlay view was correct.
+
+So it is **candidate 2, OverlayFS's own negative dentries**. virtiofs
+(`cache=auto`) revalidates within its 1 s timeout, and the canonical mtime
+doesn't matter. The overlay never revalidates a negative lookup against a
+changed lower layer. The `2dd1rz…-ci` failure was the second row: a guest tool
+opened `bin/ci` while the host was still restoring the path.
+
 ## Candidate fixes, by mechanism
 
 | Mechanism                  | Fix                                                                                                                                                                                                           | Cost                                                                                                               |
@@ -78,7 +98,19 @@ it writes to `/nix/store` outside Nix.
 | OverlayFS                  | invalidate when the guest gains a lower path: drop caches after any registration from the lower (a `post-build-hook` misses substitutions, so a hook on the guest's store), or run it every 15 min regardless | `drop_caches` empties the guest's whole page cache, a one-off cost per run that grows with the guest's working set |
 | Either, as a floor         | §2.6's reconcile drops caches on every run, not only on runs with missing rows                                                                                                                                | at most 15 min of staleness, same `drop_caches` cost every 15 min                                                  |
 
-**Recommendation.**
+**Recommendation (after step 1: OverlayFS).**
+
+- `--cache=metadata` would not help; the stale entry is the overlay's.
+- Targeted invalidation: a systemd path unit on the guest's Nix database
+  (`/nix/var/nix/db/db.sqlite`) runs `echo 2 > /proc/sys/vm/drop_caches`
+  whenever the guest registers paths, rate-limited (at most once per 30 s, plus
+  one run after the last change). Level 2 drops dentries and inodes only, not
+  the page cache. A registration is when a lower path becomes the guest's, so
+  the cache goes right after the moment it can be stale.
+- Keep the 15-minute floor as a backstop for host-side additions the guest
+  looked up without registering.
+
+Original recommendation, before measuring:
 
 - Ship the floor now. It's a one-line change to the reconcile, and it puts an
   upper bound on staleness whichever mechanism this turns out to be.
