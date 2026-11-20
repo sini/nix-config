@@ -89,12 +89,21 @@ Interface from jellarr-0c (typedrat/jellarr main @603a5a68, the fork's base):
 - **Running it:** a one-shot Job as an Argo PostSync hook, from the fork's ghcr
   image pinned by digest. It re-runs on every sync; jellarr is idempotent and
   never deletes.
-- **Open, for jellarr-0c:**
-  - Whether a plugin install needs a Jellyfin restart before its config applies.
-    If so, jellarr does the restart, or the Job runs a second pass.
-  - First-boot API key minting (cramt's #60), needed for an empty volume to
-    configure itself. The migration carries uplink's keys, so it isn't blocked;
-    disaster recovery from an empty volume is.
+- **jellarr features this needs (requested from jellarr-0c, 2026-11-20):**
+  - **Password authentication and first boot.** With no `JELLARR_API_KEY`,
+    jellarr authenticates as the admin (name plus `passwordFile`). On a pristine
+    server it first runs the wizard and creates that admin. No API key is ever
+    persisted, and an empty volume configures itself by the same path as a
+    normal run.
+  - **Restart after plugin changes.** When plugins were installed or removed,
+    jellarr POSTs /System/Restart, waits for /health, and re-runs the
+    plugin-config pass, all in one Job. A declared plugin whose config can't be
+    read fails the run instead of being skipped.
+  - **Secret references** in plugin config, `${VAR}` or a file form; nix
+    provides both.
+- **The integration test:** a throwaway instance (empty volume, no route), run
+  before uplink's data is touched. It must reach a converged state from empty,
+  and a second run must report no changes.
 
 ## 4. Migration (owner decision, §6.2)
 
