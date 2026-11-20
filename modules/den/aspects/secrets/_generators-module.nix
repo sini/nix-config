@@ -365,6 +365,20 @@ in
         + "${lib.escapeShellArg secret.settings.username})\"; "
       ) deps;
 
+    # A Garage access key pair in the format every Garage version accepts (v2.0-2.2
+    # take only these): the id is GK plus 24 hex characters, the secret 64 hex. For
+    # keys nix-config generates and GarageKey.spec.importKey takes as-is.
+    garage-key-id =
+      { pkgs, ... }:
+      ''
+        printf 'GK%s' "$(${pkgs.openssl}/bin/openssl rand -hex 12)"
+      '';
+    garage-secret-key =
+      { pkgs, ... }:
+      ''
+        printf '%s' "$(${pkgs.openssl}/bin/openssl rand -hex 32)"
+      '';
+
     # An OAuth client secret the xmsg gateway's authorization server accepts: exactly
     # 43 unreserved characters and no trailing newline (32 random bytes, unpadded
     # base64url; gateway docs/authorization-server.md).

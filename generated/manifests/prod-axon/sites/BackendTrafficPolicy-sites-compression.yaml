@@ -1,0 +1,31 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: BackendTrafficPolicy
+metadata:
+  name: sites-compression
+  namespace: garage
+spec:
+  compressor:
+    - type: Brotli
+    - type: Gzip
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: site-gen-framework-com
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: site-getqvr-com
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: site-quiver-labs-com
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: site-qvr-framework-com
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: site-qvr-run
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: site-qvr-sh
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: site-qvrlab-com

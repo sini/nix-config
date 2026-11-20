@@ -1,0 +1,13 @@
+apiVersion: garage.rajsingh.info/v1beta1
+kind: GarageBucket
+metadata:
+  name: site-gen-status-json64-dev
+  namespace: garage
+spec:
+  clusterRef:
+    name: garage
+  globalAlias: gen-status.json64.dev
+  website:
+    enabled: true
+    errorDocument: 404.html
+    indexDocument: index.html

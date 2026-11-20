@@ -1,0 +1,17 @@
+apiVersion: garage.rajsingh.info/v1beta1
+kind: GarageKey
+metadata:
+  name: site-gen-status-json64-dev-publisher
+  namespace: garage
+spec:
+  bucketPermissions:
+    - bucketRef:
+        name: site-gen-status-json64-dev
+      read: true
+      write: true
+  clusterRef:
+    name: garage
+  importKey:
+    secretRef:
+      name: site-gen-status-publisher-import
+  neverExpires: true

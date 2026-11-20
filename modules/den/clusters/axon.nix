@@ -354,6 +354,8 @@ in
       services.storage.garage.routes
       services.storage.garage.garage-ui
       services.storage.garage.sites
+      # uplink's static sites in Garage buckets (web/static-sites.nix).
+      services.web.static-sites
     ];
   };
 }
