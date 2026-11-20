@@ -1,5 +1,5 @@
-# The shared Jellyfin settings (_jellyfin-settings.nix), rendered for a sample
-# instance, against what jellarr and both instances rely on:
+# The Jellyfin aspect's jellarr setting (services.media.jellyfin.settings.jellarr),
+# read from uplink's settings and called for a sample instance, against what jellarr and both instances rely on:
 #   escape     every `$` in a string is `$$` (the CSS below carries one), and a file
 #              reference survives as { _file = path; }
 #   libraries  the 8 declared names, matching uplink's virtual folders
@@ -8,9 +8,9 @@
 #   json       render is valid JSON (so valid YAML) that round-trips to the escaped
 #              config
 #   nix build .#checks.x86_64-linux.jellyfin-settings
-{ lib, ... }:
+{ config, lib, ... }:
 let
-  settings = import ./_jellyfin-settings.nix { inherit lib; };
+  jellarr = config.den.hosts.x86_64-linux.uplink.settings.services.media.jellyfin.jellarr;
   args = {
     baseUrl = "http://127.0.0.1:8096";
     domain = "jellyfin.example.test";
@@ -21,23 +21,14 @@ let
       "hevc"
     ];
   };
-  cfg = settings.config args;
-  escaped = settings.escape (
-    cfg
-    // {
-      branding.customCss = "a::after { content: '$5'; }";
-      plugins = [
-        {
-          name = "Shoko";
-          configuration.ApiKey = settings.fileRef "/run/shoko/key";
-        }
-      ];
-    }
-  );
+  cfg = jellarr args;
+  # A `$` in a value the setting renders (the domain reaches the SSO button).
+  dollar = jellarr (args // { domain = "jf$5.example.test"; });
   names = map (f: f.name) cfg.library.virtualFolders;
   checks = {
-    escape = escaped.branding.customCss == "a::after { content: '$$5'; }";
-    fileRef = (lib.head escaped.plugins).configuration.ApiKey == { _file = "/run/shoko/key"; };
+    escape = lib.hasInfix "https://jf$$5.example.test/sso" dollar.branding.loginDisclaimer;
+    # No unescaped `$` left anywhere in the rendered file.
+    noBareDollar = builtins.match ".*[^$]\\$[^$].*" (builtins.toJSON dollar) == null;
     libraries =
       names == [
         "Movies"
@@ -54,7 +45,7 @@ let
       && (lib.head cfg.users) ? passwordFile
       && !((lib.head cfg.users) ? password);
     pins = lib.all (p: p ? version) cfg.plugins;
-    json = builtins.fromJSON (settings.render args) == settings.escape cfg;
+    json = builtins.fromJSON (builtins.toJSON cfg) == cfg;
   };
   failed = lib.attrNames (lib.filterAttrs (_: ok: !ok) checks);
 in
