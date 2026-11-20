@@ -130,6 +130,10 @@ Interface from jellarr-0c (typedrat/jellarr main @603a5a68, the fork's base):
     (a missing file is an error). No env substitution: it pasted values into raw
     YAML, where a secret could alter the config. The key name is final with the
     release.
+  - jellarr also expands `${VAR}` after parsing, in any string value; `$$` is a
+    literal `$`, and a missing variable fails the run. So nix escapes every `$`
+    in the strings it renders (the login page's HTML and CSS included), and uses
+    file references, never `${VAR}`, for secrets.
 - **The admin password** is declarative: an agenix secret, mounted as
   `passwordFile`. uplink's Admin carries a declarative-jellyfin PBKDF2 hash, so
   jellarr reconciles an existing user's `passwordFile`: it tries the login, and
