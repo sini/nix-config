@@ -100,8 +100,9 @@ in
 
         headerRules =
           s:
-          map (h: {
-            name = "headers-${slug (lib.replaceStrings [ "/" ] [ "-" ] (lib.removePrefix "/" h.prefix))}";
+          lib.imap1 (i: h: {
+            # A rule name must start and end alphanumeric, so number them.
+            name = "headers-${toString i}";
             matches = [
               {
                 path = {

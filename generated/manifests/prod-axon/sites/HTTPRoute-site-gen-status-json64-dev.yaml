@@ -24,7 +24,7 @@ spec:
         - path:
             type: PathPrefix
             value: /data/
-      name: headers-data-
+      name: headers-1
     - backendRefs:
         - name: garage
           port: 3902
