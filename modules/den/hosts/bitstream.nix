@@ -84,6 +84,8 @@
 
   den.aspects.bitstream = {
     includes = with den.aspects; [
+      # A tailnet exit node beside uplink's, so roaming devices keep one through home.
+      core.network.tailscale.exit-node
       # den-ag-design publishes gen-status from here (docs/static-sites-to-garage.md).
       services.web.gen-status-publisher
       roles.default

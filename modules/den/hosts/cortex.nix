@@ -63,6 +63,8 @@ in
 
   den.aspects.cortex = {
     includes = with den.aspects; [
+      # A tailnet exit node beside uplink's, so roaming devices keep one through home.
+      core.network.tailscale.exit-node
       roles.default
       roles.workstation
       roles.gaming
