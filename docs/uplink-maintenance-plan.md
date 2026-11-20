@@ -277,10 +277,11 @@ tiers), so it's the weaker candidate.
     back after the window, so they are down for it and nothing else. (Moving
     open-webui into the cluster against its llama-cpp stays an option; ollama
     serves nothing.)
-11. **homepage, oauth2-proxy, den-docs-mirror, gen-status:** homepage and glance
-    already run in the cluster, so retire uplink's homepage. Move the two static
-    sites to the cluster. oauth2-proxy retires with the UIs it fronts (envoy
-    does OIDC in the cluster).
+11. **homepage, oauth2-proxy, den-docs-mirror, gen-status: DONE (2026-11-19).**
+    den.json64.dev and gen-status.json64.dev serve from Garage website buckets
+    (docs/static-sites-to-garage.md); den-ag-design publishes gen-status with an
+    S3 key nix-config generates. homepage.json64.dev 301s to the cluster's dash;
+    oauth2-proxy and its kanidm client are retired.
 12. **uplink-dev microVM:** down for the window (owner, 2026-11-16). It's not
     migrated, and den-ag-design work on it pauses.
 13. **syncthing:** check whether uplink is the only always-on peer for any

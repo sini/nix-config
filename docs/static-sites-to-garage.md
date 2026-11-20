@@ -1,6 +1,8 @@
 # Plan: uplink's static sites to Garage website buckets
 
-Status: draft for the owner, 2026-11-19. Part of the uplink plan
+Status: DONE 2026-11-19 (2846032b, f917deea, 65d783cd, dcb40d1a, 04ed1564): both
+sites serve from their buckets, homepage.json64.dev 301s to dash, oauth2-proxy
+is retired, and uplink's copies are wiped. Part of the uplink plan
 (docs/uplink-maintenance-plan.md, Tier 2 item 11).
 
 ## Summary
