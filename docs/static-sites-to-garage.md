@@ -138,11 +138,12 @@ still serves.
 
 - den.json64.dev moves.
 - The gen-status publisher gets its key from nix-config, as above.
-
-## Open questions
-
-1. oauth2-proxy: which UIs does it still front on uplink? It retires with them.
-   I haven't enumerated this yet.
+- oauth2-proxy retires. On uplink it fronts only uplink's homepage (blocky-ui
+  moved to the cluster), so it goes with it: the aspect, its kanidm OAuth2
+  client `oauth2-proxy` and its secrets.
+- uplink's homepage is homepage.json64.dev; the cluster's dashboard is a
+  different one, dash.json64.dev. The gateway 301s homepage.json64.dev to
+  dash.json64.dev, so links keep working.
 
 ## Not covered
 
