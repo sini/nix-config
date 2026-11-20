@@ -199,6 +199,78 @@ Cutover, in order:
 
 Rollback before uplink's copy is wiped: unset `live` and re-include the aspect.
 
+## 4a. Shoko for Shokofin: a declared, rebuildable user (owner, 2026-11-20)
+
+Shokofin authenticates with a Shoko API key, which Shoko issues for a username
+and password. The owner wants a dedicated user, declared, and rebuildable on a
+fresh cluster. Shoko 5.3.3's API covers this (read from its swagger):
+
+- **Secrets:** agenix generates two passwords, Shoko's admin
+  (`shoko-admin-password`) and the dedicated `jellyfin` user's
+  (`shoko-jellyfin-password`). Both reach the cluster through SOPS.
+- **Bootstrap Job** (the shoko app, PostSync, idempotent):
+  - On a pristine Shoko (`GET /api/v3/Init/Status` not `Started`):
+    `POST /api/v3/Init/DefaultUser` with the admin credentials, then
+    `GET /api/v3/Init/StartServer`.
+  - Sign in as admin (`POST /api/auth {user, pass, device}`).
+  - Ensure the `jellyfin` user exists, non-admin (`POST /api/v3/User`). If it
+    exists, `POST /User/{id}/ChangePassword` to the agenix password, so the
+    password is always the declared one.
+- **Shokofin's key:** never stored. Before jellarr runs (an init container on
+  the jellarr Job; on uplink, an `ExecStartPre` of jellarr's unit), a step signs
+  in as `jellyfin` with `device = "shokofin"` and writes the returned key to a
+  file. jellarr's config sets Shokofin's `Username` = `jellyfin` and `ApiKey` =
+  `{ _file: … }`.
+- **On a new cluster:** everything above re-runs from empty, so a fresh deploy
+  needs no hand steps for this. Shoko's own library setup (AniDB login, import
+  folders) is out of scope here; that's a separate declarative-Shoko question.
+
+## 4b. PostgreSQL (owner, 2026-11-20: scope it): not now
+
+**Recommendation: keep SQLite through this migration, and move to PostgreSQL
+once Jellyfin supports it officially.**
+
+**Why:**
+
+- Jellyfin has no official PostgreSQL support. 10.11 added a database-provider
+  plugin interface, and the only provider is JPVenson/Jellyfin.Pgsql.
+- Its author calls it "HIGHLY experimental… NOT meant for a production jellyfin
+  server", and says official support is the goal for Jellyfin 13.0.
+- Its Jellyfin 12 support is broken today (issue #47, open, read 2026-11-20):
+  - `12.1-1` fails to start, both on a fresh install and upgrading from
+    10.11.11: uuid casts with no `USING` clause, foreign keys failing on
+    orphaned rows, `min(uuid)` and `json_valid` missing on PostgreSQL.
+  - Its backup restore reported success without restoring, until PR #49.
+  - There is no 12.2 image. 12.4 works only through an unmerged PR (#50) that
+    needs another unmerged upstream change and hand-made indexes.
+  - The author supports only latest-to-latest container upgrades.
+- Its SQLite → PostgreSQL migration is a documented "ADVANCED, UNTESTED"
+  pgloader run.
+
+**What that would mean here:**
+
+- Step 2 (10.11 → 12) would hinge on the plugin's migrations.
+- Every later Jellyfin upgrade would wait for a matching plugin image.
+- A failed upgrade would sit behind a restore path with a history of false
+  success.
+- That's the opposite of what the reordered plan is for.
+
+**What SQLite costs instead:**
+
+- One writer, which fits a single replica.
+- Backups are Longhorn volume snapshots of a database that's open while they
+  run. I'd add a consistent nightly copy (`sqlite3 .backup` into the same
+  volume) before the volume backup runs, so restores don't depend on WAL
+  recovery.
+
+**When to revisit:**
+
+- When Jellyfin ships an official PostgreSQL provider (13.0 is the stated aim),
+  the move is its own step: an empty CNPG cluster, Jellyfin's supported
+  migration path, run against a copy first.
+- The cluster already runs CNPG for immich, paperless, attic and the rest, so
+  the database side is routine. The risk is entirely in Jellyfin's provider.
+
 ## 5. After the move
 
 - **Jellyfin 12.** This needs jellarr's Authorization-header auth (upstream #79,
@@ -208,6 +280,8 @@ Rollback before uplink's copy is wiped: unset `live` and re-include the aspect.
   uplink's `/var/lib/jellyfin` after a week.
 
 ## 6. Open decisions for the owner
+
+0. PostgreSQL: accept SQLite now and revisit on official support (§4b)?
 
 1. GPU: A (dedicate one node) or B (share `/dev/dri`). I'd recommend A: it's
    exclusive and predictable, and needs no device-mount exception.
