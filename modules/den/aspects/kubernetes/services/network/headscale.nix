@@ -176,9 +176,13 @@ in
               selector.matchLabels = pod;
               template = {
                 metadata.labels = pod;
-                # A config change must restart it: headscale reads its config at start.
+                # A config or policy change must restart it: headscale reads both at
+                # start (a new exit node's auto-approval is in the policy).
                 metadata.annotations."json64.dev/config-hash" = builtins.hashString "sha256" (
-                  builtins.toJSON config'
+                  builtins.toJSON [
+                    config'
+                    (hs.policy exit-nodes)
+                  ]
                 );
                 spec = {
                   serviceAccountName = name;

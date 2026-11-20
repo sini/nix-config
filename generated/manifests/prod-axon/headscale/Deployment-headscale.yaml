@@ -13,7 +13,7 @@ spec:
   template:
     metadata:
       annotations:
-        json64.dev/config-hash: b2346de68a516ad63d6f0e3ae5cb85b1a1ef583dc2106ed4090df8dbc5087b3d
+        json64.dev/config-hash: 58899a2d80012cbb59384c7d76829d6600922cb62e2606104481892fee8d2ef0
       labels:
         app.kubernetes.io/name: headscale
     spec:
