@@ -90,7 +90,6 @@
       core.network.tailscale
       core.network.tailscale.exit-node
       core.network.syncthing.hub
-      services.web.gen-status
       virtualization.podman
       virtualization.microvm-host
       hardware.cpu.amd

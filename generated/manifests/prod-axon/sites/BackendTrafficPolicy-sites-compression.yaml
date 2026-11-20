@@ -13,6 +13,9 @@ spec:
       name: site-den-json64-dev
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
+      name: site-gen-status-json64-dev
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
       name: site-gen-framework-com
     - group: gateway.networking.k8s.io
       kind: HTTPRoute

@@ -88,6 +88,7 @@ in
     # retired homepage's name redirected to the cluster's dash.
     settings.kubernetes.services.web.static-sites = {
       den.live = true;
+      gen-status.live = true;
       homepageRedirect = true;
     };
 

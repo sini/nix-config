@@ -71,18 +71,6 @@ spec:
             namespace: certs
         mode: Terminate
     - allowedRoutes:
-        kinds:
-          - group: gateway.networking.k8s.io
-            kind: TLSRoute
-        namespaces:
-          from: Same
-      hostname: gen-status.json64.dev
-      name: tls-gen-status-json64-dev
-      port: 443
-      protocol: TLS
-      tls:
-        mode: Passthrough
-    - allowedRoutes:
         namespaces:
           from: All
       hostname: '*.gen.wtf'
