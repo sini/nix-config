@@ -234,6 +234,17 @@ Interface from jellarr-0c (typedrat/jellarr main @603a5a68, the fork's base):
   Every lookup refused during a restart left a file out of AnimeMovies' VFS, and
   the migration then dropped the stale items. Fixed in 94e7ff9d: liveness 15 s ×
   10 at 30 s, readiness 5 s.
+- **After the probe fix (2026-11-21):**
+  - The AnimeMovies VFS went from 39 to 350 links, 283 movies (282 before the
+    upgrade). Returned items keep their old ids, since Jellyfin derives them
+    from the path, but their UserData rows don't come back.
+  - Restored from the backup through POST /UserItems/{id}/UserData, each read
+    back equal: 3 rows on those movies, and 17 episode rows that were on Shows'
+    duplicate anime copy (the stale anime.mblink jellarr 0.3.1 removed), moved
+    to the Anime VFS item for the same file.
+  - Not restored: 6 rows on trailer entries.
+  - 132,591 items now. The difference is mostly that duplicate copy (7,945
+    episodes, 400 series) and extras.
 - **Rule for later jellarr plans:**
   - An unlink in a dry run ("its items leave the library on the next scan") is
     safe only when what replaces it is fully populated BEFORE that scan. Check
