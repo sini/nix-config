@@ -123,9 +123,11 @@ in
                     url = "https://repo.jellyfin.org/files/plugin/manifest.json";
                     enabled = true;
                   }
+                  # K0lin's maintained fork of 9p4's SSO-Auth: the same plugin GUID and
+                  # configuration, built for Jellyfin 12 (9p4 has no 12 build).
                   {
-                    name = "Jellyfin SSO Plugin";
-                    url = "https://raw.githubusercontent.com/9p4/jellyfin-plugin-sso/manifest-release/manifest.json";
+                    name = "SSO Authentication (K0lin)";
+                    url = "https://raw.githubusercontent.com/k0lin/jellyfin-plugin-sso/manifest-release/manifest.json";
                     enabled = true;
                   }
                   {
@@ -136,6 +138,12 @@ in
                   {
                     name = "Shokofin";
                     url = "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/stable/manifest.json";
+                    enabled = true;
+                  }
+                  # Shokofin's only Jellyfin 12 build is on its dev channel (owner, 2026-11-21).
+                  {
+                    name = "Shokofin Dev";
+                    url = "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/dev/manifest.json";
                     enabled = true;
                   }
                 ];
@@ -253,24 +261,25 @@ in
                 '';
               };
 
-              # Catalog names; installed plugins are matched by GUID and never reinstalled.
-              # Pinned to uplink's installed versions, so the switch to jellarr changes no
-              # plugin (the catalog's TMDb Box Sets is already 15.0.0.0); they move with
-              # Jellyfin 12. Their configuration (SSO-Auth, Shokofin) is declared once read
-              # from the live instance (GET /Plugins/{id}/Configuration); until then jellarr
-              # leaves it as it is.
+              # Catalog names, matched by GUID; pinned to their Jellyfin 12 (targetAbi 12.x)
+              # builds, each from the repository that carries it (jellarr 0.3.3 `repository`).
+              # Their configuration (SSO-Auth, Shokofin) is declared once read from the live
+              # instance (GET /Plugins/{id}/Configuration); until then jellarr leaves it as it is.
               plugins = [
                 {
                   name = "SSO Authentication";
-                  version = "4.0.0.4";
+                  version = "5.1.1";
+                  repository = "SSO Authentication (K0lin)";
                 }
                 {
                   name = "Shoko";
-                  version = "6.0.5.11";
+                  version = "6.0.5.4012";
+                  repository = "Shokofin Dev";
                 }
                 {
                   name = "TMDb Box Sets";
-                  version = "13.0.0.0";
+                  version = "15.0.0.0";
+                  repository = "Jellyfin Stable";
                 }
               ];
             };
@@ -304,9 +313,6 @@ in
       }:
       let
         domain = environment.getDomainFor "jellyfin";
-        # Jellyfin 10.11 from stable nixpkgs until the move to 12
-        # (docs/jellyfin-to-k8s.md, step 2).
-        stable = inputs.nixpkgs.legacyPackages.${pkgs.stdenv.hostPlatform.system};
       in
       {
         imports = [ inputs.jellarr.nixosModules.default ];
@@ -320,13 +326,16 @@ in
 
         services.jellyfin = {
           enable = true;
-          package = stable.jellyfin;
+          # Jellyfin 12 (uplink's channel, nixpkgs-master), docs/jellyfin-to-k8s.md step 2.
+          package = pkgs.jellyfin;
         };
 
         services.jellarr = {
           enable = true;
           package = inputs.jellarr.packages.${pkgs.stdenv.hostPlatform.system}.default;
           apiKeyFile = config.age.secrets.jellyfin-api-key.path;
+          # A major upgrade's database migration runs before /System/Info/Public answers.
+          waitTimeout = 1800;
           # Seeds the key into jellyfin.db (one stop and start of Jellyfin, skipped
           # once the key is there).
           bootstrap.enable = true;
