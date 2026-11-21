@@ -116,6 +116,12 @@ let
             need(call("POST", f"/api/v3/User/{user['ID']}/ChangePassword", body, key)[0], f"reset {USER}'s password")
             print(f"{USER}'s password reset to the declared one")
 
+    # Shoko seeds this admin with an empty password on every install (owner,
+    # 2026-11-21: delete it). Deleting a user drops its watch state too.
+    for seeded in (u for u in users if u["Username"] == "Family Friendly"):
+        need(call("DELETE", f"/api/v3/User/{seeded['ID']}", key=key)[0], "delete Family Friendly")
+        print("deleted Family Friendly")
+
     if not login(USER, user_pw):
         sys.exit(f"{USER} cannot sign in after bootstrap")
     print(f"{ADMIN} and {USER} are as declared")

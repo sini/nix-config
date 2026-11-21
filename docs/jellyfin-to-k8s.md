@@ -243,10 +243,9 @@ fresh cluster. Shoko 5.3.3's API covers this (read from its swagger):
   and `Family Friendly`. The declared `admin` was created once through
   `POST /api/v3/User`.
 - **Shoko's seeded `Family Friendly` user** is an admin with an empty password,
-  created on every install, and Shoko accepts the empty password. Anyone who can
-  reach port 8111 can get an admin key with it, and that includes the LAN,
-  through the internal LoadBalancer. This is open: the owner decides whether to
-  lock it.
+  created on every install, and Shoko accepts the empty password, so anyone on
+  the LAN could get an admin key through the internal LoadBalancer. The Job
+  deletes it (owner, 2026-11-21), along with its watch state.
 - **On a new cluster:** everything above re-runs from empty, so a fresh deploy
   needs no hand steps for this. Shoko's own library setup (AniDB login, import
   folders) is out of scope here; that's a separate declarative-Shoko question.
