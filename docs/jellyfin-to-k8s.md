@@ -229,6 +229,19 @@ Interface from jellarr-0c (typedrat/jellarr main @603a5a68, the fork's base):
     live under AnimeMovies now.
   - Watch state on 10 trailers and 3 of those movies.
 
+- **What actually removed the 240 anime movies:** Kubernetes liveness-killed
+  Shoko twice mid-scan (1 s probe timeout under Shokofin's per-file API load).
+  Every lookup refused during a restart left a file out of AnimeMovies' VFS, and
+  the migration then dropped the stale items. Fixed in 94e7ff9d: liveness 15 s ×
+  10 at 30 s, readiness 5 s.
+- **Rule for later jellarr plans:**
+  - An unlink in a dry run ("its items leave the library on the next scan") is
+    safe only when what replaces it is fully populated BEFORE that scan. Check
+    the VFS link count against Shoko's matched files first.
+  - Items that come back are new library items. Spot-check that watched and
+    progress state reattached. If it didn't, recover the UserData rows from the
+    pre-upgrade backup.
+
 ## 4. Migration (owner decision, §6.2)
 
 - **Carry the state (default):** stop Jellyfin on uplink, then `rsync -aHAX`
