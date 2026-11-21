@@ -1,8 +1,8 @@
 {
   imageName = "linuxserver/prowlarr";
   imageTag = "nightly";
-  imageDigest = "sha256:b01e7c0b5d6a1f90fd0aa0e8e68112599b17a3e216e3022047cb6dde4a66a3b7";
-  imageHash = "sha256-Rsbl/bL3ycICSdcOZa0YywrRx/3gCOXcYJuYkgqX184=";
+  imageDigest = "sha256:f204a806465dd15631f91d9e3a7a3ddf4558ea27043f3edfa4e2979b8be1a27f";
+  imageHash = "sha256-Y+j9kWrhW4jgiK/VPcveecYeWceGtjV31PG8KpvCIXg=";
   arch = "amd64";
   os = "linux";
   pinned = false;
