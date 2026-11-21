@@ -1,8 +1,8 @@
 {
   imageName = "ghcr.io/vectorize-io/hindsight-control-plane";
   imageTag = "latest";
-  imageDigest = "sha256:74a113e1f02ace9e8feed954e6b42282e9e3d33b7e0b6d528158d05902552a9a";
-  imageHash = "sha256-uQFX7ZqTroaOt4PIafVDUxsD2fMw8WM3A1jbRu+gUtc=";
+  imageDigest = "sha256:29c8fd38a6408b76f08219badc1e506b1b3bb77264d8e1cdfc327e4f955d99f8";
+  imageHash = "sha256-OnXq3JOScuZ+gYoM76QF9l/gOWsTDCaHaMbLu6fszs8=";
   arch = "amd64";
   os = "linux";
   pinned = false;
