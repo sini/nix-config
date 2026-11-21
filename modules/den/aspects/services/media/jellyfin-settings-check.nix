@@ -5,6 +5,8 @@
 #   libraries  the 8 declared names, matching uplink's virtual folders
 #   admin      the only declared user, with a passwordFile and no inline password
 #   pins       the plugins are pinned to uplink's installed versions
+#   shoko      Anime and AnimeMovies take Shoko as their only metadata fetcher and first
+#              image fetcher, with their path set only at creation (Shokofin's VFS)
 #   json       render is valid JSON (so valid YAML) that round-trips to the escaped
 #              config
 #   nix build .#checks.x86_64-linux.jellyfin-settings
@@ -46,6 +48,26 @@ let
       && (lib.head cfg.users) ? passwordFile
       && !((lib.head cfg.users) ? password);
     pins = lib.all (p: p ? version) cfg.plugins;
+    # Shokofin manages only libraries with Shoko as a metadata fetcher, and swaps
+    # their path for its VFS, so jellarr sets the path only at creation.
+    shoko =
+      lib.all
+        (
+          name:
+          let
+            f = lib.findFirst (v: v.name == name) null cfg.library.virtualFolders;
+          in
+          f != null
+          && f.ignoreChanges == [ "pathInfos" ]
+          && f.libraryOptions.typeOptions != [ ]
+          && lib.all (
+            t: t.metadataFetchers == [ "Shoko" ] && lib.head t.imageFetchers == "Shoko"
+          ) f.libraryOptions.typeOptions
+        )
+        [
+          "Anime"
+          "AnimeMovies"
+        ];
     json = builtins.fromJSON (builtins.toJSON cfg) == cfg;
   };
   failed = lib.attrNames (lib.filterAttrs (_: ok: !ok) checks);

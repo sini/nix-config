@@ -168,6 +168,7 @@
           genie-public = uidGid 944;
           genie-trusted = uidGid 943;
           matrix-xmsg = uidGid 942;
+          jellarr = uidGid 941;
 
           # uid deliberately shared with jellyfin (NFS media ownership parity
           # across hosts — NAS files owned 1027:65536 from the legacy stack;

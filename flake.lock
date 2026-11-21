@@ -2853,6 +2853,39 @@
         "type": "github"
       }
     },
+    "jellarr": {
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs-unstable"
+        ],
+        "nixpkgs-jellyfin-10_11": [
+          "nixpkgs"
+        ],
+        "systems": [
+          "systems"
+        ],
+        "treefmt-nix": [
+          "treefmt-nix"
+        ]
+      },
+      "locked": {
+        "lastModified": 1795228629,
+        "narHash": "sha256-WvARkEZ9EcyazFWn7C0rxk/bXfZ2pGT6RhCPWiFrsGk=",
+        "owner": "sini",
+        "repo": "jellarr",
+        "rev": "3aa17b297cfe6ffcd21aa6b3f8b98056ac5a5f21",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sini",
+        "ref": "v0.3.0",
+        "repo": "jellarr",
+        "type": "github"
+      }
+    },
     "kubenix": {
       "inputs": {
         "flake-compat": "flake-compat_5",
@@ -4496,6 +4529,7 @@
         "hyprland-plugins": "hyprland-plugins",
         "impermanence": "impermanence",
         "import-tree": "import-tree_2",
+        "jellarr": "jellarr",
         "kubenix": "kubenix",
         "llm-agents": "llm-agents",
         "matrix-xmsg": "matrix-xmsg",

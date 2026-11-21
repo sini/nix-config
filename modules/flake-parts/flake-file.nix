@@ -77,6 +77,19 @@
         inputs.nixpkgs.follows = "nixpkgs-unstable";
       };
 
+      # Jellyfin's settings over its API (docs/jellyfin-to-k8s.md); the fork at v0.3.0.
+      jellarr = {
+        url = "github:sini/jellarr/v0.3.0";
+        inputs = {
+          nixpkgs.follows = "nixpkgs-unstable";
+          # The fork's checks only (its Jellyfin 10.11 VM tests).
+          nixpkgs-jellyfin-10_11.follows = "nixpkgs";
+          flake-parts.follows = "flake-parts";
+          systems.follows = "systems";
+          treefmt-nix.follows = "treefmt-nix";
+        };
+      };
+
       devshell = {
         url = "github:numtide/devshell";
         inputs.nixpkgs.follows = "nixpkgs-unstable";

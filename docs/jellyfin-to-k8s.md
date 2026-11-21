@@ -172,6 +172,38 @@ Interface from jellarr-0c (typedrat/jellarr main @603a5a68, the fork's base):
   `Authorization: MediaBrowser Token=…`, proven on 10.11 in the fork's VM test
   before tagging.
 
+- **The anime libraries are Shokofin's** (measured on uplink, 2026-11-21):
+  - **Before the fix:** Anime (shows) and AnimeMovies are the Shoko-backed
+    libraries, shows and movies apart (Shokofin's `SeparateMovies`). Their items
+    under Shokofin's VFS (378 series, 9,195 episodes, 282 movies) carry AniDB
+    and Shoko IDs. But no library had Shoko as a metadata fetcher. The fetchers
+    had been left at TheMovieDb and OMDb, the declarative-jellyfin shape.
+    Shokofin manages a library only when Shoko is one of its fetchers
+    (`ShokoIdLookup.IsEnabledForLibraryOptions`, 6.0.5), so it had dropped every
+    library from its config (`Libraries` empty in its XML, already so in the Nov
+    19 backup). The VFS was empty, and the physical anime folders were being
+    scanned as plain TheMovieDb media (400 series, 438 movies with no AniDB ID).
+  - **The declaration now:** Anime and AnimeMovies carry Shoko as their only
+    metadata fetcher and first image fetcher, followed by Screen Grabber for
+    episodes and movies. The embedded title and episode info options are off.
+    This is what Shoko's docs recommend.
+  - **Paths:** with the VFS on, Shokofin replaces the media path with its VFS
+    root. So both libraries set `ignoreChanges = [ "pathInfos" ]`. The physical
+    path is used only to create the library, on a fresh server, and Shokofin
+    takes it over from there. The `jellyfin-settings` check holds both rules.
+  - **Expected on uplink's first jellarr run:** Shokofin picks the two libraries
+    back up and rebuilds the VFS, and the next scan replaces the TheMovieDb
+    copies. Shoko's docs say that enabling Shokofin on an existing library isn't
+    supported. These two were Shokofin libraries before (the VFS links carry
+    their IDs), but watch the first scan.
+  - **Left out of the config, live leftovers jellarr can't see:** jellarr
+    compares a library's `PathInfos`, not the `.mblink` files Jellyfin scans.
+    Shows still has an `anime.mblink`, so it also scans the anime folder. Movies
+    still links an empty VFS root. Books, Music, MusicVideos and Concerts each
+    list their folder twice. All of these were left by declarative-jellyfin.
+    jellarr 0.3.1 reconciles `Locations` with the declared paths (jellarr-0c).
+    They stay as they are until then, so its dry run shows them as the
+    real-world test. Don't clean them by hand.
 - **The integration test:** a throwaway instance (empty volume, no route), run
   before uplink's data is touched. It must reach a converged state from empty,
   and a second run must report no changes.

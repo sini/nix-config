@@ -205,6 +205,16 @@
     };
     impermanence.url = "github:nix-community/impermanence";
     import-tree.url = "github:vic/import-tree";
+    jellarr = {
+      url = "github:sini/jellarr/v0.3.0";
+      inputs = {
+        flake-parts.follows = "flake-parts";
+        nixpkgs.follows = "nixpkgs-unstable";
+        nixpkgs-jellyfin-10_11.follows = "nixpkgs";
+        systems.follows = "systems";
+        treefmt-nix.follows = "treefmt-nix";
+      };
+    };
     kubenix = {
       url = "github:pizzapim/kubenix";
       inputs.nixpkgs.follows = "nixpkgs-unstable";

@@ -45,21 +45,54 @@ in
             }
             // extra;
           };
-          movieFetchers = {
-            typeOptions = [
-              {
-                type = "Movie";
-                metadataFetchers = [
-                  "The Open Movie Database"
-                  "TheMovieDb"
-                ];
-                imageFetchers = [
-                  "The Open Movie Database"
-                  "TheMovieDb"
-                ];
-              }
-            ];
-          };
+          movieFetchers =
+            let
+              fetchers = [
+                "The Open Movie Database"
+                "TheMovieDb"
+              ];
+            in
+            {
+              typeOptions = [
+                {
+                  type = "Movie";
+                  metadataFetchers = fetchers;
+                  metadataFetcherOrder = fetchers;
+                  imageFetchers = fetchers;
+                  imageFetcherOrder = fetchers;
+                }
+              ];
+            };
+
+          # The anime libraries are Shokofin's (Shoko's AniDB-matched metadata), shows and
+          # movies apart (Shokofin's SeparateMovies). Shokofin manages a library only when
+          # Shoko is one of its metadata fetchers (ShokoIdLookup.IsEnabledForLibraryOptions);
+          # Shoko's docs: Shoko alone as the metadata provider, and the first image fetcher
+          # (Screen Grabber is safe after it). With its VFS on, Shokofin swaps the media
+          # path for its VFS root, so the path is only set at creation.
+          shoko =
+            types:
+            let
+              option = type: images: {
+                inherit type;
+                metadataFetchers = [ "Shoko" ];
+                metadataFetcherOrder = [ "Shoko" ];
+                imageFetchers = images;
+                imageFetcherOrder = images;
+              };
+              withGrabber = [
+                "Shoko"
+                "Screen Grabber"
+              ];
+            in
+            {
+              typeOptions = map (
+                t: option t (if t == "Episode" || t == "Movie" then withGrabber else [ "Shoko" ])
+              ) types;
+              # Mixed metadata otherwise (Shoko's docs).
+              enableEmbeddedTitles = false;
+              enableEmbeddedEpisodeInfos = false;
+            };
           config =
             {
               # Where jellarr reaches the API, e.g. http://127.0.0.1:8096.
@@ -137,8 +170,27 @@ in
               library.virtualFolders = [
                 (library "Movies" "movies" "${mediaRoot}/movies" movieFetchers)
                 (library "Shows" "tvshows" "${mediaRoot}/tv" { enableAutomaticSeriesGrouping = true; })
-                (library "Anime" "tvshows" "${mediaRoot}/anime" { enableAutomaticSeriesGrouping = true; })
-                (library "AnimeMovies" "movies" "${mediaRoot}/anime-movies" { })
+                (
+                  library "Anime" "tvshows" "${mediaRoot}/anime" (
+                    shoko [
+                      "Series"
+                      "Season"
+                      "Episode"
+                    ]
+                    // {
+                      enableAutomaticSeriesGrouping = true;
+                    }
+                  )
+                  // {
+                    ignoreChanges = [ "pathInfos" ];
+                  }
+                )
+                (
+                  library "AnimeMovies" "movies" "${mediaRoot}/anime-movies" (shoko [ "Movie" ])
+                  // {
+                    ignoreChanges = [ "pathInfos" ];
+                  }
+                )
                 (library "Books" "books" "${mediaRoot}/books" { })
                 (library "Music" "music" "${mediaRoot}/music" { })
                 (library "MusicVideos" "musicvideos" "${mediaRoot}/mv" { })
@@ -231,8 +283,20 @@ in
       den.aspects.services.storage.media-data-share
     ];
 
+    age-secrets =
+      { environment, ... }:
+      {
+        # The cluster's values (kubernetes/services/media/jellyfin.nix generates them),
+        # so the data migration carries a database whose key and Admin password match.
+        age.secrets = {
+          jellyfin-api-key.rekeyFile = environment.secretPath + "/jellyfin/api-key.age";
+          jellyfin-admin-password.rekeyFile = environment.secretPath + "/jellyfin/admin-password.age";
+        };
+      };
+
     nixos =
       {
+        config,
         environment,
         host,
         pkgs,
@@ -240,14 +304,12 @@ in
       }:
       let
         domain = environment.getDomainFor "jellyfin";
-        mediaRoot = "/mnt/data/media";
-        # declarative-jellyfin supports 10.11.x at most; nixpkgs-master ships 12.0.
+        # Jellyfin 10.11 from stable nixpkgs until the move to 12
+        # (docs/jellyfin-to-k8s.md, step 2).
         stable = inputs.nixpkgs.legacyPackages.${pkgs.stdenv.hostPlatform.system};
       in
       {
-        imports = [
-          inputs.declarative-jellyfin.nixosModules.default
-        ];
+        imports = [ inputs.jellarr.nixosModules.default ];
 
         users.users.jellyfin = {
           uid = 1027;
@@ -256,197 +318,59 @@ in
         };
         users.groups.jellyfin.gid = 1027;
 
-        services = {
-          declarative-jellyfin = {
-            enable = true;
-            serverId = builtins.hashString "md5" domain;
+        services.jellyfin = {
+          enable = true;
+          package = stable.jellyfin;
+        };
 
-            package = stable.jellyfin;
-            jellyfin-web = stable.jellyfin-web;
-            jellyfin-ffmpeg = stable.jellyfin-ffmpeg;
+        services.jellarr = {
+          enable = true;
+          package = inputs.jellarr.packages.${pkgs.stdenv.hostPlatform.system}.default;
+          apiKeyFile = config.age.secrets.jellyfin-api-key.path;
+          # Seeds the key into jellyfin.db (one stop and start of Jellyfin, skipped
+          # once the key is there).
+          bootstrap.enable = true;
+          configFile = pkgs.writeText "jellarr.json" (
+            builtins.toJSON (
+              host.settings.services.media.jellyfin.jellarr {
+                baseUrl = "http://127.0.0.1:8096";
+                inherit domain;
+                # LoadCredential below; a literal path, since the setting escapes `${`.
+                adminPasswordFile = "/run/credentials/jellarr.service/admin-password";
+                knownProxies = [ "127.0.0.1" ];
+                hardwareDecodingCodecs = [
+                  "h264"
+                  "hevc"
+                  "mpeg2video"
+                  "vc1"
+                  "vp9"
+                  "vp8"
+                  "av1"
+                ];
+              }
+            )
+          );
+        };
+        systemd.services.jellarr.serviceConfig.LoadCredential = [
+          "admin-password:${config.age.secrets.jellyfin-admin-password.path}"
+        ];
 
-            network = {
-              enableIPv6 = true;
-              enableHttps = false;
-              internalHttpPort = 8096;
-              publicHttpPort = 8096;
-              publishedServerUriBySubnet = [ "all=https://${domain}" ];
-            };
-
-            encoding = {
-              encoderAppPathDisplay = "${stable.jellyfin-ffmpeg}";
-              enableVppTonemapping = true;
-              enableTonemapping = true;
-              tonemappingAlgorithm = "bt2390";
-              enableHardwareEncoding = true;
-              hardwareAccelerationType = "vaapi";
-              enableDecodingColorDepth10Hevc = true;
-              allowHevcEncoding = true;
-              allowAv1Encoding = true;
-              hardwareDecodingCodecs = [
-                "h264"
-                "hevc"
-                "mpeg2video"
-                "vc1"
-                "vp9"
-                "vp8"
-                "av1"
-              ];
-            };
-
-            system = {
-              trickplayOptions = {
-                enableHwAcceleration = true;
-                enableHwEncoding = true;
-                enableKeyFrameOnlyExtraction = true;
-                processThreads = 2;
-              };
-              pluginRepositories = [
-                {
-                  content = {
-                    Name = "Jellyfin Stable";
-                    Url = "https://repo.jellyfin.org/files/plugin/manifest.json";
-                  };
-                  tag = "RepositoryInfo";
-                }
-                {
-                  content = {
-                    Name = "Jellyfin SSO Plugin";
-                    Url = "https://raw.githubusercontent.com/9p4/jellyfin-plugin-sso/manifest-release/manifest.json";
-                  };
-                  tag = "RepositoryInfo";
-                }
-                {
-                  content = {
-                    Name = "Intro Skipper";
-                    Url = "https://intro-skipper.org/manifest.json";
-                  };
-                  tag = "RepositoryInfo";
-                }
-                {
-                  content = {
-                    Name = "Shokofin";
-                    Url = "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/stable/manifest.json";
-                  };
-                  tag = "RepositoryInfo";
-                }
-              ];
-            };
-
-            libraries = {
-              Movies = {
-                enabled = true;
-                contentType = "movies";
-                pathInfos = [ "${mediaRoot}/movies" ];
-                typeOptions.Movies = {
-                  metadataFetchers = [
-                    "The Open Movie Database"
-                    "TheMovieDb"
-                  ];
-                  imageFetchers = [
-                    "The Open Movie Database"
-                    "TheMovieDb"
-                  ];
-                };
-              };
-              Shows = {
-                enabled = true;
-                contentType = "tvshows";
-                pathInfos = [ "${mediaRoot}/tv" ];
-                enableAutomaticSeriesGrouping = true;
-              };
-              Anime = {
-                enabled = true;
-                contentType = "tvshows";
-                pathInfos = [ "${mediaRoot}/anime" ];
-                enableAutomaticSeriesGrouping = true;
-              };
-              AnimeMovies = {
-                enabled = true;
-                contentType = "movies";
-                pathInfos = [ "${mediaRoot}/anime-movies" ];
-              };
-              Books = {
-                enabled = true;
-                contentType = "books";
-                pathInfos = [ "${mediaRoot}/books" ];
-              };
-              Music = {
-                enabled = true;
-                contentType = "music";
-                pathInfos = [ "${mediaRoot}/music" ];
-              };
-              MusicVideos = {
-                enabled = true;
-                contentType = "musicvideos";
-                pathInfos = [ "${mediaRoot}/mv" ];
-              };
-              Concerts = {
-                enabled = true;
-                contentType = "musicvideos";
-                pathInfos = [ "${mediaRoot}/concerts" ];
-              };
-            };
-
-            users = {
-              Admin = {
-                mutable = false;
-                hashedPassword = "$PBKDF2-SHA512$iterations=210000$E7332528F62FF592B1BC0BDC5B40E709$C86BCCB2501A0E816F9AA90B775D2D95F7A23791A1EE5EBD2DB0812B87BCF179AF18E682C224E429D03DA51C4E262D1D1C6A2EA0964C7E2957C831CB80B85DC8";
-                permissions = {
-                  isAdministrator = true;
-                };
-              };
-            };
-
-            branding = {
-              loginDisclaimer = ''
-                <form action="https://${domain}/sso/OID/start/kanidm">
-                  <button class="raised block emby-button button-submit">
-                    Sign in with SSO
-                  </button>
-                </form>
-              '';
-              customCss = ''
-                 /* Hide manual login form */
-                .manualLoginForm {
-                  display: none !important;
-                }
-
-                /* Hide 'Forgot password' button */
-                .btnForgotPassword {
-                  display: none !important;
-                }
-
-                /* Add SSO button */
-                a.raised.emby-button {
-                  padding: 0.9em 1em;
-                  color: inherit !important;
-                }
-
-                .disclaimerContainer {
-                  display: block;
-                }
-              '';
-            };
+        services.nginx.virtualHosts."${domain}" = {
+          forceSSL = true;
+          useACMEHost = environment.domain;
+          locations."/" = {
+            proxyPass = "http://127.0.0.1:8096";
+            extraConfig = ''
+              proxy_buffering off;
+              proxy_set_header X-Forwarded-Protocol $scheme;
+            '';
           };
-
-          nginx.virtualHosts."${domain}" = {
-            forceSSL = true;
-            useACMEHost = environment.domain;
-            locations."/" = {
-              proxyPass = "http://127.0.0.1:8096";
-              extraConfig = ''
-                proxy_buffering off;
-                proxy_set_header X-Forwarded-Protocol $scheme;
-              '';
-            };
-            locations."/socket" = {
-              proxyPass = "http://127.0.0.1:8096";
-              proxyWebsockets = true;
-              extraConfig = ''
-                proxy_set_header X-Forwarded-Protocol $scheme;
-              '';
-            };
+          locations."/socket" = {
+            proxyPass = "http://127.0.0.1:8096";
+            proxyWebsockets = true;
+            extraConfig = ''
+              proxy_set_header X-Forwarded-Protocol $scheme;
+            '';
           };
         };
       };
