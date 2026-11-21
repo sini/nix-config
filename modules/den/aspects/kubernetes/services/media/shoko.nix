@@ -308,18 +308,38 @@ in
                     PGID = "65536";
                   };
                   envFrom = [ ];
+                  # A library scan (Shokofin builds its VFS from one API call per file)
+                  # keeps Shoko busy long enough to miss the 1 s default: the liveness
+                  # probe then killed it mid-scan (2026-11-21, twice in one scan), and
+                  # every lookup during the restart left a file out of the VFS. Liveness
+                  # now allows 5 minutes of slow answers; readiness still drops it fast.
                   probes = {
                     liveness = {
                       enabled = true;
-                      type = "HTTP";
-                      path = "/api/v3/Init/Status";
-                      port = 8111;
+                      custom = true;
+                      spec = {
+                        httpGet = {
+                          path = "/api/v3/Init/Status";
+                          port = 8111;
+                        };
+                        initialDelaySeconds = 60;
+                        periodSeconds = 30;
+                        timeoutSeconds = 15;
+                        failureThreshold = 10;
+                      };
                     };
                     readiness = {
                       enabled = true;
-                      type = "HTTP";
-                      path = "/api/v3/Init/Status";
-                      port = 8111;
+                      custom = true;
+                      spec = {
+                        httpGet = {
+                          path = "/api/v3/Init/Status";
+                          port = 8111;
+                        };
+                        periodSeconds = 10;
+                        timeoutSeconds = 5;
+                        failureThreshold = 3;
+                      };
                     };
                   };
                 };
