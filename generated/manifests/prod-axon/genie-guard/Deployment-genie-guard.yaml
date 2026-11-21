@@ -35,7 +35,7 @@ spec:
           env:
             - name: XDG_RUNTIME_DIR
               value: /run/user
-          image: ghcr.io/sini/xmsg@sha256:6193ce24a95da406bf9a5d0cb7aa427142beffc27a31077c6130ebbdeded8865
+          image: ghcr.io/sini/xmsg@sha256:4c04eb53d9a13e6052e6488670a3966966716b122ce8c97fa955f947f35db303
           name: xmsg
           securityContext:
             allowPrivilegeEscalation: false
