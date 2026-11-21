@@ -208,6 +208,27 @@ Interface from jellarr-0c (typedrat/jellarr main @603a5a68, the fork's base):
   before uplink's data is touched. It must reach a converged state from empty,
   and a second run must report no changes.
 
+## 3a. Jellyfin 12 on uplink (done 2026-11-21, nix-config 9750c5a5)
+
+- **Plugins:** SSO Authentication 5.1.1 from K0lin's fork (9p4's has no 12
+  build; same GUID 505ce9d1 and configuration, which carried over), Shokofin
+  6.0.5.4012 from its dev channel (owner), and TMDb Box Sets 15.0.0.0. Each is
+  pinned to its repository with jellarr 0.3.3's `repository`.
+- **Before the upgrade:** ZFS snapshot
+  `zroot/local/persist@pre-jellyfin12-20261121T224829Z`, and
+  `/root/jellyfin.db.pre-jellyfin12-20261121T224829Z` (sqlite .backup, integrity
+  ok, 143,198 items).
+- **The migration:** about 10 minutes, then a database optimise. During it,
+  /System/Info/Public answers 200 but authenticated calls return 503. jellarr
+  0.3.3 failed on that, and 0.3.4 retries 503. The run after it converged (exit
+  0).
+- **What MigrateLinkedChildren removed:** 2,291 rows.
+  - 2,035 extras and trailers, about half of whose files still exist; a rescan
+    re-adds those.
+  - 251 movies under the old Movies VFS root, unlinked by jellarr 0.3.1; they
+    live under AnimeMovies now.
+  - Watch state on 10 trailers and 3 of those movies.
+
 ## 4. Migration (owner decision, §6.2)
 
 - **Carry the state (default):** stop Jellyfin on uplink, then `rsync -aHAX`
