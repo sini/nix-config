@@ -1,0 +1,61 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: jellyfin-db-backup
+  namespace: media
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: jellyfin-db-backup
+        spec:
+          affinity:
+            podAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchLabels:
+                      app.kubernetes.io/name: jellyfin
+                  topologyKey: kubernetes.io/hostname
+          automountServiceAccountToken: false
+          containers:
+            - command:
+                - python3
+                - /seed/backup-databases.py
+              image: library/python@sha256:0f9552bb28711333da16915ec146f5e6bb44a7fdac9ced15dc17c2e0206346dd
+              name: backup
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+              volumeMounts:
+                - mountPath: /config
+                  name: config
+                - mountPath: /seed
+                  name: seed
+                  readOnly: true
+          enableServiceLinks: false
+          restartPolicy: OnFailure
+          securityContext:
+            runAsGroup: 1027
+            runAsNonRoot: true
+            runAsUser: 1027
+            seccompProfile:
+              type: RuntimeDefault
+          volumes:
+            - name: config
+              persistentVolumeClaim:
+                claimName: jellyfin-config
+            - configMap:
+                name: jellyfin-seed
+              name: seed
+      ttlSecondsAfterFinished: 604800
+  schedule: 30 2 * * *
+  successfulJobsHistoryLimit: 1
+  timeZone: Etc/UTC

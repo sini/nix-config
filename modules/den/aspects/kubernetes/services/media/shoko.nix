@@ -23,6 +23,103 @@
 # bumps the digest.
 let
   serviceDomains = [ "shoko" ];
+
+  # The declared users (docs/jellyfin-to-k8s.md §4a): Shoko's admin, and
+  # `jellyfin`, the non-admin user Shokofin signs in as. Run as a PostSync Job, so
+  # a fresh cluster's Shoko needs no hand steps. Read from Shoko 5.3.3's source:
+  #   - a sign-in returns the same key for the same user and device, so this
+  #     Job's own device never touches Shokofin's key (device "shokofin");
+  #   - a password change revokes the user's keys, so it only happens when the
+  #     declared password fails to sign in;
+  #   - Shokofin needs no admin: its one admin-only call (GET /api/v3/Settings,
+  #     the web UI prefix) falls back to the default.
+  bootstrapScript = ''
+    import json, sys, time, urllib.error, urllib.request
+
+    BASE = "http://shoko.media.svc:8111"
+    ADMIN, USER, DEVICE = "admin", "jellyfin", "shoko-bootstrap"
+
+
+    def secret(name):
+        with open(f"/secrets/{name}") as f:
+            return f.read().strip()
+
+
+    def call(method, path, body=None, key=None, ctype="application/json"):
+        headers = {"Content-Type": ctype}
+        if key:
+            headers["apikey"] = key
+        data = None if body is None else json.dumps(body).encode()
+        req = urllib.request.Request(BASE + path, data=data, headers=headers, method=method)
+        try:
+            with urllib.request.urlopen(req, timeout=30) as r:
+                raw = r.read()
+                return r.status, json.loads(raw) if raw else None
+        except urllib.error.HTTPError as e:
+            return e.code, None
+
+
+    def need(code, what):
+        if code != 200:
+            sys.exit(f"{what}: HTTP {code}")
+
+
+    def wait(states, timeout=900):
+        end = time.monotonic() + timeout
+        while time.monotonic() < end:
+            try:
+                code, body = call("GET", "/api/v3/Init/Status")
+                state = body["State"] if code == 200 else None
+            except OSError:
+                state = None
+            if state in states:
+                return state
+            if state == "Failed":
+                sys.exit("shoko failed to start")
+            time.sleep(5)
+        sys.exit(f"shoko not {states} after {timeout}s")
+
+
+    def login(user, password):
+        code, body = call("POST", "/api/auth", {"user": user, "pass": password, "device": DEVICE})
+        return body["apikey"] if code == 200 else None
+
+
+    admin_pw, user_pw = secret("admin-password"), secret("jellyfin-password")
+
+    if wait({"Started", "Waiting"}) == "Waiting":
+        # A pristine Shoko: the declared admin becomes its first user.
+        need(call("POST", "/api/v3/Init/DefaultUser", {"Username": ADMIN, "Password": admin_pw})[0], "set default user")
+        need(call("GET", "/api/v3/Init/StartServer")[0], "start server")
+        wait({"Started"})
+        print(f"initialised shoko with {ADMIN}")
+
+    key = login(ADMIN, admin_pw)
+    if not key:
+        sys.exit(f"{ADMIN} cannot sign in with the declared password (docs/jellyfin-to-k8s.md §4a)")
+
+    code, users = call("GET", "/api/v3/User", key=key)
+    need(code, "list users")
+    user = next((u for u in users if u["Username"].lower() == USER), None)
+    if user is None:
+        code, _ = call("POST", "/api/v3/User", {"Username": USER, "Password": user_pw, "IsAdmin": False}, key)
+        need(code, f"create {USER}")
+        print(f"created {USER}")
+    else:
+        if user["IsAdmin"]:
+            patch = [{"op": "replace", "path": "/IsAdmin", "value": False}]
+            code, _ = call("PATCH", f"/api/v3/User/{user['ID']}", patch, key, "application/json-patch+json")
+            need(code, f"demote {USER}")
+            print(f"{USER} is no longer an admin")
+        if not login(USER, user_pw):
+            body = {"Password": user_pw, "RevokeAPIKeys": True}
+            need(call("POST", f"/api/v3/User/{user['ID']}/ChangePassword", body, key)[0], f"reset {USER}'s password")
+            print(f"{USER}'s password reset to the declared one")
+
+    if not login(USER, user_pw):
+        sys.exit(f"{USER} cannot sign in after bootstrap")
+    print(f"{ADMIN} and {USER} are as declared")
+  '';
 in
 {
   den.aspects.kubernetes.services.media.shoko = {
@@ -40,6 +137,22 @@ in
           sopsOutput = {
             file = "oidc";
             key = "shoko";
+          };
+        };
+        age.secrets.shoko-admin-password = {
+          rekeyFile = environment.secretPath + "/shoko/admin-password.age";
+          generator.script = "rfc3986-secret";
+          sopsOutput = {
+            file = "shoko";
+            key = "admin-password";
+          };
+        };
+        age.secrets.shoko-jellyfin-password = {
+          rekeyFile = environment.secretPath + "/shoko/jellyfin-password.age";
+          generator.script = "rfc3986-secret";
+          sopsOutput = {
+            file = "shoko";
+            key = "jellyfin-password";
           };
         };
       };
@@ -325,6 +438,12 @@ in
                           "app.kubernetes.io/name" = "jellyfin";
                         };
                       }
+                      {
+                        matchLabels = {
+                          "k8s:io.kubernetes.pod.namespace" = "media";
+                          "app.kubernetes.io/name" = "shoko-bootstrap";
+                        };
+                      }
                     ];
                     toPorts = [
                       {
@@ -467,6 +586,79 @@ in
             secrets.shoko-oidc-client-secret = {
               type = "Opaque";
               stringData.client-secret = config.age.secrets.shoko-oidc-client-secret.sopsRef;
+            };
+
+            secrets.shoko-bootstrap.stringData = {
+              admin-password = config.age.secrets.shoko-admin-password.sopsRef;
+              jellyfin-password = config.age.secrets.shoko-jellyfin-password.sopsRef;
+            };
+
+            configMaps.shoko-bootstrap.data."bootstrap.py" = bootstrapScript;
+
+            jobs.shoko-bootstrap = {
+              metadata.annotations = {
+                "argocd.argoproj.io/hook" = "PostSync";
+                "argocd.argoproj.io/hook-delete-policy" = "BeforeHookCreation";
+              };
+              spec = {
+                backoffLimit = 6;
+                template = {
+                  metadata.labels."app.kubernetes.io/name" = "shoko-bootstrap";
+                  spec = {
+                    restartPolicy = "OnFailure";
+                    automountServiceAccountToken = false;
+                    enableServiceLinks = false;
+                    # The Secret's files are root-owned; fsGroup makes them readable (0440).
+                    securityContext = {
+                      runAsNonRoot = true;
+                      runAsUser = 65534;
+                      runAsGroup = 65534;
+                      fsGroup = 65534;
+                      seccompProfile.type = "RuntimeDefault";
+                    };
+                    containers = [
+                      {
+                        name = "bootstrap";
+                        image = "${images."library/python".repository}@${images."library/python".digest}";
+                        command = [
+                          "python3"
+                          "/script/bootstrap.py"
+                        ];
+                        securityContext = {
+                          allowPrivilegeEscalation = false;
+                          readOnlyRootFilesystem = true;
+                          capabilities.drop = [ "ALL" ];
+                        };
+                        volumeMounts = [
+                          {
+                            name = "script";
+                            mountPath = "/script";
+                            readOnly = true;
+                          }
+                          {
+                            name = "secrets";
+                            mountPath = "/secrets";
+                            readOnly = true;
+                          }
+                        ];
+                      }
+                    ];
+                    volumes = [
+                      {
+                        name = "script";
+                        configMap.name = "shoko-bootstrap";
+                      }
+                      {
+                        name = "secrets";
+                        secret = {
+                          secretName = "shoko-bootstrap";
+                          defaultMode = 288;
+                        };
+                      }
+                    ];
+                  };
+                };
+              };
             };
           };
         };

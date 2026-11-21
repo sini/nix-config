@@ -1,0 +1,52 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+  name: shoko-bootstrap
+  namespace: media
+spec:
+  backoffLimit: 6
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: shoko-bootstrap
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - command:
+            - python3
+            - /script/bootstrap.py
+          image: library/python@sha256:0f9552bb28711333da16915ec146f5e6bb44a7fdac9ced15dc17c2e0206346dd
+          name: bootstrap
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - mountPath: /script
+              name: script
+              readOnly: true
+            - mountPath: /secrets
+              name: secrets
+              readOnly: true
+      enableServiceLinks: false
+      restartPolicy: OnFailure
+      securityContext:
+        fsGroup: 65534
+        runAsGroup: 65534
+        runAsNonRoot: true
+        runAsUser: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      volumes:
+        - configMap:
+            name: shoko-bootstrap
+          name: script
+        - name: secrets
+          secret:
+            defaultMode: 288
+            secretName: shoko-bootstrap

@@ -1,0 +1,92 @@
+apiVersion: v1
+data:
+  bootstrap.py: |
+    import json, sys, time, urllib.error, urllib.request
+
+    BASE = "http://shoko.media.svc:8111"
+    ADMIN, USER, DEVICE = "admin", "jellyfin", "shoko-bootstrap"
+
+
+    def secret(name):
+        with open(f"/secrets/{name}") as f:
+            return f.read().strip()
+
+
+    def call(method, path, body=None, key=None, ctype="application/json"):
+        headers = {"Content-Type": ctype}
+        if key:
+            headers["apikey"] = key
+        data = None if body is None else json.dumps(body).encode()
+        req = urllib.request.Request(BASE + path, data=data, headers=headers, method=method)
+        try:
+            with urllib.request.urlopen(req, timeout=30) as r:
+                raw = r.read()
+                return r.status, json.loads(raw) if raw else None
+        except urllib.error.HTTPError as e:
+            return e.code, None
+
+
+    def need(code, what):
+        if code != 200:
+            sys.exit(f"{what}: HTTP {code}")
+
+
+    def wait(states, timeout=900):
+        end = time.monotonic() + timeout
+        while time.monotonic() < end:
+            try:
+                code, body = call("GET", "/api/v3/Init/Status")
+                state = body["State"] if code == 200 else None
+            except OSError:
+                state = None
+            if state in states:
+                return state
+            if state == "Failed":
+                sys.exit("shoko failed to start")
+            time.sleep(5)
+        sys.exit(f"shoko not {states} after {timeout}s")
+
+
+    def login(user, password):
+        code, body = call("POST", "/api/auth", {"user": user, "pass": password, "device": DEVICE})
+        return body["apikey"] if code == 200 else None
+
+
+    admin_pw, user_pw = secret("admin-password"), secret("jellyfin-password")
+
+    if wait({"Started", "Waiting"}) == "Waiting":
+        # A pristine Shoko: the declared admin becomes its first user.
+        need(call("POST", "/api/v3/Init/DefaultUser", {"Username": ADMIN, "Password": admin_pw})[0], "set default user")
+        need(call("GET", "/api/v3/Init/StartServer")[0], "start server")
+        wait({"Started"})
+        print(f"initialised shoko with {ADMIN}")
+
+    key = login(ADMIN, admin_pw)
+    if not key:
+        sys.exit(f"{ADMIN} cannot sign in with the declared password (docs/jellyfin-to-k8s.md §4a)")
+
+    code, users = call("GET", "/api/v3/User", key=key)
+    need(code, "list users")
+    user = next((u for u in users if u["Username"].lower() == USER), None)
+    if user is None:
+        code, _ = call("POST", "/api/v3/User", {"Username": USER, "Password": user_pw, "IsAdmin": False}, key)
+        need(code, f"create {USER}")
+        print(f"created {USER}")
+    else:
+        if user["IsAdmin"]:
+            patch = [{"op": "replace", "path": "/IsAdmin", "value": False}]
+            code, _ = call("PATCH", f"/api/v3/User/{user['ID']}", patch, key, "application/json-patch+json")
+            need(code, f"demote {USER}")
+            print(f"{USER} is no longer an admin")
+        if not login(USER, user_pw):
+            body = {"Password": user_pw, "RevokeAPIKeys": True}
+            need(call("POST", f"/api/v3/User/{user['ID']}/ChangePassword", body, key)[0], f"reset {USER}'s password")
+            print(f"{USER}'s password reset to the declared one")
+
+    if not login(USER, user_pw):
+        sys.exit(f"{USER} cannot sign in after bootstrap")
+    print(f"{ADMIN} and {USER} are as declared")
+kind: ConfigMap
+metadata:
+  name: shoko-bootstrap
+  namespace: media

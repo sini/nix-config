@@ -15,6 +15,9 @@ spec:
         - matchLabels:
             app.kubernetes.io/name: jellyfin
             k8s:io.kubernetes.pod.namespace: media
+        - matchLabels:
+            app.kubernetes.io/name: shoko-bootstrap
+            k8s:io.kubernetes.pod.namespace: media
       toPorts:
         - ports:
             - port: "8111"

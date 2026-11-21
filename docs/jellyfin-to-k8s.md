@@ -228,6 +228,25 @@ fresh cluster. Shoko 5.3.3's API covers this (read from its swagger):
     first tries the key Shokofin already holds (read through Jellyfin's
     `/Plugins/{id}/Configuration`) against Shoko, and mints a new one only when
     that fails.
+- **Built** (kubernetes/services/media/shoko.nix, `shoko-bootstrap`), with these
+  facts read from Shoko 5.3.3's source:
+  - A sign-in returns the same key for the same user and device, so the key is
+    stable and the step above stays as written. The Job signs in with its own
+    device, so it never touches Shokofin's key.
+  - Changing a password revokes all of that user's keys, so the Job changes
+    `jellyfin`'s password only when the declared one fails to sign in. If the
+    `jellyfin` user is an admin, the Job demotes it.
+  - Shokofin needs no admin rights. Its one admin-only call,
+    `GET /api/v3/Settings` (for the web UI prefix), falls back to the default.
+- **Adopting the running instance (once):** the live Shoko predates the declared
+  admin. Its users are `json` (an admin, which Shokofin on uplink uses today)
+  and `Family Friendly`. The declared `admin` was created once through
+  `POST /api/v3/User`.
+- **Shoko's seeded `Family Friendly` user** is an admin with an empty password,
+  created on every install, and Shoko accepts the empty password. Anyone who can
+  reach port 8111 can get an admin key with it, and that includes the LAN,
+  through the internal LoadBalancer. This is open: the owner decides whether to
+  lock it.
 - **On a new cluster:** everything above re-runs from empty, so a fresh deploy
   needs no hand steps for this. Shoko's own library setup (AniDB login, import
   folders) is out of scope here; that's a separate declarative-Shoko question.
@@ -295,9 +314,10 @@ version we run and works on the stock image.
 
 - One writer, which fits a single replica.
 - Backups are Longhorn volume snapshots of a database that's open while they
-  run. I'd add a consistent nightly copy (`sqlite3 .backup` into the same
-  volume) before the volume backup runs, so restores don't depend on WAL
-  recovery.
+  run. So the `jellyfin-db-backup` CronJob runs at 02:30 UTC, before the 03:00
+  volume backup. It copies each `/config/data/*.db` to `/config/backup` with
+  SQLite's online backup API and checks the copy's integrity before it replaces
+  the last one, so a restore doesn't depend on WAL recovery.
 
 **When to revisit:**
 

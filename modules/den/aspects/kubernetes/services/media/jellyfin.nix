@@ -47,6 +47,32 @@ let
             )
     print("api key seeded")
   '';
+
+  # A consistent copy of each database (SQLite's online backup API, never cp) in
+  # /config/backup, verified before it replaces the last one, so the Longhorn
+  # backup after it carries a database that opens, not a mid-write snapshot.
+  backupDatabases = ''
+    import glob, os, sqlite3, sys
+    out = "/config/backup"
+    os.makedirs(out, exist_ok=True)
+    dbs = sorted(glob.glob("/config/data/*.db"))
+    if not dbs:
+        print("no databases yet (first start)")
+    for db in dbs:
+        dst = os.path.join(out, os.path.basename(db))
+        tmp = dst + ".partial"
+        if os.path.exists(tmp):
+            os.remove(tmp)
+        src, copy = sqlite3.connect(db, timeout=60), sqlite3.connect(tmp)
+        src.backup(copy)
+        src.close()
+        check = copy.execute("PRAGMA integrity_check").fetchone()[0]
+        copy.close()
+        if check != "ok":
+            sys.exit(f"{db}: the copy fails integrity_check ({check}); kept the previous backup")
+        os.replace(tmp, dst)
+        print(f"{db} -> {dst}")
+  '';
 in
 {
   den.aspects.kubernetes.services.media.jellyfin = {
@@ -120,7 +146,81 @@ in
               admin-password = config.age.secrets.jellyfin-admin-password.sopsRef;
             };
 
-            configMaps."${name}-seed".data."seed-api-key.py" = seedApiKey;
+            configMaps."${name}-seed".data = {
+              "seed-api-key.py" = seedApiKey;
+              "backup-databases.py" = backupDatabases;
+            };
+
+            # Before the Longhorn media-config backup (03:00 UTC). On Jellyfin's node,
+            # since the config volume is ReadWriteOnce.
+            cronJobs."${name}-db-backup".spec = {
+              schedule = "30 2 * * *";
+              timeZone = "Etc/UTC";
+              concurrencyPolicy = "Forbid";
+              successfulJobsHistoryLimit = 1;
+              failedJobsHistoryLimit = 3;
+              jobTemplate.spec = {
+                backoffLimit = 2;
+                # A failed run holds KubeJobFailed for a week, then clears itself.
+                ttlSecondsAfterFinished = 7 * 24 * 3600;
+                template = {
+                  metadata.labels."app.kubernetes.io/name" = "${name}-db-backup";
+                  spec = {
+                    restartPolicy = "OnFailure";
+                    automountServiceAccountToken = false;
+                    enableServiceLinks = false;
+                    affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution = [
+                      {
+                        labelSelector.matchLabels = pod;
+                        topologyKey = "kubernetes.io/hostname";
+                      }
+                    ];
+                    securityContext = {
+                      runAsUser = uid;
+                      runAsGroup = uid;
+                      runAsNonRoot = true;
+                      seccompProfile.type = "RuntimeDefault";
+                    };
+                    containers = [
+                      {
+                        name = "backup";
+                        image = ref images."library/python";
+                        command = [
+                          "python3"
+                          "/seed/backup-databases.py"
+                        ];
+                        securityContext = {
+                          allowPrivilegeEscalation = false;
+                          readOnlyRootFilesystem = true;
+                          capabilities.drop = [ "ALL" ];
+                        };
+                        volumeMounts = [
+                          {
+                            name = "config";
+                            mountPath = "/config";
+                          }
+                          {
+                            name = "seed";
+                            mountPath = "/seed";
+                            readOnly = true;
+                          }
+                        ];
+                      }
+                    ];
+                    volumes = [
+                      {
+                        name = "config";
+                        persistentVolumeClaim.claimName = "${name}-config";
+                      }
+                      {
+                        name = "seed";
+                        configMap.name = "${name}-seed";
+                      }
+                    ];
+                  };
+                };
+              };
+            };
 
             # config + data (the database, metadata, plugins). In the nightly
             # off-cluster backup group.

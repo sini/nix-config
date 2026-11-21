@@ -1,5 +1,26 @@
 apiVersion: v1
 data:
+  backup-databases.py: |
+    import glob, os, sqlite3, sys
+    out = "/config/backup"
+    os.makedirs(out, exist_ok=True)
+    dbs = sorted(glob.glob("/config/data/*.db"))
+    if not dbs:
+        print("no databases yet (first start)")
+    for db in dbs:
+        dst = os.path.join(out, os.path.basename(db))
+        tmp = dst + ".partial"
+        if os.path.exists(tmp):
+            os.remove(tmp)
+        src, copy = sqlite3.connect(db, timeout=60), sqlite3.connect(tmp)
+        src.backup(copy)
+        src.close()
+        check = copy.execute("PRAGMA integrity_check").fetchone()[0]
+        copy.close()
+        if check != "ok":
+            sys.exit(f"{db}: the copy fails integrity_check ({check}); kept the previous backup")
+        os.replace(tmp, dst)
+        print(f"{db} -> {dst}")
   seed-api-key.py: |
     import os, sqlite3, sys, datetime
     db = "/config/data/jellyfin.db"
