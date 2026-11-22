@@ -94,7 +94,27 @@ let
           inherit (environment) domain;
         }
       )
-    ) (fedOf host).nodes;
+    ) (fedOf host).nodes
+    // lib.optionalAttrs (fedOf host).collector.enable (
+      let
+        user = (fedOf host).collector.user;
+      in
+      {
+        ${collectorLeafName user} =
+          xl.leafSecret {
+            inherit config host user;
+            inherit (environment) domain;
+          }
+          // {
+            rekeyFile = host.secretPath + "/${collectorLeafName user}.age";
+            settings = {
+              cn = "${user}@collector";
+              uri = spiffeOf environment.domain "collector" user;
+            };
+          };
+      }
+    );
+  collectorLeafName = user: "xmsg-${user}-collector-ca";
 in
 {
   # A hub admits its leaves' cluster nodes, which live in other environments, so it
@@ -198,6 +218,43 @@ in
       );
       default = { };
       description = "Users on this host that run an xmsg federation node, `<user>.<host>`, each with a CA-signed leaf `xmsg-<user>-fed-ca` in the host's secretPath. Declaring one needs `agenix generate`, `git add` of the .age and .crt files, and `agenix rekey`. Its peers and leaves are derived (policies/xmsg.nix).";
+    };
+
+    # The fleet observer, PILOT (xmsg-design, owner-approved; Mission Control replaces its
+    # login): `xmsg observe-collector` as the user's service on one host, reading the v2
+    # observe export of the nodes it lists. Its identity is `<user>.collector`
+    # (spiffe://<domain>/host/collector/user/<user>), a leaf from the host intermediate.
+    # The view needs an owner bearer even on loopback: the kanidm public client
+    # `xmsg-collector` (services/security/kanidm.nix), introspected per request.
+    settings.federation.collector = {
+      enable = lib.mkEnableOption "the pilot fleet-observer collector for this host's federation user";
+      user = lib.mkOption {
+        type = lib.types.str;
+        default = "sini";
+        description = "The user who runs the collector; it needs a node on this host.";
+      };
+      sources = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [ ];
+        example = [ "sini.cortex" ];
+        description = "Node names the collector polls. Each must grant it (that host's federation.observedBy).";
+      };
+      subject = lib.mkOption {
+        type = lib.types.strMatching "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+        description = "The owner's kanidm person UUID, the only `sub` the collector admits.";
+      };
+      kanidmDomain = lib.mkOption {
+        type = lib.types.str;
+        example = "idm.example.org";
+        description = "kanidm's name, for the issuer and the introspection endpoint.";
+      };
+    };
+
+    settings.federation.observedBy = lib.mkOption {
+      type = lib.types.listOf (lib.types.strMatching "[a-z0-9-]+\\.collector");
+      default = [ ];
+      example = [ "sini.collector" ];
+      description = "Collectors (`<user>.collector`) granted `observe` on this host's nodes of the same user (sini.collector observes sini's node, never vic's): node-wide, metadata only, no labels, never send, reply or list.";
     };
 
     # darwin hosts run their user's node under launchd (the xmsg home-manager module's
@@ -317,6 +374,7 @@ in
     homeManager =
       {
         config,
+        environment,
         host,
         inputs',
         osConfig,
@@ -390,7 +448,25 @@ in
                 inherit (leaf) allow targets;
               }
             ) (lib.filter (l: lib.elem self' l.hubs) xmsg-leaves)
+          )
+          # The pilot collector's grant: observe only, node-wide (targets omitted is this
+          # node's own endpoints), no labels. The collector dials; its address is never used.
+          // lib.listToAttrs (
+            map (
+              c:
+              lib.nameValuePair c {
+                address = "${c}.invalid:${toString node.port}";
+                ca = rootCa;
+                identities = [ (spiffeOf environment.domain "collector" (lib.removeSuffix ".collector" c)) ];
+                allow = [ "observe" ];
+              }
+              # Only a collector's own user's nodes: another user's node here is not its to observe.
+            ) (lib.filter (c: c == "${me}.collector") (lib.optionals (node != null) (fedOf host).observedBy))
           );
+
+        collector = (fedOf host).collector;
+        collectorOn = collector.enable && me == collector.user;
+        collectorDir = "${config.xdg.configHome}/xmsg/observe-collector";
       in
       {
         # A service node is another user's only through a trusted pair; a record that
@@ -431,6 +507,45 @@ in
               key = osConfig.age.secrets.${leafName me}.path;
             };
           };
+          # The pilot collector (settings.federation.collector), loopback only: no web_tls.
+          # Its key and certificate are runtime paths, never store paths (the module asserts
+          # it): the key from agenix, the certificate a symlink the user's config owns.
+          observeCollector = lib.mkIf collectorOn {
+            enable = true;
+            config = {
+              client_cert = "${collectorDir}/client.crt";
+              client_key = osConfig.age.secrets.${collectorLeafName me}.path;
+              auth = {
+                issuer = "https://${collector.kanidmDomain}/oauth2/openid/xmsg-collector";
+                introspection_url = "https://${collector.kanidmDomain}/oauth2/token/introspect";
+                subjects = [ collector.subject ];
+                audience = "xmsg-collector";
+                hosted_client = "xmsg-collector";
+              };
+              sources = map (
+                name:
+                let
+                  # A node's own record never reaches it (policies/xmsg.nix), so this host's
+                  # node is added from its own settings, as xmsg-node emits it.
+                  self = {
+                    name = self';
+                    address = "${host.name}.ts.${environment.domain}:${toString node.port}";
+                    identity = spiffeOf environment.domain host.name me;
+                  };
+                  p = lib.findFirst (
+                    n: n.name == name
+                  ) (throw "xmsg collector: source ${name} is not an xmsg node this user federates with.") (
+                    [ self ] ++ xmsg-nodes
+                  );
+                in
+                {
+                  node = name;
+                  inherit (p) address identity;
+                  ca = "${rootCa}";
+                }
+              ) collector.sources;
+            };
+          };
           harnesses =
             lib.genAttrs
               [
@@ -444,6 +559,13 @@ in
               (_: {
                 enable = true;
               });
+        };
+
+        # The collector's certificate at a runtime path (observeCollector refuses store paths).
+        home.file = lib.mkIf collectorOn {
+          "${lib.removePrefix "${config.home.homeDirectory}/" collectorDir}/client.crt".source = caCrt (
+            host.secretPath + "/${collectorLeafName me}.crt"
+          );
         };
 
         systemd.user.services.agent-quota = lib.mkIf agentQuotaEnabled {

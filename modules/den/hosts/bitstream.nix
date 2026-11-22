@@ -56,6 +56,8 @@
         sini = { };
         vic.port = 7789;
       };
+      # sini's node here grants the pilot collector observe (vic's never does).
+      applications.dev.ai.mcp.xmsg.federation.observedBy = [ "sini.collector" ];
 
       # @genie support bot: #support:json64.dev (testing), #denful:matrix.org and a private room.
       services.matrix-xmsg = {

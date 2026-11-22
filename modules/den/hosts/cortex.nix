@@ -52,6 +52,19 @@ in
 
       # sini@bitstream <-> sini@cortex, authenticated by the xmsg CA (federation plan §6.7).
       applications.dev.ai.mcp.xmsg.federation.nodes.sini = { };
+      # The pilot fleet observer, sini.collector, here (xmsg-design, owner-approved).
+      applications.dev.ai.mcp.xmsg.federation.collector = {
+        enable = true;
+        sources = [
+          "sini.cortex"
+          "sini.bitstream"
+          "sini.patch"
+        ];
+        # json's kanidm person UUID, the same owner `sub` the gateway admits (clusters/axon.nix).
+        subject = "b01ebf55-9b81-4d78-a308-8c2b9e5b46c0";
+        kanidmDomain = "idm.json64.dev";
+      };
+      applications.dev.ai.mcp.xmsg.federation.observedBy = [ "sini.collector" ];
       # agent-quota@sini.cortex for xmsg-design's quota reader (xmsg-fei.6).
       applications.dev.ai.mcp.xmsg.agentQuotaService.enable = true;
 

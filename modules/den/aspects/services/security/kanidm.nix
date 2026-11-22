@@ -107,6 +107,24 @@ let
         ];
       };
 
+      # The pilot fleet observer (applications/dev/ai/mcp/xmsg.nix federation.collector):
+      # ★ DEDICATED, as the collector's audience. The owner signs in from a browser
+      # (auth-code + PKCE to a localhost redirect) for the bearer the view needs; the
+      # collector introspects it on every request. Public: no secret to hold. Pilot
+      # only, replaced by Mission Control's session issuer.
+      xmsg-collector = {
+        displayName = "xmsg fleet observer (pilot)";
+        originUrl = "http://localhost:9429/callback";
+        originLanding = "http://localhost:9428/";
+        public = true;
+        enableLocalhostRedirects = true;
+        preferShortUsername = true;
+        scopeMaps.admins = [
+          "openid"
+          "profile"
+        ];
+      };
+
       # The gateway's own credential for the introspection endpoint
       # (kubernetes/services/ai/xmsg-gateway.nix), never the hosted client's secret.
       # Kanidm 1.11 authenticates no introspection caller, so it needs no scope map;
