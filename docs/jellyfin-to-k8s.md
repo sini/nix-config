@@ -276,6 +276,35 @@ Cutover, in order:
 
 Rollback before uplink's copy is wiped: unset `live` and re-include the aspect.
 
+## 4. Done: Jellyfin runs in the cluster (2026-11-22, nix-config 4381b88a)
+
+- **The move:** a ZFS snapshot
+  (`zroot/local/persist@pre-k8s-move-20261122T060727Z`). Then uplink's Jellyfin
+  and jellarr were stopped, and `/var/lib/jellyfin` (17 GB, without
+  declarative-jellyfin's 81 GB `backups` and the log) and `/var/cache/jellyfin`
+  were tarred to the NAS. The tars were sha256-checked and unpacked by a
+  temporary pod into `jellyfin-data` (Longhorn, 40Gi) and `jellyfin-cache`; the
+  tars were deleted after.
+- **Layout:** the pod keeps uplink's paths
+  (`JELLYFIN_DATA_DIR=/var/lib/jellyfin`, cache `/var/cache/jellyfin`) and
+  mounts the same NFS export at `/mnt/data`, so the database needed no rescan.
+- **Read-back:**
+  - the same server id (9550a7ff…), Jellyfin 12.4.0, 20 users;
+  - 4,155 movies, 484 series, 11,498 episodes;
+  - Shokofin VFS 9,540 links; the 17 restored watch rows intact;
+  - SSO-Auth 5.1.1, Shoko 6.0.5.4012 and TMDb Box Sets 15.0.0.0 all Active;
+  - a VA-API decode and encode on the Radeon 780M;
+  - jellarr's first container run (v0.3.5 Job) applied only the cluster's
+    encoder codecs and proxy range;
+  - jellyfin.json64.dev now resolves to the cluster gateway, and its SSO start
+    redirects to kanidm.
+- **Rollback:** uplink's copy stays in `/persist/var/lib/jellyfin`. Re-include
+  `services.media.jellyfin` on uplink, then unset `live` and `serving`.
+- **Left for the owner:** the old staged volume `pvc-1883f620` (150Gi, Released,
+  Retain) holds only the throwaway clean install, so delete it. Delete uplink's
+  `/persist/var/lib/jellyfin` and the snapshot once the cluster copy has run for
+  a while.
+
 ## 4a. Shoko for Shokofin: a declared, rebuildable user (owner, 2026-11-20)
 
 Shokofin authenticates with a Shoko API key, which Shoko issues for a username
