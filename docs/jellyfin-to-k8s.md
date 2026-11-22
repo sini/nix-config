@@ -301,7 +301,13 @@ Rollback before uplink's copy is wiped: unset `live` and re-include the aspect.
 - **Rollback:** uplink's copy stays in `/persist/var/lib/jellyfin` (the
   pre-k8s-move snapshot was destroyed on 2026-11-22, owner). Re-include
   `services.media.jellyfin` on uplink, then unset `live` and `serving`.
-- **Closed (owner, 2026-11-22):** SSO sign-in confirmed on the cluster copy. The
-  stale staged volume pvc-1883f620 (150Gi) is deleted, PV and Longhorn volume.
-  Still to go when the owner is ready: uplink's `/persist/var/lib/jellyfin`, and
-  the pre-jellarr and pre-jellyfin12 snapshots.
+- **Closed (owner, 2026-11-22):** SSO sign-in confirmed on the cluster copy.
+  Cleanup done: the stale staged volume pvc-1883f620 (150Gi; PV and Longhorn
+  volume); uplink's `/persist/var/lib/jellyfin` (98 GB with the old
+  declarative-jellyfin backups); the pre-jellarr, pre-jellyfin12 and
+  pre-k8s-move snapshots; the database backups in uplink's `/root`; uplink's
+  rekeyed Jellyfin secrets. The cluster volume is now the only copy, kept by
+  Longhorn's nightly media-config backup and the 02:30 jellyfin-db-backup copy
+  before it. stale staged volume pvc-1883f620 (150Gi) is deleted, PV and
+  Longhorn volume. Still to go when the owner is ready: uplink's
+  `/persist/var/lib/jellyfin`, and the pre-jellarr and pre-jellyfin12 snapshots.
