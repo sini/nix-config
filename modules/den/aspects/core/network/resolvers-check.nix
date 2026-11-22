@@ -87,7 +87,15 @@ let
   tsNames = cfg: lib.concatMap (k: k.hostNames) (lib.attrValues cfg.services.openssh.knownHosts);
   probesTsName = name: cfg: lib.elem name (tsNames cfg);
 
-  headscaleGlobal = uplink.services.headscale.settings.dns.nameservers.global;
+  # headscale serves from the cluster (9db0876f), so its nameservers are read from the
+  # rendered config there, not from uplink, which no longer runs it.
+  headscaleGlobal =
+    (builtins.fromJSON
+      (lib.findFirst (o: o.kind == "ConfigMap" && o.metadata.name == "headscale-config")
+        (throw "dns-clients: no headscale-config ConfigMap")
+        config.flake.nixidyEnvs.x86_64-linux.axon.config.applications.headscale.objects
+      ).data."config.yaml"
+    ).dns.nameservers.global;
 
   blade = nixosConfigurations.blade.config;
   bladeLink = blade.systemd.network.networks.wlp0s20f3.networkConfig;
