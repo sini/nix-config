@@ -16,6 +16,8 @@
     # derived (policies/xmsg.nix).
     settings.applications.dev.ai.mcp.xmsg.federation.nodes.sini = { };
     settings.applications.dev.ai.mcp.xmsg.federation.observedBy = [ "sini.collector" ];
+    # cortex relays the xmsg gateway's sends here (clusters/axon.nix xmsg-gateway.relayed).
+    settings.applications.dev.ai.mcp.xmsg.federation.relayedBy = [ "sini.cortex" ];
   };
 
   den.aspects.patch = {

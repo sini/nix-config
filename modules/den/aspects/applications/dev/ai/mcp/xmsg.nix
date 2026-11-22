@@ -250,6 +250,13 @@ in
       };
     };
 
+    settings.federation.relayedBy = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [ ];
+      example = [ "sini.cortex" ];
+      description = "Hubs (`<user>.<host>`) this host's nodes accept forwarded messages from: their peer entry gets `relayed` (xmsg hubs-and-leaves, forwarding through a hub).";
+    };
+
     settings.federation.observedBy = lib.mkOption {
       type = lib.types.listOf (lib.types.strMatching "[a-z0-9-]+\\.collector");
       default = [ ];
@@ -425,13 +432,15 @@ in
               p:
               lib.nameValuePair p.name {
                 inherit (p) address;
-                # A service node's record names what it may do here (policies/xmsg.nix).
+                # A service node's record names what it may do here (policies/xmsg.nix); a hub
+                # this host trusts to relay to it also gets `relayed`.
                 allow =
                   p.allow or [
                     "send"
                     "reply"
                     "list"
-                  ];
+                  ]
+                  ++ lib.optional (lib.elem p.name (fedOf host).relayedBy) "relayed";
                 ca = rootCa;
                 identities = [ p.identity ];
               }
@@ -445,7 +454,9 @@ in
                 ca = rootCa;
                 identities = [ leaf.identity ];
                 leaf = true;
-                inherit (leaf) allow targets;
+                # `forward` only where the leaf record names this node (single-hop relay).
+                allow = leaf.allow ++ lib.optional (lib.elem self' (leaf.forwardAt or [ ])) "forward";
+                inherit (leaf) targets;
               }
             ) (lib.filter (l: lib.elem self' l.hubs) xmsg-leaves)
           )
@@ -532,11 +543,10 @@ in
                     address = "${host.name}.ts.${environment.domain}:${toString node.port}";
                     identity = spiffeOf environment.domain host.name me;
                   };
-                  p = lib.findFirst (
-                    n: n.name == name
-                  ) (throw "xmsg collector: source ${name} is not an xmsg node this user federates with.") (
-                    [ self ] ++ xmsg-nodes
-                  );
+                  p =
+                    lib.findFirst (n: n.name == name)
+                      (throw "xmsg collector: source ${name} is not an xmsg node this user federates with.")
+                      ([ self ] ++ xmsg-nodes);
                 in
                 {
                   node = name;

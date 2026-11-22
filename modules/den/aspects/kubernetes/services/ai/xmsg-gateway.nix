@@ -245,6 +245,13 @@ in
         description = "More hosts whose owner's xmsg is also the leaf's hub, so the gateway reaches and lists their sessions too. Each takes the leaf from the same xmsg-leaves record.";
       };
 
+      relayed = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [ ];
+        example = [ "sini.patch" ];
+        description = "Nodes (`<user>.<host>`) the gateway reaches through its `hub` by single-hop forwarding (xmsg hubs-and-leaves, forwarding through a hub), never as its own peers: the hub grants the leaf `forward`, the leaf routes unknown destinations to the hub (`default_route`), and the grant's outbound policy admits them. Each must grant the hub `relayed` (that host's federation.relayedBy).";
+      };
+
       kanidmHost = lib.mkOption {
         type = lib.types.nullOr lib.types.str;
         default = null;
@@ -325,6 +332,10 @@ in
             "send"
             "reply"
             "list"
+          ];
+          # `forward` at the primary hub only, for the `relayed` nodes (mcp/xmsg.nix adds it).
+          forwardAt = lib.optionals (cfg.relayed != [ ]) [
+            "${den.hosts.x86_64-linux.${hostSetting cfg "hub"}.system-owner}.${hostSetting cfg "hub"}"
           ];
           # Explicitly every target. One `targets` list gates both what the hub queues
           # to the leaf and what the leaf may reach on the hub. The hub's agent sessions
@@ -432,31 +443,35 @@ in
         resource = "${origin}/mcp";
         verifierIssuer = "https://${kanidmDomain}/oauth2/openid/${hostedClient}";
 
+        primary = lib.head hubs;
         peers = lib.listToAttrs (
           map (h: {
             inherit (h) name;
-            value = {
-              address = "${h.ip}:${toString h.port}";
-              ca = "${tlsDir}/ca.crt";
-              identities = [ h.identity ];
-              # What the hub may ask of the leaf. `list` lets it answer the hub's list
-              # query from its mailbox, so the hub's sessions see the gateway (xmsg XA6).
-              # `send` and `reply` gate only fed requests, which a leaf never listens for
-              # (xmsg refuses --leaf with --fed-listen); a pulled send reaches only the
-              # leaf principal.
-              allow = [
-                "send"
-                "reply"
-                "list"
-              ];
-            };
+            value =
+              # The relayed nodes aren't peers: unknown explicit destinations go to the
+              # primary hub, which forwards them (one hop).
+              lib.optionalAttrs (cfg.relayed != [ ] && h.name == primary.name) { default_route = true; } // {
+                address = "${h.ip}:${toString h.port}";
+                ca = "${tlsDir}/ca.crt";
+                identities = [ h.identity ];
+                # What the hub may ask of the leaf. `list` lets it answer the hub's list
+                # query from its mailbox, so the hub's sessions see the gateway (xmsg XA6).
+                # `send` and `reply` gate only fed requests, which a leaf never listens for
+                # (xmsg refuses --leaf with --fed-listen); a pulled send reaches only the
+                # leaf principal.
+                allow = [
+                  "send"
+                  "reply"
+                  "list"
+                ];
+              };
           }) hubs
         );
 
         # The grant's outbound policy: each hub's sessions, for send and for reply. Written
         # by hand in the gateway's own field order (send, reply; targets, required_scope),
         # which builtins.toJSON would sort; apply compares typed values either way.
-        outboundTargets = builtins.toJSON (map (h: "*@${h.name}") hubs);
+        outboundTargets = builtins.toJSON (map (h: "*@${h.name}") hubs ++ map (n: "*@${n}") cfg.relayed);
         permission = scope: ''{"targets":${outboundTargets},"required_scope":${builtins.toJSON scope}}'';
         policy = ''{"send":${permission "xmsg:send"},"reply":${permission "xmsg:reply"}}'';
 
