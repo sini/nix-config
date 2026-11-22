@@ -61,7 +61,22 @@
                   retention_delete_delay = "2h";
                   delete_request_store = "filesystem";
                 };
+
+                # Log-based alerts: rule ConfigMaps labelled `loki_rule` (any namespace's
+                # app may own one in `monitoring`) are written by the rules sidecar to
+                # /rules/<tenant>; with auth off the tenant is `fake`. The ruler reads
+                # them there and sends to the cluster's Alertmanager (it had no URL).
+                rulerConfig = {
+                  storage = {
+                    type = "local";
+                    local.directory = "/rules";
+                  };
+                  alertmanager_url = "http://kube-prometheus-stack-alertmanager.monitoring.svc:9093";
+                  enable_alertmanager_v2 = true;
+                };
               };
+
+              sidecar.rules.folder = "/rules/fake";
 
               singleBinary = {
                 replicas = 1;

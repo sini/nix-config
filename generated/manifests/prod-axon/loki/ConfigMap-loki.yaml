@@ -84,7 +84,11 @@ data:
             timeout: 500ms
             update_interval: 1m
     ruler:
+      alertmanager_url: http://kube-prometheus-stack-alertmanager.monitoring.svc:9093
+      enable_alertmanager_v2: true
       storage:
+        local:
+          directory: /rules
         type: local
       wal:
         dir: /var/loki/ruler-wal

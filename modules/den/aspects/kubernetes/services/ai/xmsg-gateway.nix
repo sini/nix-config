@@ -902,6 +902,65 @@ in
 
             configMaps."${name}-xmsg-peers".data."peers.json" = builtins.toJSON peers;
 
+            # Custody alerts from the gateway's log (Loki ruler, monitoring/loki.nix). The
+            # store filling silently wedged Artemis's inbound on 2026-11-22 (xmsg-lxd2):
+            # a deferral is the outage itself, 80% is the warning before it, and a missing
+            # capacity line (logged every 300 s) means the others can't be trusted.
+            configMaps."${name}-custody-alerts" = {
+              metadata = {
+                namespace = "monitoring";
+                labels.loki_rule = "true";
+              };
+              data."xmsg-gateway-custody.yaml" =
+                let
+                  sel = ''{namespace="${namespace}", container="gateway"}'';
+                  field = f: ''${sel} |= "custody capacity" | regexp `${f}=(?P<v>\d+)` | unwrap v [15m]'';
+                  ratio = num: den: "max(max_over_time(${field num})) / max(max_over_time(${field den}))";
+                in
+                builtins.toJSON {
+                  groups = [
+                    {
+                      name = "xmsg-gateway-custody";
+                      rules = [
+                        {
+                          alert = "XmsgGatewayCustodyDeferred";
+                          expr = ''sum by (reason) (count_over_time(${sel} |= "custody intake deferred" | regexp `reason=(?P<reason>[a-z_]+)` [5m])) > 0'';
+                          labels.severity = "critical";
+                          annotations = {
+                            summary = "xmsg gateway custody is deferring intake ({{ $labels.reason }})";
+                            description = "New messages are not stored or acked: the hubs' queues for the gateway leaf grow and Artemis gets nothing. Raise events.custody_limits (xmsg-gateway.nix) or clear the cause.";
+                          };
+                        }
+                        {
+                          alert = "XmsgGatewayCustodyUnavailable";
+                          expr = ''sum(count_over_time(${sel} |~ "custody (store )?unavailable" [5m])) > 0'';
+                          labels.severity = "critical";
+                          annotations.summary = "xmsg gateway custody store is unavailable";
+                        }
+                        {
+                          alert = "XmsgGatewayCustodyNearFull";
+                          expr = "${ratio "active_rows" "max_items"} >= 0.8";
+                          labels.severity = "warning";
+                          annotations.summary = "xmsg gateway custody active rows at {{ $value | humanizePercentage }} of max_items";
+                        }
+                        {
+                          alert = "XmsgGatewayCustodyRetiredNearFull";
+                          expr = "${ratio "retired_rows" "max_retired_items"} >= 0.8";
+                          labels.severity = "warning";
+                          annotations.summary = "xmsg gateway retired-grant custody rows at {{ $value | humanizePercentage }} of max_retired_items";
+                        }
+                        {
+                          alert = "XmsgGatewayCustodyCapacityLogMissing";
+                          expr = ''absent_over_time(${sel} |= "custody capacity" [20m])'';
+                          labels.severity = "warning";
+                          annotations.summary = "no xmsg gateway custody capacity line in 20 minutes; the custody alerts are blind";
+                        }
+                      ];
+                    }
+                  ];
+                };
+            };
+
             # Nonsecret: world-readable, never writable (serving.md "Owner configuration").
             configMaps."${name}-config".data = {
               "serving.json" = builtins.toJSON serving;

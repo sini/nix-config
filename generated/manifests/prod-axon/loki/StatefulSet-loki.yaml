@@ -20,7 +20,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 85ca2a33a5f20bbdae86c973131137d23b5e039ab2d9445e94640a3a801c50be
+        checksum/config: a647bd06b1b7159d07a936ec14b7ae8aede53767e3b6e09212953e3c440b469f
         kubectl.kubernetes.io/default-container: loki
         storage/size: 50Gi
       labels:
@@ -99,7 +99,7 @@ spec:
               name: storage
             - mountPath: /tmp
               name: temp
-            - mountPath: /rules
+            - mountPath: /rules/fake
               name: sc-rules-volume
         - env:
             - name: METHOD
@@ -107,7 +107,7 @@ spec:
             - name: LABEL
               value: loki_rule
             - name: FOLDER
-              value: /rules
+              value: /rules/fake
             - name: RESOURCE
               value: both
             - name: WATCH_SERVER_TIMEOUT
@@ -154,7 +154,7 @@ spec:
           volumeMounts:
             - mountPath: /tmp
               name: sc-rules-temp
-            - mountPath: /rules
+            - mountPath: /rules/fake
               name: sc-rules-volume
       enableServiceLinks: true
       securityContext:
