@@ -334,7 +334,7 @@ in
             "list"
           ];
           # `forward` at the primary hub only, for the `relayed` nodes (mcp/xmsg.nix adds it).
-          forwardAt = lib.optionals (cfg.relayed != [ ]) [
+          forwardAt = lib.optionals ((cfg.relayed or [ ]) != [ ]) [
             "${den.hosts.x86_64-linux.${hostSetting cfg "hub"}.system-owner}.${hostSetting cfg "hub"}"
           ];
           # Explicitly every target. One `targets` list gates both what the hub queues
@@ -450,7 +450,8 @@ in
             value =
               # The relayed nodes aren't peers: unknown explicit destinations go to the
               # primary hub, which forwards them (one hop).
-              lib.optionalAttrs (cfg.relayed != [ ] && h.name == primary.name) { default_route = true; } // {
+              lib.optionalAttrs ((cfg.relayed or [ ]) != [ ] && h.name == primary.name) { default_route = true; }
+              // {
                 address = "${h.ip}:${toString h.port}";
                 ca = "${tlsDir}/ca.crt";
                 identities = [ h.identity ];
@@ -471,7 +472,9 @@ in
         # The grant's outbound policy: each hub's sessions, for send and for reply. Written
         # by hand in the gateway's own field order (send, reply; targets, required_scope),
         # which builtins.toJSON would sort; apply compares typed values either way.
-        outboundTargets = builtins.toJSON (map (h: "*@${h.name}") hubs ++ map (n: "*@${n}") cfg.relayed);
+        outboundTargets = builtins.toJSON (
+          map (h: "*@${h.name}") hubs ++ map (n: "*@${n}") (cfg.relayed or [ ])
+        );
         permission = scope: ''{"targets":${outboundTargets},"required_scope":${builtins.toJSON scope}}'';
         policy = ''{"send":${permission "xmsg:send"},"reply":${permission "xmsg:reply"}}'';
 
