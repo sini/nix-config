@@ -21,13 +21,17 @@ let
   pod."app.kubernetes.io/name" = name;
   ref = image: "${image.repository}@${image.digest}";
   secretsDir = "/run/secrets/jellyfin";
+  # uplink's layout (services.jellyfin's defaults), so every absolute path in a migrated
+  # database (the Shokofin VFS, metadata, plugins) stays valid without a rescan.
+  dataDir = "/var/lib/jellyfin";
+  cacheDir = "/var/cache/jellyfin";
 
   # Leaves exactly one ApiKeys row named "jellarr", carrying the agenix token.
   # Checks the 10.11 schema first, so a changed table fails the pod rather than
   # writing something Jellyfin won't read.
   seedApiKey = ''
     import os, sqlite3, sys, datetime
-    db = "/config/data/jellyfin.db"
+    db = "${dataDir}/data/jellyfin.db"
     if not os.path.exists(db):
         print("no jellyfin.db yet (first start); the key is seeded at the next pod start")
         sys.exit(0)
@@ -49,13 +53,13 @@ let
   '';
 
   # A consistent copy of each database (SQLite's online backup API, never cp) in
-  # /config/backup, verified before it replaces the last one, so the Longhorn
+  # <dataDir>/db-backup, verified before it replaces the last one, so the Longhorn
   # backup after it carries a database that opens, not a mid-write snapshot.
   backupDatabases = ''
     import glob, os, sqlite3, sys
-    out = "/config/backup"
+    out = "${dataDir}/db-backup"
     os.makedirs(out, exist_ok=True)
-    dbs = sorted(glob.glob("/config/data/*.db"))
+    dbs = sorted(glob.glob("${dataDir}/data/*.db"))
     if not dbs:
         print("no databases yet (first start)")
     for db in dbs:
@@ -76,6 +80,14 @@ let
 in
 {
   den.aspects.kubernetes.services.media.jellyfin = {
+    # Off while uplink's data is copied in (docs/jellyfin-to-k8s.md §4): replicas 0 and
+    # no jellarr Job, so nothing writes the volume, or waits on a Jellyfin that isn't there.
+    settings.serving = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Run the Jellyfin pod and its jellarr Job.";
+    };
+
     settings.live = lib.mkOption {
       type = lib.types.bool;
       default = false;
@@ -128,6 +140,7 @@ in
       }:
       let
         live = cluster.settings.kubernetes.services.media.jellyfin.live;
+        serving = cluster.settings.kubernetes.services.media.jellyfin.serving;
         domain = cluster.domainFor (if live then "jellyfin" else "jellyfin-next");
         tcp = p: {
           port = toString p;
@@ -149,6 +162,104 @@ in
             configMaps."${name}-seed".data = {
               "seed-api-key.py" = seedApiKey;
               "backup-databases.py" = backupDatabases;
+            };
+
+            # jellarr's config: the shared setting (services/media/jellyfin.nix), called
+            # with the cluster's values. JSON is valid YAML for --configFile.
+            configMaps."${name}-jellarr".data."config.yml" = builtins.toJSON (
+              cluster.settings.services.media.jellyfin.jellarr {
+                baseUrl = "http://${name}.${namespace}.svc:${toString port}";
+                inherit domain;
+                adminPasswordFile = "/run/secrets/jellarr/admin-password";
+                # The gateway's envoy pods, in the pod network.
+                knownProxies = [ "172.20.0.0/16" ];
+                # The Radeon 780M's VCN4 decoders (no MPEG-2, VC-1 or VP8).
+                hardwareDecodingCodecs = [
+                  "h264"
+                  "hevc"
+                  "vp9"
+                  "av1"
+                ];
+              }
+            );
+
+            # Applies the settings after every sync (and so after the pod's first start):
+            # jellarr waits for Jellyfin, including a migration's 503s, up to 30 minutes.
+            jobs = lib.optionalAttrs serving {
+              "${name}-jellarr" = {
+                metadata.annotations = {
+                  "argocd.argoproj.io/hook" = "PostSync";
+                  "argocd.argoproj.io/hook-delete-policy" = "BeforeHookCreation";
+                };
+                spec = {
+                  backoffLimit = 3;
+                  template = {
+                    metadata.labels."app.kubernetes.io/name" = "${name}-jellarr";
+                    spec = {
+                      restartPolicy = "OnFailure";
+                      automountServiceAccountToken = false;
+                      enableServiceLinks = false;
+                      securityContext = {
+                        runAsNonRoot = true;
+                        runAsUser = 65534;
+                        runAsGroup = 65534;
+                        fsGroup = 65534;
+                        seccompProfile.type = "RuntimeDefault";
+                      };
+                      containers = [
+                        {
+                          name = "jellarr";
+                          image = ref images."sini/jellarr";
+                          args = [
+                            "--configFile"
+                            "/config/config.yml"
+                          ];
+                          env = [
+                            {
+                              name = "JELLARR_API_KEY_FILE";
+                              value = "/run/secrets/jellarr/api-key";
+                            }
+                            {
+                              name = "JELLARR_WAIT_TIMEOUT";
+                              value = "1800";
+                            }
+                          ];
+                          securityContext = {
+                            allowPrivilegeEscalation = false;
+                            readOnlyRootFilesystem = true;
+                            capabilities.drop = [ "ALL" ];
+                          };
+                          volumeMounts = [
+                            {
+                              name = "config";
+                              mountPath = "/config";
+                              readOnly = true;
+                            }
+                            {
+                              name = "secrets";
+                              mountPath = "/run/secrets/jellarr";
+                              readOnly = true;
+                            }
+                          ];
+                        }
+                      ];
+                      volumes = [
+                        {
+                          name = "config";
+                          configMap.name = "${name}-jellarr";
+                        }
+                        {
+                          name = "secrets";
+                          secret = {
+                            secretName = "${name}-secrets";
+                            defaultMode = 288;
+                          };
+                        }
+                      ];
+                    };
+                  };
+                };
+              };
             };
 
             # Before the Longhorn media-config backup (03:00 UTC). On Jellyfin's node,
@@ -197,7 +308,7 @@ in
                         volumeMounts = [
                           {
                             name = "config";
-                            mountPath = "/config";
+                            mountPath = dataDir;
                           }
                           {
                             name = "seed";
@@ -210,7 +321,7 @@ in
                     volumes = [
                       {
                         name = "config";
-                        persistentVolumeClaim.claimName = "${name}-config";
+                        persistentVolumeClaim.claimName = "${name}-data";
                       }
                       {
                         name = "seed";
@@ -222,15 +333,17 @@ in
               };
             };
 
-            # config + data (the database, metadata, plugins). In the nightly
-            # off-cluster backup group.
+            # The data dir: the database, metadata, plugins and config. Sized from uplink's
+            # (2026-11-21: 17 GB, 16 of it metadata, 0.8 the database; the 81 GB of
+            # declarative-jellyfin backups not carried), with room to double; Longhorn
+            # grows it online. In the nightly off-cluster backup group.
             persistentVolumeClaims = {
-              "${name}-config" = {
+              "${name}-data" = {
                 metadata.labels."recurring-job-group.longhorn.io/media-config" = "enabled";
                 spec = {
                   accessModes = [ "ReadWriteOnce" ];
                   storageClassName = "longhorn";
-                  resources.requests.storage = "150Gi";
+                  resources.requests.storage = "40Gi";
                 };
               };
               # Transcodes and image cache: regenerable, single replica, not backed up.
@@ -242,7 +355,7 @@ in
             };
 
             deployments.${name}.spec = {
-              replicas = 1;
+              replicas = if serving then 1 else 0;
               # One writer on SQLite and ReadWriteOnce volumes.
               strategy.type = "Recreate";
               selector.matchLabels = pod;
@@ -277,7 +390,7 @@ in
                       volumeMounts = [
                         {
                           name = "config";
-                          mountPath = "/config";
+                          mountPath = dataDir;
                         }
                         {
                           name = "seed";
@@ -301,6 +414,23 @@ in
                           name = "JELLYFIN_PublishedServerUrl";
                           value = "https://${domain}";
                         }
+                        # uplink's layout over the image's /config and /cache (its env).
+                        {
+                          name = "JELLYFIN_DATA_DIR";
+                          value = dataDir;
+                        }
+                        {
+                          name = "JELLYFIN_CONFIG_DIR";
+                          value = "${dataDir}/config";
+                        }
+                        {
+                          name = "JELLYFIN_LOG_DIR";
+                          value = "${dataDir}/log";
+                        }
+                        {
+                          name = "JELLYFIN_CACHE_DIR";
+                          value = cacheDir;
+                        }
                       ];
                       securityContext = {
                         allowPrivilegeEscalation = false;
@@ -312,6 +442,16 @@ in
                           containerPort = port;
                         }
                       ];
+                      # A major-version start migrates the database first (uplink's 10.11 → 12:
+                      # ~10 minutes plus an optimise); up to 30 minutes before liveness counts.
+                      startupProbe = {
+                        httpGet = {
+                          path = "/health";
+                          port = "http";
+                        };
+                        periodSeconds = 15;
+                        failureThreshold = 120;
+                      };
                       readinessProbe = {
                         httpGet = {
                           path = "/health";
@@ -324,7 +464,6 @@ in
                           path = "/health";
                           port = "http";
                         };
-                        initialDelaySeconds = 60;
                         periodSeconds = 30;
                         failureThreshold = 6;
                       };
@@ -339,11 +478,11 @@ in
                       volumeMounts = [
                         {
                           name = "config";
-                          mountPath = "/config";
+                          mountPath = dataDir;
                         }
                         {
                           name = "cache";
-                          mountPath = "/cache";
+                          mountPath = cacheDir;
                         }
                         # The NAS at uplink's path, so library paths in a migrated
                         # database stay valid.
@@ -358,7 +497,7 @@ in
                   volumes = [
                     {
                       name = "config";
-                      persistentVolumeClaim.claimName = "${name}-config";
+                      persistentVolumeClaim.claimName = "${name}-data";
                     }
                     {
                       name = "cache";
@@ -440,7 +579,16 @@ in
                 endpointSelector.matchLabels = pod;
                 ingress = [
                   {
-                    fromEndpoints = [ { matchLabels."k8s:io.kubernetes.pod.namespace" = "gateways"; } ];
+                    fromEndpoints = [
+                      { matchLabels."k8s:io.kubernetes.pod.namespace" = "gateways"; }
+                      # jellarr's Job, against the API.
+                      {
+                        matchLabels = {
+                          "k8s:io.kubernetes.pod.namespace" = namespace;
+                          "app.kubernetes.io/name" = "${name}-jellarr";
+                        };
+                      }
+                    ];
                     toPorts = [ { ports = [ (tcp port) ]; } ];
                   }
                 ];

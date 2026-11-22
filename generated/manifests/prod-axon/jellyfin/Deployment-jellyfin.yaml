@@ -4,7 +4,7 @@ metadata:
   name: jellyfin
   namespace: media
 spec:
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       app.kubernetes.io/name: jellyfin
@@ -20,13 +20,20 @@ spec:
         - env:
             - name: JELLYFIN_PublishedServerUrl
               value: https://jellyfin-next.json64.dev
-          image: jellyfin/jellyfin@sha256:aefb67e6a7ff1debdd154a78a7bbb780fd0c873d8639210a7f6a2016ad2b35db
+            - name: JELLYFIN_DATA_DIR
+              value: /var/lib/jellyfin
+            - name: JELLYFIN_CONFIG_DIR
+              value: /var/lib/jellyfin/config
+            - name: JELLYFIN_LOG_DIR
+              value: /var/lib/jellyfin/log
+            - name: JELLYFIN_CACHE_DIR
+              value: /var/cache/jellyfin
+          image: jellyfin/jellyfin@sha256:fea863d0cd9ec445985d9c75fc6ed64e38a1d2766cf0c250a33d553f4fc1b771
           livenessProbe:
             failureThreshold: 6
             httpGet:
               path: /health
               port: http
-            initialDelaySeconds: 60
             periodSeconds: 30
           name: jellyfin
           ports:
@@ -49,10 +56,16 @@ spec:
             capabilities:
               drop:
                 - ALL
+          startupProbe:
+            failureThreshold: 120
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 15
           volumeMounts:
-            - mountPath: /config
+            - mountPath: /var/lib/jellyfin
               name: config
-            - mountPath: /cache
+            - mountPath: /var/cache/jellyfin
               name: cache
             - mountPath: /mnt/data
               name: media
@@ -71,7 +84,7 @@ spec:
                 - ALL
             readOnlyRootFilesystem: true
           volumeMounts:
-            - mountPath: /config
+            - mountPath: /var/lib/jellyfin
               name: config
             - mountPath: /seed
               name: seed
@@ -93,7 +106,7 @@ spec:
       volumes:
         - name: config
           persistentVolumeClaim:
-            claimName: jellyfin-config
+            claimName: jellyfin-data
         - name: cache
           persistentVolumeClaim:
             claimName: jellyfin-cache

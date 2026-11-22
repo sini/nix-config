@@ -3,12 +3,12 @@ kind: PersistentVolumeClaim
 metadata:
   labels:
     recurring-job-group.longhorn.io/media-config: enabled
-  name: jellyfin-config
+  name: jellyfin-data
   namespace: media
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 150Gi
+      storage: 40Gi
   storageClassName: longhorn

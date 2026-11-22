@@ -12,6 +12,9 @@ spec:
     - fromEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: gateways
+        - matchLabels:
+            app.kubernetes.io/name: jellyfin-jellarr
+            k8s:io.kubernetes.pod.namespace: media
       toPorts:
         - ports:
             - port: "8096"

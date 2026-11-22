@@ -1,0 +1,15 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: deny-media-ingress-jellyfin-jellarr
+  namespace: media
+spec:
+  description: Default-deny all ingress to jellyfin-jellarr (no inbound callers).
+  enableDefaultDeny:
+    ingress: true
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: jellyfin-jellarr
+  ingress:
+    - fromEntities:
+        - host

@@ -35,7 +35,7 @@ spec:
                     - ALL
                 readOnlyRootFilesystem: true
               volumeMounts:
-                - mountPath: /config
+                - mountPath: /var/lib/jellyfin
                   name: config
                 - mountPath: /seed
                   name: seed
@@ -51,7 +51,7 @@ spec:
           volumes:
             - name: config
               persistentVolumeClaim:
-                claimName: jellyfin-config
+                claimName: jellyfin-data
             - configMap:
                 name: jellyfin-seed
               name: seed

@@ -263,6 +263,7 @@ let
         "unpackerr"
         "shoko-bootstrap"
         "jellyfin-db-backup"
+        "jellyfin-jellarr"
       ]
   );
 

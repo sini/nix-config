@@ -2,9 +2,9 @@ apiVersion: v1
 data:
   backup-databases.py: |
     import glob, os, sqlite3, sys
-    out = "/config/backup"
+    out = "/var/lib/jellyfin/db-backup"
     os.makedirs(out, exist_ok=True)
-    dbs = sorted(glob.glob("/config/data/*.db"))
+    dbs = sorted(glob.glob("/var/lib/jellyfin/data/*.db"))
     if not dbs:
         print("no databases yet (first start)")
     for db in dbs:
@@ -23,7 +23,7 @@ data:
         print(f"{db} -> {dst}")
   seed-api-key.py: |
     import os, sqlite3, sys, datetime
-    db = "/config/data/jellyfin.db"
+    db = "/var/lib/jellyfin/data/jellyfin.db"
     if not os.path.exists(db):
         print("no jellyfin.db yet (first start); the key is seeded at the next pod start")
         sys.exit(0)
