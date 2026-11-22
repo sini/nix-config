@@ -592,6 +592,21 @@ in
               key_file = eventsKey;
               grant_id = eventsGrant;
               dispatch_timeout_ms = timeouts.dispatch;
+              # Custody admission counts every row, expired tombstones and other grants'
+              # rows included, and a row holds its slot for content + metadata retention
+              # (7 + 7 days). At the default 1000 rows that filled on 2026-11-22: every new
+              # message was deferred silently, the leaf never acked, and Artemis's inbound
+              # wedged (xmsg-lxd2). Sized for ~20x the measured volume (1000 rows, 1.87 MB
+              # over 14 days), within the 1Gi data volume. All seven fields are required.
+              custody_limits = {
+                max_items = 20000;
+                max_bytes = 128 * 1024 * 1024;
+                max_item_bytes = 256 * 1024;
+                content_retention_secs = 604800;
+                max_metadata = 1000;
+                metadata_retention_secs = 604800;
+                max_gap_intervals = 1000;
+              };
             };
           }
           // (
