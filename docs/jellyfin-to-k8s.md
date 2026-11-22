@@ -298,9 +298,8 @@ Rollback before uplink's copy is wiped: unset `live` and re-include the aspect.
     encoder codecs and proxy range;
   - jellyfin.json64.dev now resolves to the cluster gateway, and its SSO start
     redirects to kanidm.
-- **Rollback:** uplink's copy stays in `/persist/var/lib/jellyfin` (the
-  pre-k8s-move snapshot was destroyed on 2026-11-22, owner). Re-include
-  `services.media.jellyfin` on uplink, then unset `live` and `serving`.
+- **Rollback:** uplink's copy is gone (cleanup, owner, 2026-11-22); restore from
+  the cluster volume's Longhorn backup instead.
 - **Closed (owner, 2026-11-22):** SSO sign-in confirmed on the cluster copy.
   Cleanup done: the stale staged volume pvc-1883f620 (150Gi; PV and Longhorn
   volume); uplink's `/persist/var/lib/jellyfin` (98 GB with the old
