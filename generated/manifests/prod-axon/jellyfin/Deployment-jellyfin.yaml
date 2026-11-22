@@ -4,7 +4,7 @@ metadata:
   name: jellyfin
   namespace: media
 spec:
-  replicas: 0
+  replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: jellyfin
@@ -19,7 +19,7 @@ spec:
       containers:
         - env:
             - name: JELLYFIN_PublishedServerUrl
-              value: https://jellyfin-next.json64.dev
+              value: https://jellyfin.json64.dev
             - name: JELLYFIN_DATA_DIR
               value: /var/lib/jellyfin
             - name: JELLYFIN_CONFIG_DIR

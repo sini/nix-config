@@ -25,8 +25,7 @@ data:
             10.11.0.1 hs.json64.dev
             10.11.0.1 idm.json64.dev
             10.11.0.1 immich.json64.dev
-            10.11.0.1 jellyfin-next.json64.dev
-            10.10.10.1 jellyfin.json64.dev
+            10.11.0.1 jellyfin.json64.dev
             10.11.0.1 komga.json64.dev
             10.11.0.1 lidarr.json64.dev
             10.11.0.1 longhorn.zeroday.run

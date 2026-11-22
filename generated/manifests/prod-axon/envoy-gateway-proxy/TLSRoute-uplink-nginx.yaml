@@ -5,7 +5,6 @@ metadata:
   namespace: gateways
 spec:
   hostnames:
-    - jellyfin.json64.dev
     - open-webui.json64.dev
   parentRefs:
     - group: gateway.networking.k8s.io

@@ -87,6 +87,11 @@ in
     settings.kubernetes.services.dev.attic.live = true;
     # The registry serves from the cluster (dev/registry.nix); uplink's is gone.
     settings.kubernetes.services.dev.registry.live = true;
+    # Jellyfin from the cluster, with uplink's data (docs/jellyfin-to-k8s.md §4, 2026-11-21).
+    settings.kubernetes.services.media.jellyfin = {
+      serving = true;
+      live = true;
+    };
     # The Syncthing hub runs here (network/syncthing-hub.nix); uplink's is retired.
     settings.kubernetes.services.network.syncthing-hub.live = true;
     # uplink's static sites from Garage buckets (web/static-sites.nix), and its

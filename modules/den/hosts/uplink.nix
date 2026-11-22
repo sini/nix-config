@@ -81,7 +81,6 @@
       github-state-passphrase
       services.networking.nginx
       services.networking.gateway-upstream
-      services.media.jellyfin
       services.ai.ollama
       services.ai.open-webui
       core.network.tailscale

@@ -1,0 +1,57 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+  name: jellyfin-jellarr
+  namespace: media
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: jellyfin-jellarr
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - args:
+            - --configFile
+            - /config/config.yml
+          env:
+            - name: JELLARR_API_KEY_FILE
+              value: /run/secrets/jellarr/api-key
+            - name: JELLARR_WAIT_TIMEOUT
+              value: "1800"
+          image: ghcr.io/sini/jellarr@sha256:437245cf7bcfb8f5df32244b632b31de808befbe82c7ff55b0c3f4626577ead1
+          name: jellarr
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - mountPath: /config
+              name: config
+              readOnly: true
+            - mountPath: /run/secrets/jellarr
+              name: secrets
+              readOnly: true
+      enableServiceLinks: false
+      restartPolicy: OnFailure
+      securityContext:
+        fsGroup: 65534
+        runAsGroup: 65534
+        runAsNonRoot: true
+        runAsUser: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      volumes:
+        - configMap:
+            name: jellyfin-jellarr
+          name: config
+        - name: secrets
+          secret:
+            defaultMode: 288
+            secretName: jellyfin-secrets

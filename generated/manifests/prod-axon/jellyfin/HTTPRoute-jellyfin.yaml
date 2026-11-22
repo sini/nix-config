@@ -5,7 +5,7 @@ metadata:
   namespace: media
 spec:
   hostnames:
-    - jellyfin-next.json64.dev
+    - jellyfin.json64.dev
   parentRefs:
     - name: default-gateway
       namespace: gateways
