@@ -88,18 +88,21 @@ let
         ${legacyEnv}
         ${liveSocket}
         uid=$(id -u)
-        # Wait for the daemon to accept on its agent socket; a stale socket file from
-        # the previous run exists before the new daemon has bound it.
+        # The daemon's namespace is the one whose agent socket accepts. Other xmsg-<uid>-*
+        # directories can share the parent (on darwin /tmp, every test run's state root
+        # leaves one), and a stale socket file from the previous run exists before the new
+        # daemon has bound it.
         for _ in $(seq 1 60); do
-          set -- "$parent"/xmsg-"$uid"-*
-          [ "$#" -eq 1 ] && [ -d "$1" ] && live "$1/agent.sock" && break
+          n=0; ns=
+          for d in "$parent"/xmsg-"$uid"-*; do
+            if [ -d "$d" ] && live "$d/agent.sock"; then n=$((n + 1)); ns=$d; fi
+          done
+          [ "$n" -ge 1 ] && break
           sleep 1
         done
-        set -- "$parent"/xmsg-"$uid"-*
-        if [ "$#" -ne 1 ] || [ ! -d "$1" ]; then
-          echo "xmsg-legacy: expected exactly one $parent/xmsg-$uid-* namespace, found: $*" >&2; exit 1
+        if [ "$n" -ne 1 ]; then
+          echo "xmsg-legacy: expected exactly one live $parent/xmsg-$uid-* namespace, found $n" >&2; exit 1
         fi
-        ns=$1
         if [ -L "$legacy" ] && [ "$(readlink "$legacy")" = "$ns" ]; then exit 0; fi
         # darwin has no pre-start hook, so the old daemon's directory is cleared here.
         ${clearLegacy}
