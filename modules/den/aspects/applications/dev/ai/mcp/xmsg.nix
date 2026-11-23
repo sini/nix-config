@@ -61,9 +61,9 @@ let
           for s in http agent register; do
             if live "$legacy/$s.sock"; then echo "xmsg-legacy: $legacy/$s.sock is live; refusing to start" >&2; exit 1; fi
           done
-          ${pkgs.findutils}/bin/find "$legacy" -mindepth 1 -maxdepth 1 ! -type s -print -quit | grep -q . && {
-            echo "xmsg-legacy: $legacy holds more than sockets; leaving it, refusing to start" >&2; exit 1; }
-          rm -rf -- "$legacy"   # a real directory of dead sockets
+          ${pkgs.findutils}/bin/find "$legacy" -mindepth 1 -maxdepth 1 ! -type s ! -type l -print -quit | grep -q . && {
+            echo "xmsg-legacy: $legacy holds more than sockets and links; leaving it, refusing to start" >&2; exit 1; }
+          rm -rf -- "$legacy"   # dead sockets or socket links; rm never follows a link
         fi
       '';
       # Its own PATH: a launchd agent's is minimal, and a user unit's is the manager's.
@@ -103,11 +103,23 @@ let
         if [ "$n" -ne 1 ]; then
           echo "xmsg-legacy: expected exactly one live $parent/xmsg-$uid-* namespace, found $n" >&2; exit 1
         fi
-        if [ -L "$legacy" ] && [ "$(readlink "$legacy")" = "$ns" ]; then exit 0; fi
+        # A real 0700 directory of socket links: clients before PR-A refuse a socket
+        # directory that is itself a symlink, but follow a socket path that is one.
+        linked() {
+          [ -d "$legacy" ] && [ ! -L "$legacy" ] || return 1
+          for s in http agent register; do
+            [ "$(readlink "$legacy/$s.sock")" = "$ns/$s.sock" ] || return 1
+          done
+        }
+        if linked; then exit 0; fi
+        # A directory-level link to this namespace (the shim's first form) is replaced
+        # though its sockets are live; it is unlinked, never followed.
+        if [ -L "$legacy" ] && [ "$(readlink "$legacy")" = "$ns" ]; then rm -f -- "$legacy"; fi
         # darwin has no pre-start hook, so the old daemon's directory is cleared here.
         ${clearLegacy}
-        ln -sfn -- "$ns" "$legacy"
-        echo "xmsg-legacy: $legacy -> $ns"
+        mkdir -m 0700 -- "$legacy"
+        for s in http agent register; do ln -s -- "$ns/$s.sock" "$legacy/$s.sock"; done
+        echo "xmsg-legacy: $legacy/{http,agent,register}.sock -> $ns"
       '';
     in
     {
