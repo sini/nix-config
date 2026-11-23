@@ -206,7 +206,7 @@
     impermanence.url = "github:nix-community/impermanence";
     import-tree.url = "github:vic/import-tree";
     jellarr = {
-      url = "github:sini/jellarr/v0.4.0";
+      url = "github:sini/jellarr/v0.5.0";
       inputs = {
         flake-parts.follows = "flake-parts";
         nixpkgs.follows = "nixpkgs-unstable";
