@@ -658,9 +658,10 @@ in
         # old layout (genie-agent's guard, tier1 and dispatchers; MCP processes started
         # before the switch) look in <rt>/xmsg. The symlink <rt>/xmsg -> the namespace
         # serves both.
-        systemd.user.services.xmsg.Service.ExecStartPre = lib.mkIf pkgs.stdenv.hostPlatform.isLinux [
-          legacyPre
-        ];
+        # Guarded at the unit, not the leaf: a false leaf still defines the xmsg unit on darwin.
+        systemd.user.services.xmsg = lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
+          Service.ExecStartPre = [ legacyPre ];
+        };
         systemd.user.services.xmsg-legacy-link = lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
           Unit = {
             Description = "xmsg legacy socket path <rt>/xmsg -> its managed namespace (transition shim, xmsg-mqsh)";
