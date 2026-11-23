@@ -6,6 +6,25 @@ let
   # One proxy per user, all on loopback: offset by uid so users sharing a host never collide
   # (uid 1000 keeps 8787). Every consumer below reads this.
   portFor = user: 8787 + (user.system.uid or 1000) - 1000;
+
+  # Every agent's API calls go through the proxy, so a proxy that is down or hung fails
+  # them all. The check asks /livez twice, 5 s apart, and restarts the proxy only if both
+  # go unanswered and it has been up for 2 minutes (a slow start is not a hang).
+  # `restart` is the platform's restart command; `upSeconds` prints the proxy's uptime.
+  livenessCheck =
+    pkgs: user:
+    { restart, upSeconds }:
+    pkgs.writeShellScript "headroom-liveness" ''
+      url=http://127.0.0.1:${toString (portFor user)}/livez
+      alive() { ${pkgs.curl}/bin/curl -fsS -o /dev/null --max-time 10 "$url"; }
+      up=$(${upSeconds}) || up=0
+      [ "''${up:-0}" -ge 120 ] || exit 0
+      alive && exit 0
+      sleep 5
+      alive && exit 0
+      echo "headroom: $url unanswered twice after ''${up}s up; restarting the proxy" >&2
+      ${restart}
+    '';
 in
 {
   flake-file.inputs.headroom = {
@@ -81,6 +100,8 @@ in
         systemd.user.services.headroom = {
           Unit = {
             Description = "Headroom token-compression proxy for AI coding agents";
+            # Never give up restarting: every agent on this host depends on it.
+            StartLimitIntervalSec = 0;
             Documentation = [ "https://github.com/headroomlabs-ai/headroom" ];
             After = [ "network-online.target" ];
             Wants = [ "network-online.target" ];
@@ -144,12 +165,44 @@ in
               "HEADROOM_LOG_MESSAGES=1"
             ];
             ExecStart = "${lib.getExe pkgs.local.headroom-ai} proxy --host 127.0.0.1 --port ${toString (portFor user)} --no-telemetry";
-            Restart = "on-failure";
-            RestartSec = 5;
+            # `always`, not `on-failure`: a plain kill (SIGTERM) shuts the server down
+            # gracefully with exit 0, which on-failure treats as done.
+            Restart = "always";
+            RestartSec = 2;
             TimeoutStartSec = "infinity";
           };
 
           Install.WantedBy = [ "default.target" ];
+        };
+
+        # A hung proxy is alive to systemd; this restarts one that stops answering.
+        systemd.user.services.headroom-liveness = {
+          Unit.Description = "Restart the headroom proxy if it stops answering";
+          Service = {
+            Type = "oneshot";
+            ExecStart = livenessCheck pkgs user {
+              restart = "${pkgs.systemd}/bin/systemctl --user restart headroom.service";
+              upSeconds = lib.escapeShellArgs [
+                "${pkgs.bash}/bin/bash"
+                "-c"
+                ''
+                  [ "$(${pkgs.systemd}/bin/systemctl --user is-active headroom.service)" = active ] || { echo 0; exit; }
+                  t=$(${pkgs.systemd}/bin/systemctl --user show headroom.service -p ActiveEnterTimestampMonotonic --value)
+                  read -r now _ < /proc/uptime
+                  echo $(( ''${now%.*} - t / 1000000 ))
+                ''
+              ];
+            };
+          };
+        };
+        systemd.user.timers.headroom-liveness = {
+          Unit.Description = "Check the headroom proxy every 30 s";
+          Timer = {
+            OnActiveSec = "2min";
+            OnUnitActiveSec = "30s";
+            AccuracySec = "5s";
+          };
+          Install.WantedBy = [ "timers.target" ];
         };
       };
 
@@ -194,13 +247,35 @@ in
               HEADROOM_LOSSLESS = "1";
               HEADROOM_LOG_MESSAGES = "1";
             };
-            KeepAlive = {
-              Crashed = true;
-              SuccessfulExit = false;
-            };
+            # Restarted however it ends: a plain kill shuts the server down with exit 0.
+            KeepAlive = true;
             ProcessType = "Background";
             RunAtLoad = true;
             ThrottleInterval = 5;
+          };
+        };
+
+        # A hung proxy is alive to launchd; this restarts one that stops answering.
+        launchd.agents.headroom-liveness = {
+          enable = true;
+          config = {
+            ProgramArguments = [
+              "${livenessCheck pkgs user {
+                restart = "/bin/launchctl kickstart -k gui/$(/usr/bin/id -u)/org.nix-community.home.headroom";
+                upSeconds = lib.escapeShellArgs [
+                  "/bin/sh"
+                  "-c"
+                  ''
+                    pid=$(/bin/launchctl print gui/$(/usr/bin/id -u)/org.nix-community.home.headroom 2>/dev/null | /usr/bin/awk '$1 == "pid" { print $3 }')
+                    [ -n "$pid" ] || { echo 0; exit; }
+                    /bin/ps -o etimes= -p "$pid" | /usr/bin/tr -d ' '
+                  ''
+                ];
+              }}"
+            ];
+            StartInterval = 30;
+            RunAtLoad = false;
+            ProcessType = "Background";
           };
         };
       };
