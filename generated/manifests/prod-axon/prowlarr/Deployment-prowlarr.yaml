@@ -104,7 +104,7 @@ spec:
               value: "1027"
             - name: TZ
               value: America/Los_Angeles
-          image: linuxserver/prowlarr@sha256:b01e7c0b5d6a1f90fd0aa0e8e68112599b17a3e216e3022047cb6dde4a66a3b7
+          image: linuxserver/prowlarr@sha256:93db99069c77a5a294f65fb4ec3978af15e9f8e2b5bd868261dc22974f4def1e
           livenessProbe:
             failureThreshold: 3
             httpGet:

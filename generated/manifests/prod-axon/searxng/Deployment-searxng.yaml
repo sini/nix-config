@@ -47,7 +47,7 @@ spec:
                 secretKeyRef:
                   key: secret-key
                   name: searxng
-          image: docker.io/searxng/searxng@sha256:0b9f3ddd85efc8df189e6543d65702abfa8f3ed1c32229a53f7707cd12b554ef
+          image: docker.io/searxng/searxng@sha256:fc1d81d7e9d04d3c8b3e23c7162feddf5c3d6aecd32e67a56eaabcb8d8747f79
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3

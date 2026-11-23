@@ -118,7 +118,7 @@ spec:
                   name: media-pg-radarr-password
             - name: TZ
               value: America/Los_Angeles
-          image: linuxserver/radarr@sha256:d1c5e964bcd845cd4660944ce71c8e646f1e5216eec7b478ce6015c19c56e5ed
+          image: linuxserver/radarr@sha256:4e723b451fb1f718bf28c76f2d0b9d0bc3e4d09ee4faaec07ef873cfbf8194ec
           livenessProbe:
             failureThreshold: 3
             httpGet:
