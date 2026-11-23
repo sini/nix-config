@@ -1,8 +1,8 @@
 {
   imageName = "ghcr.io/sini/jellarr";
-  imageTag = "v0.3.5";
-  imageDigest = "sha256:437245cf7bcfb8f5df32244b632b31de808befbe82c7ff55b0c3f4626577ead1";
-  imageHash = "sha256-fBJxYn6UUHzTPadIkRwdTXoyKlVUgUd+t2ijZLrxJQQ=";
+  imageTag = "v0.4.0";
+  imageDigest = "sha256:a5ee5c115d7a4802646a83bad9d73061467e20a6bb78b5f722359a315528b723";
+  imageHash = "sha256-XCy/pTQRdVetXg/GEt8qpJXzns4fS2B/YvuPdrJyS6A=";
   arch = "amd64";
   os = "linux";
   pinned = false;

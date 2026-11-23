@@ -2872,16 +2872,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1795302294,
-        "narHash": "sha256-0RUHGBsWaAjwoHb2yecKINAdYUwDE+1EpqkmJGceE2w=",
+        "lastModified": 1795465662,
+        "narHash": "sha256-OZkxA6dL1FfWmsNjR2L8kbgKkvEbUanwkn8Eo9lSXSQ=",
         "owner": "sini",
         "repo": "jellarr",
-        "rev": "f12e2df07927c0ce62a2dedb1c027cbf9cd95264",
+        "rev": "7f23f900f15733d723dbab92a784bf130f2fec1f",
         "type": "github"
       },
       "original": {
         "owner": "sini",
-        "ref": "v0.3.4",
+        "ref": "v0.4.0",
         "repo": "jellarr",
         "type": "github"
       }
