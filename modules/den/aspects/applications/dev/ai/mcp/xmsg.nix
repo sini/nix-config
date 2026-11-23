@@ -117,7 +117,8 @@ let
         linked() {
           [ -d "$legacy" ] && [ ! -L "$legacy" ] || return 1
           for s in http agent register; do
-            [ "$legacy/$s.sock" -ef "$ns/$s.sock" ] || return 1
+            # -ef follows a symlink, so a symlinked socket must fail here explicitly.
+            [ ! -L "$legacy/$s.sock" ] && [ "$legacy/$s.sock" -ef "$ns/$s.sock" ] || return 1
           done
         }
         if linked; then exit 0; fi
