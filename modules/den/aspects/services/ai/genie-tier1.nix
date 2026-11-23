@@ -14,12 +14,6 @@
 { inputs, lib, ... }:
 let
   stateDir = "/var/lib/genie-agent";
-  # XMSG_*_SOCK for a client given xmsg's legacy socket directory.
-  xmsgSocks = dir: {
-    XMSG_HTTP_SOCK = "${dir}/http.sock";
-    XMSG_AGENT_SOCK = "${dir}/agent.sock";
-    XMSG_REGISTER_SOCK = "${dir}/register.sock";
-  };
 in
 {
   den.aspects.services.ai.genie-tier1 = {
@@ -52,10 +46,6 @@ in
             trusted = lib.mkDefault "genie-support@${node}";
           };
         };
-
-        # genie-agent's sandbox binds only the xmsg socket directory; the sockets are pinned
-        # there so it never resolves through `xmsg doctor`, which can't see the namespace.
-        systemd.services.genie-agent.environment = xmsgSocks config.services.genie-agent.xmsgSocket;
 
         # guard.enable also declares a local genie-guard unit; screening stays on, the
         # unit does not.
