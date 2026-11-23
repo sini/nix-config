@@ -264,6 +264,10 @@ in
                         "127.0.0.1:7787"
                         "--leaf-register-sock"
                         "${runtimeDir}/xmsg/register.sock"
+                        # Both leaf endpoints pinned, so xmsg derives no managed namespace (PR-A)
+                        # under /run/user, a root-owned emptyDir it would refuse as unsafe.
+                        "--agent-sock"
+                        "${runtimeDir}/xmsg/agent.sock"
                         "--db-path"
                         "${stateDir}/xmsg.db"
                         "--peers-file"

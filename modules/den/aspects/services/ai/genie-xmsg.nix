@@ -228,6 +228,12 @@ in
                   HOME = homeOf tier;
                   XDG_RUNTIME_DIR = runtimeDir tier;
                   XMSG_DB_PATH = "${stateDir tier}/xmsg.db";
+                  # Sockets pinned where the tier's dispatchers look ($XDG_RUNTIME_DIR/xmsg,
+                  # genie-agent), not xmsg's managed namespace (PR-A). A TRANSITION pin, removed
+                  # with xmsg-mqsh once genie-agent resolves the namespace.
+                  XMSG_HTTP_SOCK = "${runtimeDir tier}/xmsg/http.sock";
+                  XMSG_AGENT_SOCK = "${runtimeDir tier}/xmsg/agent.sock";
+                  XMSG_REGISTER_SOCK = "${runtimeDir tier}/xmsg/register.sock";
                 }
                 // lib.optionalAttrs (cfg.${tier}.sessionsDirs != [ ]) {
                   XMSG_SESSIONS_DIR = lib.concatStringsSep ":" cfg.${tier}.sessionsDirs;

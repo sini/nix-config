@@ -475,6 +475,80 @@ in
             ) (lib.filter (c: c == "${me}.collector") (lib.optionals (node != null) (fedOf host).observedBy))
           );
 
+        # The legacy socket directory: $XDG_RUNTIME_DIR/xmsg on Linux, $TMPDIR/xmsg on darwin,
+        # and the namespace parent: $XDG_RUNTIME_DIR, or /tmp on darwin (xmsg install_paths).
+        legacyEnv =
+          if pkgs.stdenv.hostPlatform.isDarwin then
+            ''
+              t=$(/usr/bin/getconf DARWIN_USER_TEMP_DIR); legacy="''${t%/}/xmsg"; parent=/private/tmp; export parent
+            ''
+          else
+            ''
+              legacy="''${XDG_RUNTIME_DIR:?}/xmsg"; parent="$XDG_RUNTIME_DIR"; export parent
+            '';
+        # A socket counts as live only if connect() succeeds (never mtime).
+        liveSocket = ''
+          live() { ${lib.getExe pkgs.socat} -u OPEN:/dev/null "UNIX-CONNECT:$1" 2>/dev/null; }
+        '';
+        # Clears <rt>/xmsg unless a socket under it is live: a link is unlinked (never
+        # followed), a real directory only if it holds nothing but dead sockets.
+        clearLegacy = ''
+          ${liveSocket}
+          if [ -L "$legacy" ]; then
+            for s in http agent register; do
+              if live "$legacy/$s.sock"; then echo "xmsg-legacy: $legacy/$s.sock is live; refusing to start" >&2; exit 1; fi
+            done
+            rm -f -- "$legacy"   # the link only, never through it
+          elif [ -d "$legacy" ]; then
+            for s in http agent register; do
+              if live "$legacy/$s.sock"; then echo "xmsg-legacy: $legacy/$s.sock is live; refusing to start" >&2; exit 1; fi
+            done
+            ${pkgs.findutils}/bin/find "$legacy" -mindepth 1 -maxdepth 1 ! -type s -print -quit | grep -q . && {
+              echo "xmsg-legacy: $legacy holds more than sockets; leaving it, refusing to start" >&2; exit 1; }
+            rm -rf -- "$legacy"   # a real directory of dead sockets
+          fi
+        '';
+        # Its own PATH: a launchd agent's is minimal, and a user unit's is the manager's.
+        shimPath = ''
+          export PATH=${
+            lib.makeBinPath [
+              pkgs.coreutils
+              pkgs.gnugrep
+              pkgs.findutils
+            ]
+          }:/usr/bin:/bin
+        '';
+        legacyPre = pkgs.writeShellScript "xmsg-legacy-pre" ''
+          set -eu
+          ${shimPath}
+          ${legacyEnv}
+          ${clearLegacy}
+        '';
+        legacyLink = pkgs.writeShellScript "xmsg-legacy-link" ''
+          set -eu
+          ${shimPath}
+          ${legacyEnv}
+          ${liveSocket}
+          uid=$(id -u)
+          # Wait for the daemon to accept on its agent socket; a stale socket file from
+          # the previous run exists before the new daemon has bound it.
+          for _ in $(seq 1 60); do
+            set -- "$parent"/xmsg-"$uid"-*
+            [ "$#" -eq 1 ] && [ -d "$1" ] && live "$1/agent.sock" && break
+            sleep 1
+          done
+          set -- "$parent"/xmsg-"$uid"-*
+          if [ "$#" -ne 1 ] || [ ! -d "$1" ]; then
+            echo "xmsg-legacy: expected exactly one $parent/xmsg-$uid-* namespace, found: $*" >&2; exit 1
+          fi
+          ns=$1
+          if [ -L "$legacy" ] && [ "$(readlink "$legacy")" = "$ns" ]; then exit 0; fi
+          # darwin has no pre-start hook, so the old daemon's directory is cleared here.
+          ${clearLegacy}
+          ln -sfn -- "$ns" "$legacy"
+          echo "xmsg-legacy: $legacy -> $ns"
+        '';
+
         collector = (fedOf host).collector;
         collectorOn = collector.enable && me == collector.user;
         collectorDir = "${config.xdg.configHome}/xmsg/observe-collector";
@@ -576,6 +650,39 @@ in
           "${lib.removePrefix "${config.home.homeDirectory}/" collectorDir}/client.crt".source = caCrt (
             host.secretPath + "/${collectorLeafName me}.crt"
           );
+        };
+
+        # TRANSITION SHIM (xmsg PR-A, 912ca97a; removed with xmsg-mqsh). xmsg now serves its
+        # sockets from a managed namespace <rt>/xmsg-<uid>-<hex>/ instead of <rt>/xmsg/.
+        # New clients compute that namespace themselves, but consumers built against the
+        # old layout (genie-agent's guard, tier1 and dispatchers; MCP processes started
+        # before the switch) look in <rt>/xmsg. The symlink <rt>/xmsg -> the namespace
+        # serves both.
+        systemd.user.services.xmsg.Service.ExecStartPre = lib.mkIf pkgs.stdenv.hostPlatform.isLinux [
+          legacyPre
+        ];
+        systemd.user.services.xmsg-legacy-link = lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
+          Unit = {
+            Description = "xmsg legacy socket path <rt>/xmsg -> its managed namespace (transition shim, xmsg-mqsh)";
+            After = [ "xmsg.service" ];
+            BindsTo = [ "xmsg.service" ];
+          };
+          Service = {
+            Type = "oneshot";
+            RemainAfterExit = true;
+            ExecStart = legacyLink;
+          };
+          Install.WantedBy = [ "xmsg.service" ];
+        };
+        # darwin: the same link from $TMPDIR/xmsg to /tmp/xmsg-<uid>-<hex>, refreshed each
+        # minute (launchd has no ExecStartPost; /tmp is cleared at boot).
+        launchd.agents.xmsg-legacy-link = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
+          enable = true;
+          config = {
+            ProgramArguments = [ "${legacyLink}" ];
+            RunAtLoad = true;
+            StartInterval = 60;
+          };
         };
 
         systemd.user.services.agent-quota = lib.mkIf agentQuotaEnabled {

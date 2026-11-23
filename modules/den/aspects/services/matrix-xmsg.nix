@@ -269,6 +269,15 @@ in
         networking.nftables.enable = lib.mkIf (leafRules != "") true;
         networking.firewall.extraInputRules = lib.mkIf (leafRules != "") leafRules;
 
+        # The bot looks for its daemon's sockets in /run/matrix-xmsg-xmsg/xmsg (its module's
+        # xmsgSocket); pin them there rather than xmsg's managed namespace (PR-A). A
+        # TRANSITION pin, removed with xmsg-mqsh once matrix-xmsg resolves the namespace.
+        systemd.services.matrix-xmsg-xmsg.environment = lib.mkIf (cfg.rooms != [ ]) {
+          XMSG_HTTP_SOCK = "/run/matrix-xmsg-xmsg/xmsg/http.sock";
+          XMSG_AGENT_SOCK = "/run/matrix-xmsg-xmsg/xmsg/agent.sock";
+          XMSG_REGISTER_SOCK = "/run/matrix-xmsg-xmsg/xmsg/register.sock";
+        };
+
         services.matrix-xmsg = lib.mkIf (cfg.rooms != [ ]) {
           enable = true;
           package = inputs'.matrix-xmsg.packages.default;
