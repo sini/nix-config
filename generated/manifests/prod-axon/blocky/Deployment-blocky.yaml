@@ -41,7 +41,7 @@ spec:
         - env:
             - name: BLOCKY_CONFIG_FILE
               value: /config/config.yml
-          image: ghcr.io/0xerr0r/blocky@sha256:191c0f1e688aa37698297ef4059e11a2b080299a878f5b31d6d32ace9d0c54b2
+          image: ghcr.io/0xerr0r/blocky@sha256:d9b6344d7c8f3fe577a47bc97b523faa116f7ea8a8901bfaf800a4dbdce64c96
           livenessProbe:
             tcpSocket:
               port: 53

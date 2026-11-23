@@ -250,7 +250,7 @@ spec:
                   key: applicationsetcontroller.wq.cooldown.ns
                   name: argocd-cmd-params-cm
                   optional: true
-          image: quay.io/argoproj/argocd:v3.6.1
+          image: quay.io/argoproj/argocd:v3.6.2
           imagePullPolicy: IfNotPresent
           name: applicationset-controller
           ports:

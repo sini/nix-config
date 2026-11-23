@@ -118,7 +118,7 @@ spec:
               value: "1027"
             - name: TZ
               value: America/Los_Angeles
-          image: linuxserver/lidarr@sha256:a91ef0642c15c9bd7c4260fee98fa99972c61601e37c8a96411d6a9cf0e9ad40
+          image: linuxserver/lidarr@sha256:8fb40ada166dd1880cb1b166df5bcbb081107523f20ab60df05c313e2052a467
           livenessProbe:
             failureThreshold: 3
             httpGet:
