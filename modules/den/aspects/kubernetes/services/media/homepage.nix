@@ -463,6 +463,9 @@ in
                       - Jellyfin:
                           - abbr: JF
                             href: https://jellyfin.json64.dev/
+                      - Seerr:
+                          - abbr: SR
+                            href: https://seerr.json64.dev/
                       - Bazarr:
                           - abbr: BZ
                             href: https://bazarr.json64.dev/

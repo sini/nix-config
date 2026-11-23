@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: seerr
+    app.kubernetes.io/name: seerr
+    app.kubernetes.io/service: seerr
+  name: seerr
+  namespace: media
+spec:
+  ports:
+    - name: http
+      port: 5055
+      protocol: TCP
+      targetPort: 5055
+  selector:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: seerr
+    app.kubernetes.io/name: seerr
+  type: ClusterIP

@@ -43,6 +43,10 @@ spec:
         name: romm
         passwordSecret:
           name: media-pg-romm-password
+      - login: true
+        name: seerr
+        passwordSecret:
+          name: media-pg-seerr-password
   postgresql:
     synchronous:
       dataDurability: preferred

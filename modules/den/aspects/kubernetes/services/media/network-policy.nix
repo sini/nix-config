@@ -136,6 +136,18 @@ let
         from = "bazarr";
         to = "radarr";
       }
+    ]
+    # seerr -> sonarr/radarr (requests become series/movies; quality profiles and
+    # root folders are read back)
+    ++ [
+      {
+        from = "seerr";
+        to = "sonarr";
+      }
+      {
+        from = "seerr";
+        to = "radarr";
+      }
     ];
 
   # The qbittorrent INGRESS side is fully owned by qbittorrent.nix (it aggregates

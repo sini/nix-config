@@ -613,6 +613,10 @@ let
       displayName = "Bazarr";
       group = "media.access";
     };
+    seerr = {
+      displayName = "Seerr";
+      group = "media.access";
+    };
     sabnzbd = {
       displayName = "SABnzbd";
       group = "media.admins";

@@ -588,6 +588,13 @@ in
                           "app.kubernetes.io/name" = "${name}-jellarr";
                         };
                       }
+                      # seerr: library sync, availability and Jellyfin sign-in.
+                      {
+                        matchLabels = {
+                          "k8s:io.kubernetes.pod.namespace" = namespace;
+                          "app.kubernetes.io/name" = "seerr";
+                        };
+                      }
                     ];
                     toPorts = [ { ports = [ (tcp port) ]; } ];
                   }

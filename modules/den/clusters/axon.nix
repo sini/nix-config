@@ -297,6 +297,7 @@ in
       services.media.lidarr
       services.media.whisparr
       services.media.bazarr
+      services.media.seerr
       services.media.sabnzbd
       # TODO: allocate against LLM GPU resources (see hardware.amd-gpu-device-plugin) and enable
       #services.media.tdarr

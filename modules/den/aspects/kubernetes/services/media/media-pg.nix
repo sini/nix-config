@@ -26,6 +26,7 @@ let
     "prowlarr"
     "bazarr"
     "romm"
+    "seerr"
   ];
 
   # *arrs split their data into a main db and a logs db (Servarr's
@@ -61,6 +62,10 @@ let
     romm = {
       db = "romm";
       owner = "romm";
+    };
+    seerr = {
+      db = "seerr";
+      owner = "seerr";
     };
   };
 
