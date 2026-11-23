@@ -48,22 +48,30 @@ let
       liveSocket = ''
         live() { ${lib.getExe pkgs.socat} -u OPEN:/dev/null "UNIX-CONNECT:$1" 2>/dev/null; }
       '';
-      # Clears <rt>/xmsg unless a socket under it is live: a link is unlinked (never
-      # followed), a real directory only if it holds nothing but dead sockets.
+      # <rt>/xmsg stays one persistent 0700 directory: a sandbox that bind-mounts it
+      # (genie-agent's units) keeps the directory it mounted, so it is never removed and
+      # recreated. Clearing it drops dead entries; a live one, or anything that is not a
+      # socket or a link, refuses. A directory-level link (the shim's first form) is
+      # unlinked, never followed.
       clearLegacy = ''
         ${liveSocket}
         if [ -L "$legacy" ]; then
           for s in http agent register; do
             if live "$legacy/$s.sock"; then echo "xmsg-legacy: $legacy/$s.sock is live; refusing to start" >&2; exit 1; fi
           done
-          rm -f -- "$legacy"   # the link only, never through it
-        elif [ -d "$legacy" ]; then
-          for s in http agent register; do
-            if live "$legacy/$s.sock"; then echo "xmsg-legacy: $legacy/$s.sock is live; refusing to start" >&2; exit 1; fi
+          rm -f -- "$legacy"
+        fi
+        if [ -d "$legacy" ]; then
+          for e in "$legacy"/* "$legacy"/.[!.]*; do
+            [ -e "$e" ] || [ -L "$e" ] || continue
+            if [ ! -S "$e" ] && [ ! -L "$e" ]; then
+              echo "xmsg-legacy: $e is not a socket or link; leaving it, refusing to start" >&2; exit 1
+            fi
+            if live "$e"; then echo "xmsg-legacy: $e is live; refusing to start" >&2; exit 1; fi
+            rm -f -- "$e"
           done
-          ${pkgs.findutils}/bin/find "$legacy" -mindepth 1 -maxdepth 1 ! -type s ! -type l -print -quit | grep -q . && {
-            echo "xmsg-legacy: $legacy holds more than sockets and links; leaving it, refusing to start" >&2; exit 1; }
-          rm -rf -- "$legacy"   # dead sockets or socket links; rm never follows a link
+        else
+          mkdir -m 0700 -- "$legacy"
         fi
       '';
       # Its own PATH: a launchd agent's is minimal, and a user unit's is the manager's.
@@ -103,23 +111,23 @@ let
         if [ "$n" -ne 1 ]; then
           echo "xmsg-legacy: expected exactly one live $parent/xmsg-$uid-* namespace, found $n" >&2; exit 1
         fi
-        # A real 0700 directory of socket links: clients before PR-A refuse a socket
-        # directory that is itself a symlink, but follow a socket path that is one.
+        # Hard links to the namespace's sockets: clients before PR-A refuse a socket
+        # directory that is a symlink, and a symlinked socket would point outside a
+        # sandbox that binds only this directory. Each name is swapped in by rename.
         linked() {
           [ -d "$legacy" ] && [ ! -L "$legacy" ] || return 1
           for s in http agent register; do
-            [ "$(readlink "$legacy/$s.sock")" = "$ns/$s.sock" ] || return 1
+            [ "$legacy/$s.sock" -ef "$ns/$s.sock" ] || return 1
           done
         }
         if linked; then exit 0; fi
-        # A directory-level link to this namespace (the shim's first form) is replaced
-        # though its sockets are live; it is unlinked, never followed.
-        if [ -L "$legacy" ] && [ "$(readlink "$legacy")" = "$ns" ]; then rm -f -- "$legacy"; fi
-        # darwin has no pre-start hook, so the old daemon's directory is cleared here.
-        ${clearLegacy}
-        mkdir -m 0700 -- "$legacy"
-        for s in http agent register; do ln -s -- "$ns/$s.sock" "$legacy/$s.sock"; done
-        echo "xmsg-legacy: $legacy/{http,agent,register}.sock -> $ns"
+        if [ -L "$legacy" ]; then rm -f -- "$legacy"; fi
+        if [ ! -d "$legacy" ]; then mkdir -m 0700 -- "$legacy"; fi
+        for s in http agent register; do
+          ln -f -- "$ns/$s.sock" "$legacy/.$s.sock.new"
+          mv -f -- "$legacy/.$s.sock.new" "$legacy/$s.sock"
+        done
+        echo "xmsg-legacy: $legacy/{http,agent,register}.sock = $ns (hard links)"
       '';
     in
     {

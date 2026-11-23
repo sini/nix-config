@@ -26,6 +26,12 @@
 let
   secret = "genie-expert-token";
   tokenSource = rootPath + "/.secrets/env/prod/genie-experts/trusted/owner.age";
+  # XMSG_*_SOCK for a client given xmsg's legacy socket directory.
+  xmsgSocks = dir: {
+    XMSG_HTTP_SOCK = "${dir}/http.sock";
+    XMSG_AGENT_SOCK = "${dir}/agent.sock";
+    XMSG_REGISTER_SOCK = "${dir}/register.sock";
+  };
 in
 {
   den.aspects.services.ai.genie-experts = {
@@ -87,7 +93,13 @@ in
         systemd.services."genie-dispatcher@public" = lib.mkIf enabled {
           after = [ "genie-public-repos.service" ];
           wants = [ "genie-public-repos.service" ];
+          environment = xmsgSocks config.services.genie-agent.xmsgSocket;
         };
+        # The dispatchers' sandbox binds only the xmsg socket directory, where `xmsg doctor`
+        # can't see the daemon's namespace and refuses; pinned sockets are resolved first.
+        systemd.services."genie-dispatcher@trusted".environment = lib.mkIf enabled (
+          xmsgSocks config.services.genie-agent.xmsgSocket
+        );
       };
   };
 }
