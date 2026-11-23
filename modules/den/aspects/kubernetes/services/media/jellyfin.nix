@@ -13,23 +13,10 @@
 { config, lib, ... }:
 let
   # Jellyfin's SSO users who may stay: the people in media.access, the group the
-  # kanidm `jellyfin` client is scoped to (services/security/kanidm.nix), through
-  # nested groups. Kanidm's usernames are short names (preferShortUsername), and
-  # SSO-Auth names Jellyfin users by preferred_username, so these are their names.
-  mediaUsers =
-    let
-      groups = config.den.groups;
-      nested =
-        s:
-        let
-          n = lib.unique (s ++ lib.concatMap (g: groups.${g}.members or [ ]) s);
-        in
-        if lib.length n == lib.length s then s else nested n;
-      access = nested [ "media.access" ];
-    in
-    lib.attrNames (
-      lib.filterAttrs (_: u: lib.any (g: lib.elem g access) (u.groups or [ ])) config.den.users.registry
-    );
+  # kanidm `jellyfin` client is scoped to (services/security/kanidm.nix). Kanidm's
+  # usernames are short names (preferShortUsername), and SSO-Auth names Jellyfin
+  # users by preferred_username, so these are their names.
+  mediaUsers = import ./_members.nix { inherit config lib; } "media.access";
   name = "jellyfin";
   namespace = "media";
   port = 8096;
@@ -200,10 +187,12 @@ in
                 ];
               }
               // {
-                # SSO-created users who left media.access are disabled (reversibly;
-                # never deleted). Local accounts (Admin and the others) are out of scope.
+                # SSO-created users who left media.access are disabled, and deleted 30
+                # days later unless they're back by then. Local accounts (Admin and the
+                # others) are out of scope.
                 authoritative = {
                   users = "disable";
+                  deleteDisabledAfter = "30d";
                   usersScope.authenticationProviderId = "Jellyfin.Plugin.SSO_Auth.Api.SSOController";
                   keep.users = mediaUsers;
                 };
