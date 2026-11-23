@@ -276,6 +276,7 @@ let
         "shoko-bootstrap"
         "jellyfin-db-backup"
         "jellyfin-jellarr"
+        "seerr-bootstrap"
       ]
   );
 

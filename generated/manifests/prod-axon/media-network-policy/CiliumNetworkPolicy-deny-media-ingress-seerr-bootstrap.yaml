@@ -1,0 +1,15 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: deny-media-ingress-seerr-bootstrap
+  namespace: media
+spec:
+  description: Default-deny all ingress to seerr-bootstrap (no inbound callers).
+  enableDefaultDeny:
+    ingress: true
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: seerr-bootstrap
+  ingress:
+    - fromEntities:
+        - host

@@ -27,6 +27,11 @@ spec:
       automountServiceAccountToken: false
       containers:
         - env:
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: seerr
+                  name: media-arr-api-keys
             - name: DB_HOST
               value: media-pg-rw
             - name: DB_NAME

@@ -23,6 +23,7 @@ let
     "whisparr"
     "bazarr"
     "sabnzbd"
+    "seerr"
   ];
 
   secretName = "media-arr-api-keys";

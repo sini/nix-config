@@ -12,6 +12,9 @@ spec:
     - fromEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: gateways
+        - matchLabels:
+            app.kubernetes.io/name: seerr-bootstrap
+            k8s:io.kubernetes.pod.namespace: media
       toPorts:
         - ports:
             - port: "5055"
