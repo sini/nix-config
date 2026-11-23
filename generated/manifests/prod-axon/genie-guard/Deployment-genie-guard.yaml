@@ -27,7 +27,7 @@ spec:
             - --agent-sock
             - /run/user/xmsg/agent.sock
             - --db-path
-            - /var/lib/xmsg/xmsg.db
+            - /var/lib/xmsg/db/xmsg.db
             - --peers-file
             - /etc/xmsg/peers/peers.json
             - --fed-cert
@@ -91,6 +91,27 @@ spec:
               name: api-key
               readOnly: true
       enableServiceLinks: false
+      initContainers:
+        - command:
+            - mkdir
+            - -m
+            - "0700"
+            - -p
+            - /var/lib/xmsg/db
+          image: library/busybox@sha256:a46257e06c82ad85242d0d38077d0a52d9896389ca60a1a59d3463db586e5fa4
+          name: state-dir
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+          volumeMounts:
+            - mountPath: /var/lib/xmsg
+              name: state
       securityContext:
         fsGroup: 65532
         runAsGroup: 65532

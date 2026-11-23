@@ -250,6 +250,29 @@ in
                     fsGroup = uid;
                     seccompProfile.type = "RuntimeDefault";
                   };
+                  # xmsg (PR-A) refuses a state root it doesn't own; with --db-path the state
+                  # root is the DB's directory, and the `state` emptyDir is root:<fsGroup>. A
+                  # subdirectory made as 65532 is ours. The DB is per pod, so nothing moves.
+                  initContainers = [
+                    {
+                      name = "state-dir";
+                      image = ref images."library/busybox";
+                      command = [
+                        "mkdir"
+                        "-m"
+                        "0700"
+                        "-p"
+                        "${stateDir}/db"
+                      ];
+                      securityContext = hardened;
+                      volumeMounts = [
+                        {
+                          name = "state";
+                          mountPath = stateDir;
+                        }
+                      ];
+                    }
+                  ];
                   containers = [
                     {
                       name = "xmsg";
@@ -269,7 +292,7 @@ in
                         "--agent-sock"
                         "${runtimeDir}/xmsg/agent.sock"
                         "--db-path"
-                        "${stateDir}/xmsg.db"
+                        "${stateDir}/db/xmsg.db"
                         "--peers-file"
                         "${peersDir}/peers.json"
                         "--fed-cert"
