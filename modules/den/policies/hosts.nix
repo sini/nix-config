@@ -1,11 +1,10 @@
 # Host-level schema wiring.
 #
-# Wires env-users onto host scope so user resolution fires for every
-# host in the fleet. Access groups (merged env + host grants, gated by
-# system-access-groups) are propagated via scope context from fleet policy.
+# Wires the fleet-access assignment policy (policies/users.nix) onto every host:
+# it puts each host's admitted registry users on host.users before resolution.
 { den, ... }:
 {
   den.schema.host.includes = [
-    den.policies.env-users
+    den.policies.fleet-access
   ];
 }

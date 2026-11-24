@@ -4,7 +4,7 @@
 rec {
   # The users whose nodes federate with `name`'s across the two users (policies/xmsg.nix),
   # and the only cross-user reach a service node may have (mcp/xmsg.nix asserts it): each
-  # user's `xmsg.trusts` (den.users.registry), read both ways.
+  # user's `xmsg.trusts` (den.users), read both ways.
   partnersOf =
     users: name:
     lib.remove name (

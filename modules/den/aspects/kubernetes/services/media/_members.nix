@@ -1,6 +1,6 @@
 # The people in a kanidm group through nested groups, by their kanidm short names.
 # den.groups lists a group's member groups; people join groups through their own
-# `groups` in den.users.registry, which is what kanidm provisions
+# `facts.groups` in den.users, which is what kanidm provisions
 # (services/security/kanidm.nix).
 { config, lib }:
 group:
@@ -15,5 +15,5 @@ let
   within = nested [ group ];
 in
 lib.attrNames (
-  lib.filterAttrs (_: u: lib.any (g: lib.elem g within) (u.groups or [ ])) config.den.users.registry
+  lib.filterAttrs (_: u: lib.any (g: lib.elem g within) u.facts.groups) config.den.users
 )

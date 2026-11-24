@@ -6,7 +6,7 @@
       {
         imports = [ inputs.nixos-facter-modules.nixosModules.facter ];
         facter = {
-          reportPath = host.facts or null;
+          reportPath = host.facterReport or null;
           detected = {
             dhcp.enable = false;
             graphics.enable = false;

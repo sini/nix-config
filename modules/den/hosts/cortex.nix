@@ -5,9 +5,9 @@ in
 {
   den.hosts.x86_64-linux.cortex = {
     channel = "nixos-unstable";
-    environment = "dev";
+    facts.environment = "dev";
     system-owner = "sini";
-    system-access-groups = [ "workstation-access" ];
+    facts.system-access-groups = [ "workstation-access" ];
 
     networking.interfaces.enp8s0 = {
       ipv4 = [ "10.9.2.1/16" ];
@@ -240,24 +240,25 @@ in
       ];
     };
 
-    sini = {
-      includes = with den.aspects; [
-        # applications.wayland.waybar
-        # applications.wayland.swaync
-        # applications.wayland.hypridle
-        # applications.wayland.hyprland-split-monitors
-        applications.media.spotify-player
-        services.ai.genie-memory-loader
-        services.ai.openai-tunnel
-      ];
-    };
-
-    shuo = {
-      includes = with den.aspects; [
-        applications.browsers.firefox
-        applications.gaming.steam
-        applications.media.spicetify
-      ];
-    };
   };
+
+  # Per-user additions on this host. den resolves a user's aspect as "<user>@<host>"
+  # before <user>; den.aspects.<host>.<user> would land at host scope (host-to-users).
+  den.aspects."sini@cortex".includes = with den.aspects; [
+    sini
+    # applications.wayland.waybar
+    # applications.wayland.swaync
+    # applications.wayland.hypridle
+    # applications.wayland.hyprland-split-monitors
+    applications.media.spotify-player
+    services.ai.genie-memory-loader
+    services.ai.openai-tunnel
+  ];
+
+  den.aspects."shuo@cortex".includes = with den.aspects; [
+    shuo
+    applications.browsers.firefox
+    applications.gaming.steam
+    applications.media.spicetify
+  ];
 }

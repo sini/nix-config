@@ -19,7 +19,7 @@ let
 
   groups = config.den.groups;
   clusters = config.den.clusters or { };
-  registry = config.den.users.registry;
+  registry = config.den.users;
 
   # Groups by label for provisioning classification
   groupsWithLabel = label: filterAttrs (_: g: elem label (g.labels or [ ])) groups;
@@ -30,7 +30,7 @@ let
     let
       labelGroupNames = builtins.attrNames (groupsWithLabel label);
     in
-    filterAttrs (_: user: builtins.any (g: elem g labelGroupNames) (user.groups or [ ])) registry;
+    filterAttrs (_: user: builtins.any (g: elem g labelGroupNames) user.facts.groups) registry;
 
   # Users provisioned as kanidm persons (have oauth-grant or user-role groups)
   kanidmUsers =
@@ -48,7 +48,7 @@ let
       roleGroupNames = builtins.attrNames (groupsWithLabel "user-role");
       relevant = unique (oauthGroupNames ++ roleGroupNames);
     in
-    builtins.filter (g: elem g relevant) (user.groups or [ ]);
+    builtins.filter (g: elem g relevant) user.facts.groups;
 
   # ---- POSIX extra JSON (kanidm-provision fork features) ----
 

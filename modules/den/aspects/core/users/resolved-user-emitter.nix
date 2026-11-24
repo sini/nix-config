@@ -7,7 +7,7 @@
       {
         inherit (user) name;
         uid = user.system.uid or null;
-        inherit (user) groups;
+        groups = user.facts.groups;
         sshKeys = map (k: k.key) (user.identity.sshKeys or [ ]);
         sshOidcPrincipals = user.identity.sshOidcPrincipals or [ ];
       };

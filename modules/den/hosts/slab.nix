@@ -4,7 +4,7 @@
     class = "droid";
     system = "aarch64-linux";
     channel = "nixos-unstable";
-    environment = "dev";
+    facts.environment = "dev";
     system-owner = "sini";
 
     users.sini = { };

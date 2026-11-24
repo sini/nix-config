@@ -39,15 +39,15 @@ in
     channel = "nixos-unstable";
     # Its environment is where it sits on the network (uplink's prod VLAN), not what it is
     # used for.
-    environment = "prod";
+    facts.environment = "prod";
     system-owner = "sini";
-    system-access-groups = [ "server-access" ];
+    facts.system-access-groups = [ "server-access" ];
     intoAttr = [ ]; # delivered as a child of uplink, not a standalone nixosConfiguration
 
     # A raw guest entity: the host-submodule defaults for these never compute.
     secretPath = ./. + "/../../../.secrets/hosts/uplink-dev";
     public_key = ./. + "/../../../.secrets/hosts/uplink-dev/ssh_host_ed25519_key.pub";
-    facts = ./. + "/../../../hosts/uplink/facter.json";
+    facterReport = ./. + "/../../../hosts/uplink/facter.json";
 
     # The guests policy forwards home-manager only for the raw entity's own
     # `users` (fleet access groups never resolve onto a raw guest).

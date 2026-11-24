@@ -1,10 +1,10 @@
 { den, lib, ... }:
 {
   den.hosts.patch = {
-    environment = "dev";
+    facts.environment = "dev";
     system = "aarch64-darwin";
     channel = "nixpkgs-master";
-    system-access-groups = [ "system-access" ];
+    facts.system-access-groups = [ "system-access" ];
     system-owner = "sini";
 
     users.sini = { };

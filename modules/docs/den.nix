@@ -33,7 +33,7 @@
                  +-> host       (role-based membership)
         ```
 
-        User assignment is ACL-driven via `fleet.user-access` group mappings against `den.users.registry`, not den's built-in host-to-users policy.
+        User assignment is ACL-driven via `fleet.user-access` group mappings against `den.users` facts (an assignment policy, den.lib.policy.assign).
 
         ### Aspects
 

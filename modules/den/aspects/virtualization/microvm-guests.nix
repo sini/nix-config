@@ -38,10 +38,10 @@ let
   # preserves the original root-key parity (admins/wheel keys).
   rootKeys = lib.concatMap (
     u:
-    lib.optionals (builtins.any (g: g == "admins" || g == "wheel") (u.groups or [ ])) (
+    lib.optionals (builtins.any (g: g == "admins" || g == "wheel") u.facts.groups) (
       map (k: k.key) (u.identity.sshKeys or [ ])
     )
-  ) (lib.attrValues (den.users.registry or { }));
+  ) (lib.attrValues den.users);
 in
 {
   # For a guest that pins its own machine-id (environment.etc) and takes its SSH

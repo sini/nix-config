@@ -15,7 +15,9 @@ in
 {
   den.hosts.x86_64-linux.cortex-cuda = {
     channel = "nixos-unstable";
-    environment = "dev";
+    facts.environment = "dev";
+    # The parent's gate: a guest's users are its parent's (cortex).
+    facts.system-access-groups = [ "workstation-access" ];
     intoAttr = [ ]; # do not emit a standalone nixosConfiguration output (delivered as a child)
 
     # Delivered as a microvm guest of cortex (see cortex.nix `guests`).
@@ -29,11 +31,11 @@ in
     secretPath = ./. + "/../../../.secrets/hosts/cortex-cuda";
     public_key = ./. + "/../../../.secrets/hosts/cortex-cuda/ssh_host_ed25519_key.pub";
 
-    # The guest is a raw entity (no host-submodule `facts` default), but
-    # roles.default's core.system.facter reads host.facts. Point it at the
+    # The guest is a raw entity (no host-submodule `facterReport` default), but
+    # roles.default's core.system.facter reads host.facterReport. Point it at the
     # PARENT's facter report — the guest runs on cortex's hardware (GPU
     # passthrough device IDs derive from it).
-    facts = ./. + "/../../../hosts/cortex/facter.json";
+    facterReport = ./. + "/../../../hosts/cortex/facter.json";
 
     networking.interfaces.vm-cuda = {
       ipv4 = [ "${lanIp}/16" ];

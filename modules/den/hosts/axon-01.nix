@@ -5,9 +5,9 @@ in
 {
   den.hosts.x86_64-linux.axon-01 = {
     channel = "nixos-unstable";
-    environment = "prod";
+    facts.environment = "prod";
     system-owner = "sini";
-    system-access-groups = [ "server-access" ];
+    facts.system-access-groups = [ "server-access" ];
 
     networking.interfaces = {
       enp2s0 = {

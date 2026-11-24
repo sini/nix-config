@@ -93,7 +93,7 @@
       url = "github:Sveske-Juice/declarative-jellyfin";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
-    den.url = "github:denful/den";
+    den.url = "github:denful/den/4629ad9787d88ddf53515e844e640004e20a150b";
     den-diagram = {
       url = "github:denful/den-diagram";
       inputs.nixpkgs.follows = "nixpkgs-unstable";

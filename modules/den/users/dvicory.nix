@@ -4,9 +4,9 @@
     includes = [ den.aspects.roles.default ];
   };
 
-  den.users.registry.dvicory = {
+  den.users.dvicory = {
     system.uid = 1006;
-    groups = [
+    facts.groups = [
       "users"
       "server-access"
       "grafana.server-admins"

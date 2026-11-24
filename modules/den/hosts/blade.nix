@@ -2,9 +2,9 @@
 {
   den.hosts.x86_64-linux.blade = {
     channel = "nixpkgs-master";
-    environment = "dev";
+    facts.environment = "dev";
     system-owner = "sini";
-    system-access-groups = [ "workstation-access" ];
+    facts.system-access-groups = [ "workstation-access" ];
 
     networking.interfaces.wlp0s20f3 = {
       dhcp = "yes";
@@ -84,22 +84,23 @@
         };
       };
 
-    sini = {
-      includes = with den.aspects; [
-        # applications.wayland.waybar
-        # applications.wayland.swaync
-        # applications.wayland.hypridle
-        # applications.wayland.hyprland-split-monitors
-        applications.media.spotify-player
-      ];
-    };
-
-    shuo = {
-      includes = with den.aspects; [
-        applications.browsers.firefox
-        applications.gaming.steam
-        applications.media.spicetify
-      ];
-    };
   };
+
+  # Per-user additions on this host. den resolves a user's aspect as "<user>@<host>"
+  # before <user>; den.aspects.<host>.<user> would land at host scope (host-to-users).
+  den.aspects."sini@blade".includes = with den.aspects; [
+    sini
+    # applications.wayland.waybar
+    # applications.wayland.swaync
+    # applications.wayland.hypridle
+    # applications.wayland.hyprland-split-monitors
+    applications.media.spotify-player
+  ];
+
+  den.aspects."shuo@blade".includes = with den.aspects; [
+    shuo
+    applications.browsers.firefox
+    applications.gaming.steam
+    applications.media.spicetify
+  ];
 }

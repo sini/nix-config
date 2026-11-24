@@ -41,7 +41,7 @@ in
     { user, ... }:
     let
       src = user.name;
-      partners = partnersOf den.users.registry src;
+      partners = partnersOf den.users src;
     in
     lib.optionals (partners != [ ]) [
       (pipe.from "xmsg-nodes" [

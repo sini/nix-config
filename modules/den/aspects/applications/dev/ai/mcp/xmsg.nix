@@ -629,7 +629,7 @@ in
         # A service node is another user's only through a trusted pair; a record that
         # reached this node by any other path fails the build instead of linking.
         assertions = map (p: {
-          assertion = xl.trusts den.users.registry me p.owner;
+          assertion = xl.trusts den.users me p.owner;
           message = "xmsg federation: ${self'} would peer ${p.name}, a service of ${p.owner}, who is neither ${me} nor in xmsg.trusts with them.";
         }) (lib.filter (p: p ? owner) xmsg-nodes);
 

@@ -4,10 +4,10 @@
     includes = [ den.batteries.host-aspects ];
   };
 
-  den.users.registry.sini = {
+  den.users.sini = {
     system.uid = 1000;
     system.linger = true; # always-on per-user Syncthing daemon (replicateHome)
-    groups = [
+    facts.groups = [
       "admins"
       "system-access"
       "libvirtd"

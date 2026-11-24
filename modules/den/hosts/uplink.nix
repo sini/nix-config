@@ -2,9 +2,9 @@
 {
   den.hosts.x86_64-linux.uplink = {
     channel = "nixpkgs-master";
-    environment = "prod";
+    facts.environment = "prod";
     system-owner = "sini";
-    system-access-groups = [ "server-access" ];
+    facts.system-access-groups = [ "server-access" ];
 
     networking.interfaces.enp4s0 = {
       ipv4 = [ "10.10.10.1/16" ];

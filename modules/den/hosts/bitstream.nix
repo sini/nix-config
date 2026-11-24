@@ -2,9 +2,9 @@
 {
   den.hosts.x86_64-linux.bitstream = {
     channel = "nixos-unstable";
-    environment = "dev";
+    facts.environment = "dev";
     system-owner = "sini";
-    system-access-groups = [ "server-access" ];
+    facts.system-access-groups = [ "server-access" ];
 
     networking = {
       bonds.bond0 = {
@@ -108,8 +108,17 @@
       services.ai.genie-experts
       services.scanning.epson
     ];
-
-    sini.includes = with den.aspects; [ services.ai.genie-bank-review ];
-    vic.includes = with den.aspects; [ roles.dev ];
   };
+
+  # Per-user additions on this host. den resolves a user's aspect as "<user>@<host>"
+  # before <user>; den.aspects.<host>.<user> would land at host scope (host-to-users).
+  den.aspects."sini@bitstream".includes = with den.aspects; [
+    sini
+    services.ai.genie-bank-review
+  ];
+
+  den.aspects."vic@bitstream".includes = with den.aspects; [
+    vic
+    roles.dev
+  ];
 }

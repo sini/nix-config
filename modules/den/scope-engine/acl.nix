@@ -27,7 +27,7 @@ let
 
   groups = config.den.groups or { };
   environments = config.den.environments or { };
-  registry = config.den.users.registry or { };
+  registry = config.den.users;
   hosts = flatHosts;
 
   groupNames = builtins.attrNames groups;
@@ -151,7 +151,7 @@ let
     resolveUser = engine.paramAttr (
       self: hostId: userName:
       let
-        directGroups = registry.${userName}.groups or [ ];
+        directGroups = registry.${userName}.facts.groups or [ ];
 
         allGroupIds = lib.unique (
           lib.concatMap (gname: transitiveGroups self "group:${gname}") directGroups

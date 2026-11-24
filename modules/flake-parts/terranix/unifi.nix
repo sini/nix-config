@@ -903,7 +903,7 @@ let
             date = "";
             fingerprint = "";
           }
-        ) fleet.users.registry.${u}.identity.sshKeys
+        ) fleet.users.${u}.identity.sshKeys
       ) ssh.users;
       fields = {
         x_ssh_enabled = true;

@@ -1,13 +1,13 @@
 # Identity-only users (Kanidm/SSO — no Unix accounts, no system-access groups)
 {
-  den.users.registry = {
+  den.users = {
     json = {
-      groups = [ "admins" ];
+      facts.groups = [ "admins" ];
       classes = [ ];
     };
 
     json_user = {
-      groups = [ "users" ];
+      facts.groups = [ "users" ];
       classes = [ ];
       identity = {
         displayName = "Jason-user";
@@ -16,7 +16,7 @@
     };
 
     greco = {
-      groups = [ "users" ];
+      facts.groups = [ "users" ];
       classes = [ ];
       identity = {
         displayName = "Jason Greco";
@@ -25,7 +25,7 @@
     };
 
     taiche = {
-      groups = [ "users" ];
+      facts.groups = [ "users" ];
       classes = [ ];
       identity = {
         displayName = "Chris Tai";
@@ -34,7 +34,7 @@
     };
 
     jennism = {
-      groups = [ "users" ];
+      facts.groups = [ "users" ];
       classes = [ ];
       identity = {
         displayName = "Jennifer Ng";
@@ -43,7 +43,7 @@
     };
 
     hugs = {
-      groups = [
+      facts.groups = [
         "users"
         "grafana.server-admins"
       ];
@@ -53,12 +53,12 @@
     };
 
     ellen = {
-      groups = [ "users" ];
+      facts.groups = [ "users" ];
       classes = [ ];
     };
 
     jenn = {
-      groups = [ "users" ];
+      facts.groups = [ "users" ];
       classes = [ ];
       identity = {
         displayName = "Jennifer Griffith-Delgado";
@@ -67,7 +67,7 @@
     };
 
     zogger = {
-      groups = [ "users" ];
+      facts.groups = [ "users" ];
       classes = [ ];
       identity = {
         displayName = "Pradeep Gollakota";
@@ -76,7 +76,7 @@
     };
 
     vincentpierre = {
-      groups = [ "users" ];
+      facts.groups = [ "users" ];
       classes = [ ];
       identity = {
         displayName = "Vincent Pierre Berges";
@@ -85,7 +85,7 @@
     };
 
     you = {
-      groups = [ "users" ];
+      facts.groups = [ "users" ];
       classes = [ ];
       identity = {
         displayName = "You Zhou";
@@ -94,7 +94,7 @@
     };
 
     yiran = {
-      groups = [ "users" ];
+      facts.groups = [ "users" ];
       classes = [ ];
       identity = {
         displayName = "Yiran Tao";
@@ -103,7 +103,7 @@
     };
 
     louisabella = {
-      groups = [ "users" ];
+      facts.groups = [ "users" ];
       classes = [ ];
       identity = {
         displayName = "Jei Jiao";

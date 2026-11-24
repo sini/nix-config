@@ -4,9 +4,9 @@
     includes = [ den.aspects.roles.default ];
   };
 
-  den.users.registry.theutz = {
+  den.users.theutz = {
     system.uid = 1004;
-    groups = [
+    facts.groups = [
       "users"
       "admins"
       "server-access"

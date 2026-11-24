@@ -197,10 +197,12 @@ in
             description = "Nixpkgs channel — determines nixpkgs, home-manager, and nix-darwin versions";
           };
 
+          # Follows the `environment` fact (policies/users.nix), which user
+          # assignment reads before any host is resolved; set the fact.
           environment = mkOption {
             type = types.str;
-            default = "prod";
-            description = "Environment name that this host belongs to";
+            default = config.facts.environment;
+            description = "Environment name that this host belongs to (follows facts.environment)";
           };
 
           # Computed IPs from networking interfaces
@@ -283,11 +285,12 @@ in
 
           system-access-groups = mkOption {
             type = types.listOf types.str;
-            default = [ ];
-            description = "Groups granting Unix account creation on this host";
+            default = config.facts.system-access-groups;
+            description = "Groups granting Unix account creation on this host (follows facts.system-access-groups)";
           };
 
-          facts =
+          # nixos-facter hardware report (core.system.facter).
+          facterReport =
             mkOption {
               type = types.nullOr types.path;
               default = null;
@@ -343,7 +346,7 @@ in
           # `self` self-cycles (registry → self → flake outputs → registry).
           # Same git-tracked source as `self`; mirrors `user.secretPath`.
           secretPath = lib.mkDefault (rootPath + "/.secrets/hosts/${config.name}");
-          facts = lib.mkDefault (rootPath + "/hosts/${config.name}/facter.json");
+          facterReport = lib.mkDefault (rootPath + "/hosts/${config.name}/facter.json");
           public_key = lib.mkDefault (
             if config.secretPath != null then config.secretPath + "/ssh_host_ed25519_key.pub" else null
           );

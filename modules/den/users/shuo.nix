@@ -4,9 +4,9 @@
     includes = [ den.aspects.roles.default ];
   };
 
-  den.users.registry.shuo = {
+  den.users.shuo = {
     system.uid = 1001;
-    groups = [
+    facts.groups = [
       "users"
       "admins"
       "workstation-access"

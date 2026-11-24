@@ -1,8 +1,10 @@
-# User registry and access-driven user resolution policies.
+# User facts and access-driven user assignment.
 #
-# Users are resolved onto hosts via environment and host-level
-# access group intersection. The fleet.user-access ACL mappings
-# and user registry drive the resolution (following fleet-demo pattern).
+# Users live in den's registry (den.users). Which users a host gets is decided
+# by den's assignment stage, before any host is resolved, so the rule reads only
+# facts: the host's environment and system-access-groups, each user's groups.
+# The environments' gates and fleet.user-access grants are fleet data, read
+# from config.
 {
   lib,
   den,
@@ -10,21 +12,12 @@
   ...
 }:
 let
-  inherit (den.lib.policy) resolve;
   inherit (lib) mkOption types;
 
-  registry = config.den.users.registry;
-
-  # Filter registry users whose groups intersect the granted set.
-  matchRegistryUsers =
-    grantedGroups:
-    lib.filter (
-      name:
-      let
-        userGroups = registry.${name}.groups or [ ];
-      in
-      builtins.any (g: lib.elem g grantedGroups) userGroups
-    ) (builtins.attrNames registry);
+  groupNames = mkOption {
+    type = types.listOf types.str;
+    default = [ ];
+  };
 
   # Submodule for group-based access grants.
   accessGrantType = types.submodule {
@@ -35,53 +28,27 @@ let
     };
   };
 
-  # Registry entry type — mirrors the standard user entity shape so that
-  # pipeline self-provide, define-user, and other batteries find the
-  # expected attributes (userName, aspect, classes).
-  registryUserType = den.lib.schema.mkInstanceType {
-    strict = false;
-    extraModules = [
-      (
-        { name, config, ... }:
-        {
-          config._module.args.user = config;
-          # `name` is gen-schema's: mkInstanceType declares it, defaulting to the key.
-          options = {
-            userName = mkOption {
-              type = types.str;
-              default = name;
-              description = "User account name";
-            };
-            classes = mkOption {
-              type = types.listOf types.str;
-              default = [ "user" ];
-              description = "Home management nix classes";
-            };
-            aspect = mkOption {
-              type = types.raw;
-              default = den.aspects.${name} or { };
-              defaultText = "den.aspects.<name>";
-              description = "Aspect that configures this user";
-            };
-            groups = mkOption {
-              type = types.listOf types.str;
-              default = [ ];
-              description = "Group memberships for access policy selection";
-            };
-          };
-        }
-      )
-    ];
-  } den.schema.user;
+  # The groups that admit a user on a host: grants (environment + host + the
+  # host's own gates, which are also an implicit grant) filtered to the gates
+  # (environment + host); with no gate at all, every grant admits.
+  accessGroupsFor =
+    host:
+    let
+      inherit (config) fleet;
+      env = host.facts.environment;
+      envGrant = (fleet.user-access.by-environment.${env} or { groups = [ ]; }).groups;
+      envGate = config.den.environments.${env}.system-access-groups or [ ];
+      hostGrant = (fleet.user-access.by-host.${host.name} or { groups = [ ]; }).groups;
+      hostGate = host.facts.system-access-groups;
+      effectiveGate = lib.unique (envGate ++ hostGate);
+      allGrants = lib.unique (envGrant ++ hostGrant ++ hostGate);
+    in
+    if effectiveGate == [ ] then
+      allGrants
+    else
+      builtins.filter (g: builtins.elem g effectiveGate) allGrants;
 in
 {
-  # User registry option.
-  options.den.users.registry = mkOption {
-    type = types.attrsOf registryUserType;
-    default = { };
-    description = "User registry with extended schema for fleet policy resolution";
-  };
-
   # Access mappings: under fleet (following fleet-demo pattern).
   options.fleet.user-access = {
     by-environment = mkOption {
@@ -101,19 +68,37 @@ in
     den.schema.user.isEntity = true;
     den.schema.user.classes = lib.mkDefault [ "homeManager" ];
 
-    # host -> users: resolve registry users whose groups intersect the
-    # effective access groups (merged env + host, propagated via scope context).
-    den.policies.env-users =
+    # What assignment reads. A user's groups are their DIRECT memberships; the
+    # nested closure over den.groups is applied by its readers (acl, kanidm, media).
+    den.schema.user.facts = [
       {
-        accessGroups ? [ ],
-        ...
-      }:
-      let
-        matched = matchRegistryUsers accessGroups;
-      in
-      map (name: resolve.to "user" { user = registry.${name}; }) matched;
+        options.groups = groupNames // {
+          description = "Group memberships (direct)";
+        };
+      }
+    ];
+    den.schema.host.facts = [
+      {
+        options.environment = mkOption {
+          type = types.str;
+          default = "prod";
+          description = "Environment name that this host belongs to";
+        };
+        options.system-access-groups = groupNames // {
+          description = "Groups granting Unix account creation on this host";
+        };
+      }
+    ];
 
-    # host-users policy removed — by-host grants are now merged into
-    # accessGroups in the fleet policy's env-to-hosts resolver.
+    # Users whose direct groups meet the host's access groups.
+    den.policies.fleet-access = den.lib.policy.assign (
+      { host, users }:
+      let
+        access = accessGroupsFor host;
+      in
+      builtins.attrNames (
+        lib.filterAttrs (_: u: builtins.any (g: builtins.elem g access) u.facts.groups) users
+      )
+    );
   };
 }
