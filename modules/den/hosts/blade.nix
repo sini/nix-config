@@ -70,6 +70,10 @@
         # produces the frametime and audio-deadline misses under game load.
         services.thermald.enable = lib.mkForce false;
 
+        # Lets user-space MSR tools (undervolt, below) write without the kernel
+        # tainting or logging each write; msr defaults to restricted writes.
+        boot.kernelParams = [ "msr.allow_writes=on" ];
+
         # Thermally limited rather than power limited, so shedding voltage at
         # constant frequency is the only tuning that raises sustained clocks
         # instead of just relocating heat. Measured at -75mV core+cache under
