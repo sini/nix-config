@@ -18,7 +18,7 @@ BASELINE = "allow-internal-egress"
 CIDR = "10.9.2.2/32"
 TARGET = ipaddress.ip_network(CIDR)
 PORTS = {("8081", "TCP"), ("18020", "TCP")}
-ALLOW = {("genie", "genie-guard"), ("genie", "genie-tier1")}
+ALLOW = {("genie", "genie-guard-xmsg"), ("genie", "genie-tier1")}
 NS_KEY = "k8s:io.kubernetes.pod.namespace"
 SA_KEY = "k8s:io.cilium.k8s.policy.serviceaccount"
 # L3 fields that name a destination; a rule with none of them reaches anywhere.

@@ -5,11 +5,15 @@
 # and the leaf container long-polls it over mTLS and hands each message to the
 # guard on register.sock. Nothing connects in: no Service, no ingress.
 #
-# Both containers run as one uid, because the leaf admits a registration on
-# register.sock by SO_PEERCRED uid (exe attestation is impossible across
-# containers). XDG_RUNTIME_DIR is an emptyDir mounted in both; the leaf creates
-# its `xmsg/` socket dir under it, owned by that uid and mode 0700, as xmsg
-# requires of an existing socket dir (an emptyDir root is owned by root).
+# The pod is xmsg's chart (charts/xmsg, `mode: leaf`) with genie-agent's
+# genie-guard overlay (examples/helm/genie-guard-values.yaml): the chart owns the
+# leaf sidecar (hardening, shared uid, the /run socket dir, the state dir, the peers
+# ConfigMap), the overlay the guard container. This aspect sets only the instance:
+# the hubs, the images, and the objects around the pod.
+#
+# The chart names its ServiceAccount `<release>-xmsg`, so the pod runs as
+# genie-guard-xmsg while its SPIFFE id keeps sa/genie-guard (the node name). The
+# egress policies select the ServiceAccount the pod runs as.
 #
 # Identity (plan §6.7): a cert-manager Certificate from xmsg-cluster-ca whose one
 # URI SAN is spiffe://<environment domain>/ns/genie/sa/genie-guard. Its Secret's tls.crt is
@@ -25,24 +29,21 @@
 # No gVisor RuntimeClass: the guard executes no model-produced code, it only
 # reads a model's verdict.
 #
-# Gating check: genie-guard-check.nix, over this aspect's manifests with the
-# flag forced on.
+# Gating check: genie-guard-check.nix, over axon's rendered manifests.
 {
   den,
   lib,
+  inputs,
   rootPath,
   ...
 }:
 let
   namespace = "genie";
   name = "genie-guard";
-  uid = 65532;
+  # The chart's `<release>-xmsg` ServiceAccount, the one the pod runs as.
+  serviceAccount = "${name}-xmsg";
   issuer = "xmsg-cluster-ca";
-  runtimeDir = "/run/user";
-  tlsDir = "/etc/xmsg/tls";
-  peersDir = "/etc/xmsg/peers";
-  stateDir = "/var/lib/xmsg";
-  keyDir = "/etc/genie-guard";
+  tlsSecret = "${name}-xmsg-tls";
 
   # Enabled, and refused by name until the guard image is pinned.
   enabledFor =
@@ -70,17 +71,19 @@ let
   domainOf = entity: den.environments.${entity.environment}.domain;
 
   ref = image: "${image.repository}@${image.digest}";
-
-  hardened = {
-    runAsUser = uid;
-    runAsGroup = uid;
-    runAsNonRoot = true;
-    readOnlyRootFilesystem = true;
-    allowPrivilegeEscalation = false;
-    capabilities.drop = [ "ALL" ];
-  };
 in
 {
+  # Source-only pins of the chart and the overlay, apart from the `xmsg` and
+  # `genie-agent` inputs that pin the fleet's daemon and package.
+  flake-file.inputs.xmsg-chart = {
+    url = "github:sini/xmsg/a3efb129c8e99a873c7a39b6f78eb8768b5719c5";
+    flake = false;
+  };
+  flake-file.inputs.genie-agent-helm = {
+    url = "github:sini/genie-agent/4d8e39cf6487270d472f8dddda9fb1b371993bdf";
+    flake = false;
+  };
+
   den.aspects.kubernetes.services.ai.genie-guard = {
     settings.enable = lib.mkOption {
       type = lib.types.bool;
@@ -140,6 +143,7 @@ in
         config,
         cluster,
         images,
+        lib,
         xmsg-nodes ? [ ],
         ...
       }:
@@ -156,51 +160,48 @@ in
         # Service nodes that screen through this pod (services/matrix-xmsg.nix `guards`)
         # are hubs too: the pod collects their guard requests from them.
         serviceHubs = lib.filter (n: lib.elem "${name}@${name}.${namespace}" (n.guards or [ ])) xmsg-nodes;
-        # A CA entry is keyed by the node name its identity derives, `<user>.<host>`
-        # (xmsg README 7.0); the leaf routes each reply to the peer of the origin's node.
-        peers = lib.listToAttrs (
+        # The chart's leaf.hubs. A hub is keyed by the node name its identity derives,
+        # `<user>.<host>` (xmsg README 7.0); the leaf routes each reply to the peer of
+        # the origin's node.
+        chartHubs =
           map (h: {
             name = "${h.host.system-owner}.${h.name}";
-            value = {
-              address = "${h.ip}:${toString h.port}";
-              ca = "${tlsDir}/ca.crt";
-              identities = [ "spiffe://${domainOf h.host}/host/${h.name}/user/${h.host.system-owner}" ];
-              # The leaf has no listener; `list` lets it answer the hub's list query from
-              # its mailbox. Without it the leaf withholds list, and every bare send on
-              # the hub is `unavailable` (xmsg XA6).
-              allow = [ "list" ];
-            };
+            address = "${h.ip}:${toString h.port}";
+            identity = "spiffe://${domainOf h.host}/host/${h.name}/user/${h.host.system-owner}";
           }) hubs
           ++ map (n: {
-            inherit (n) name;
-            value = {
-              address = "${n.lanIp}:${toString n.port}";
-              ca = "${tlsDir}/ca.crt";
-              identities = [ n.identity ];
-              allow = [ "list" ];
-            };
-          }) serviceHubs
+            inherit (n) name identity;
+            address = "${n.lanIp}:${toString n.port}";
+          }) serviceHubs;
+        # lib is nixidy's module lib here, whose lib.kube parses the overlay's YAML.
+        overlay = lib.head (
+          lib.kube.fromYAML (
+            builtins.readFile "${inputs.genie-agent-helm}/examples/helm/genie-guard-values.yaml"
+          )
         );
-        runMount = {
-          name = "run";
-          mountPath = runtimeDir;
-        };
-        # The root is read-only; a writable /tmp keeps the guard's runtime from
-        # failing at start.
-        tmpMount = {
-          name = "tmp";
-          mountPath = "/tmp";
-        };
       in
       lib.optionalAttrs (enabledFor cluster images) {
         applications.${name} = {
           inherit namespace;
 
-          resources = {
-            serviceAccounts.${name}.automountServiceAccountToken = false;
+          helm.releases.${name} = {
+            chart = "${inputs.xmsg-chart}/charts/xmsg";
+            values = lib.recursiveUpdate overlay {
+              image = { inherit (images."sini/xmsg") repository digest; };
+              tls.existingSecret = tlsSecret;
+              leaf = {
+                prepareImage = ref images."library/busybox";
+                hubs = chartHubs;
+                containers = map (
+                  c: if c.name == name then c // { image = ref images."sini/genie-guard"; } else c
+                ) overlay.leaf.containers;
+              };
+            };
+          };
 
+          resources = {
             certificates.${name}.spec = {
-              secretName = "${name}-xmsg-tls";
+              secretName = tlsSecret;
               issuerRef = {
                 name = issuer;
                 kind = "ClusterIssuer";
@@ -224,180 +225,12 @@ in
               };
             };
 
-            configMaps."${name}-xmsg-peers".data."peers.json" = builtins.toJSON peers;
-
-            # The URL is no secret, but it rides in the same Secret so the guard's
-            # whole configuration is one object.
+            # The overlay's guard container reads both keys. The URL is no secret, but
+            # it rides in the same Secret so the guard's whole configuration is one object.
             secrets.${name}.stringData = {
               api-key = config.age.secrets.genie-guard-api-key.sopsRef;
               # The hub's own guard setting, so both guards ask the same endpoint.
               ninfer-url = hub.settings.applications.dev.ai.mcp.xmsg.genieGuard.ninferUrl;
-            };
-
-            deployments.${name}.spec = {
-              replicas = 1;
-              selector.matchLabels."app.kubernetes.io/name" = name;
-              template = {
-                metadata.labels."app.kubernetes.io/name" = name;
-                spec = {
-                  serviceAccountName = name;
-                  automountServiceAccountToken = false;
-                  enableServiceLinks = false;
-                  securityContext = {
-                    runAsUser = uid;
-                    runAsGroup = uid;
-                    runAsNonRoot = true;
-                    fsGroup = uid;
-                    seccompProfile.type = "RuntimeDefault";
-                  };
-                  # xmsg (PR-A) refuses a state root it doesn't own; with --db-path the state
-                  # root is the DB's directory, and the `state` emptyDir is root:<fsGroup>. A
-                  # subdirectory made as 65532 is ours. The DB is per pod, so nothing moves.
-                  initContainers = [
-                    {
-                      name = "state-dir";
-                      image = ref images."library/busybox";
-                      command = [
-                        "mkdir"
-                        "-m"
-                        "0700"
-                        "-p"
-                        "${stateDir}/db"
-                      ];
-                      securityContext = hardened;
-                      volumeMounts = [
-                        {
-                          name = "state";
-                          mountPath = stateDir;
-                        }
-                      ];
-                    }
-                  ];
-                  containers = [
-                    {
-                      name = "xmsg";
-                      image = ref images."sini/xmsg";
-                      args = [
-                        "serve"
-                        "--leaf"
-                        "--leaf-principal"
-                        name
-                        # Required by --leaf; loopback in the pod's own netns.
-                        "--listen"
-                        "127.0.0.1:7787"
-                        "--leaf-register-sock"
-                        "${runtimeDir}/xmsg/register.sock"
-                        # Both leaf endpoints pinned, so xmsg derives no managed namespace (PR-A)
-                        # under /run/user, a root-owned emptyDir it would refuse as unsafe.
-                        "--agent-sock"
-                        "${runtimeDir}/xmsg/agent.sock"
-                        "--db-path"
-                        "${stateDir}/db/xmsg.db"
-                        "--peers-file"
-                        "${peersDir}/peers.json"
-                        "--fed-cert"
-                        "${tlsDir}/tls.crt"
-                        "--fed-key"
-                        "${tlsDir}/tls.key"
-                      ];
-                      env = [
-                        {
-                          name = "XDG_RUNTIME_DIR";
-                          value = runtimeDir;
-                        }
-                      ];
-                      securityContext = hardened;
-                      volumeMounts = [
-                        runMount
-                        tmpMount
-                        {
-                          name = "state";
-                          mountPath = stateDir;
-                        }
-                        {
-                          name = "tls";
-                          mountPath = tlsDir;
-                          readOnly = true;
-                        }
-                        {
-                          name = "peers";
-                          mountPath = peersDir;
-                          readOnly = true;
-                        }
-                      ];
-                    }
-                    {
-                      inherit name;
-                      image = ref images."sini/genie-guard";
-                      env = [
-                        {
-                          name = "XDG_RUNTIME_DIR";
-                          value = runtimeDir;
-                        }
-                        {
-                          name = "GENIE_GUARD_NINFER_URL";
-                          valueFrom.secretKeyRef = {
-                            inherit name;
-                            key = "ninfer-url";
-                          };
-                        }
-                        {
-                          name = "GENIE_GUARD_API_KEY_FILE";
-                          value = "${keyDir}/api-key";
-                        }
-                      ];
-                      securityContext = hardened;
-                      volumeMounts = [
-                        runMount
-                        tmpMount
-                        {
-                          name = "api-key";
-                          mountPath = keyDir;
-                          readOnly = true;
-                        }
-                      ];
-                    }
-                  ];
-                  volumes = [
-                    {
-                      name = "run";
-                      emptyDir.medium = "Memory";
-                    }
-                    {
-                      name = "state";
-                      emptyDir = { };
-                    }
-                    {
-                      name = "tmp";
-                      emptyDir = { };
-                    }
-                    {
-                      name = "tls";
-                      secret = {
-                        secretName = "${name}-xmsg-tls";
-                        defaultMode = 288; # 0440, read through fsGroup
-                      };
-                    }
-                    {
-                      name = "peers";
-                      configMap.name = "${name}-xmsg-peers";
-                    }
-                    {
-                      name = "api-key";
-                      secret = {
-                        secretName = name;
-                        items = [
-                          {
-                            key = "api-key";
-                            path = "api-key";
-                          }
-                        ];
-                        defaultMode = 288;
-                      };
-                    }
-                  ];
-                };
-              };
             };
 
             ciliumClusterwideNetworkPolicies."allow-xmsg-egress-${namespace}-${name}".spec = {
@@ -411,7 +244,7 @@ in
                 {
                   key = "k8s:io.cilium.k8s.policy.serviceaccount";
                   operator = "In";
-                  values = [ name ];
+                  values = [ serviceAccount ];
                 }
               ];
               egress = map (h: {

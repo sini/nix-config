@@ -2,7 +2,8 @@
 #
 # xmsg-peers: every peers file loads in the xmsg it runs (`xmsg check-peers`, the
 # loader `xmsg serve` uses): bitstream's, cortex's and blade's, each checked against its own
-# node certificate, and the genie-guard pod's ConfigMap. The pod's `ca` is a path
+# node certificate, and the genie-guard pod's ConfigMap as axon renders it (xmsg's
+# chart, `{"peers": ...}`). The pod's `ca` is a path
 # inside the pod (cert-manager's ca.crt, the xmsg root), and the loader reads it, so
 # the check points it at the committed root .crt instead.
 #   nix build .#checks.x86_64-linux.xmsg-peers
@@ -88,16 +89,12 @@ let
     in
     if i == null then throw "xmsg-check: ${h}'s xmsg unit has no ${flag}" else lib.elemAt argv (i + 1);
 
-  pod = config.den.aspects.kubernetes.services.ai.genie-guard.k8s-manifests {
-    config.age.secrets.genie-guard-api-key.sopsRef = "ref+sops://stand-in";
-    cluster.settings.kubernetes.services.ai.genie-guard = {
-      enable = true;
-      hub = "bitstream";
-    };
-    images = config.flake.imageRefs.x86_64-linux;
-  };
+  # The chart's ConfigMap, among the rendered objects.
   podPeers =
-    pod.applications.genie-guard.resources.configMaps.genie-guard-xmsg-peers.data."peers.json";
+    (lib.findFirst (o: o.kind == "ConfigMap" && o.metadata.name == "genie-guard-xmsg-peers")
+      (throw "xmsg-check: axon renders no genie-guard-xmsg-peers ConfigMap")
+      config.flake.nixidyEnvs.x86_64-linux.axon.config.applications.genie-guard.objects
+    ).data."peers.json";
   root = builtins.path {
     path = rootPath + "/.secrets/xmsg-ca/root.crt";
     name = "root.crt";
@@ -120,7 +117,7 @@ in
               ${lib.concatMapStrings (h: ''
                 xmsg check-peers ${flagOf h "--peers-file"} --fed-cert ${flagOf h "--fed-cert"}
               '') hosts}
-              jq --arg ca ${root} 'map_values(.ca = $ca)' ${pkgs.writeText "pod-peers.json" podPeers} > pod-peers.json
+              jq --arg ca ${root} '.peers |= map_values(.ca = $ca)' ${pkgs.writeText "pod-peers.json" podPeers} > pod-peers.json
               xmsg check-peers pod-peers.json
               touch $out
             '';

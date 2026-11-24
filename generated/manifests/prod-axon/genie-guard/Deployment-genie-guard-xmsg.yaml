@@ -1,17 +1,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: genie-guard
+  labels:
+    app.kubernetes.io/instance: genie-guard
+    app.kubernetes.io/name: xmsg
+  name: genie-guard-xmsg
   namespace: genie
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: genie-guard
+      app.kubernetes.io/instance: genie-guard
+      app.kubernetes.io/name: xmsg
+  strategy:
+    type: Recreate
   template:
     metadata:
+      annotations:
+        checksum/peers: ce8d1dc9f59e72caebbe20558b3e21c53b4e66c2ac76ba8657badbb3935598c9
       labels:
-        app.kubernetes.io/name: genie-guard
+        app.kubernetes.io/instance: genie-guard
+        app.kubernetes.io/name: xmsg
     spec:
       automountServiceAccountToken: false
       containers:
@@ -23,9 +32,9 @@ spec:
             - --listen
             - 127.0.0.1:7787
             - --leaf-register-sock
-            - /run/user/xmsg/register.sock
+            - /run/xmsg/register.sock
             - --agent-sock
-            - /run/user/xmsg/agent.sock
+            - /run/xmsg/agent.sock
             - --db-path
             - /var/lib/xmsg/db/xmsg.db
             - --peers-file
@@ -36,9 +45,14 @@ spec:
             - /etc/xmsg/tls/tls.key
           env:
             - name: XDG_RUNTIME_DIR
-              value: /run/user
+              value: /run
           image: ghcr.io/sini/xmsg@sha256:ddd2fa1543c2c6883823e6eebf8633f1e0bd0de7a606f5f8ed8ab59bbb28909c
+          imagePullPolicy: IfNotPresent
           name: xmsg
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -49,10 +63,8 @@ spec:
             runAsNonRoot: true
             runAsUser: 65532
           volumeMounts:
-            - mountPath: /run/user
-              name: run
-            - mountPath: /tmp
-              name: tmp
+            - mountPath: /run
+              name: runtime
             - mountPath: /var/lib/xmsg
               name: state
             - mountPath: /etc/xmsg/tls
@@ -62,8 +74,6 @@ spec:
               name: peers
               readOnly: true
         - env:
-            - name: XDG_RUNTIME_DIR
-              value: /run/user
             - name: GENIE_GUARD_NINFER_URL
               valueFrom:
                 secretKeyRef:
@@ -71,6 +81,8 @@ spec:
                   name: genie-guard
             - name: GENIE_GUARD_API_KEY_FILE
               value: /etc/genie-guard/api-key
+            - name: XDG_RUNTIME_DIR
+              value: /run
           image: ghcr.io/sini/genie-guard@sha256:ead3fbd648b3b67c58853d567d976bbe68af6df5309732d518b2ebae5972c9ce
           name: genie-guard
           securityContext:
@@ -83,13 +95,13 @@ spec:
             runAsNonRoot: true
             runAsUser: 65532
           volumeMounts:
-            - mountPath: /run/user
-              name: run
             - mountPath: /tmp
               name: tmp
             - mountPath: /etc/genie-guard
               name: api-key
               readOnly: true
+            - mountPath: /run
+              name: runtime
       enableServiceLinks: false
       initContainers:
         - command:
@@ -99,7 +111,7 @@ spec:
             - -p
             - /var/lib/xmsg/db
           image: library/busybox@sha256:a46257e06c82ad85242d0d38077d0a52d9896389ca60a1a59d3463db586e5fa4
-          name: state-dir
+          name: prepare-state
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -119,15 +131,13 @@ spec:
         runAsUser: 65532
         seccompProfile:
           type: RuntimeDefault
-      serviceAccountName: genie-guard
+      serviceAccountName: genie-guard-xmsg
       volumes:
         - emptyDir:
             medium: Memory
-          name: run
+          name: runtime
         - emptyDir: {}
           name: state
-        - emptyDir: {}
-          name: tmp
         - name: tls
           secret:
             defaultMode: 288
@@ -135,6 +145,8 @@ spec:
         - configMap:
             name: genie-guard-xmsg-peers
           name: peers
+        - emptyDir: {}
+          name: tmp
         - name: api-key
           secret:
             defaultMode: 288

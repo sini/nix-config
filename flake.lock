@@ -1971,6 +1971,23 @@
         "type": "github"
       }
     },
+    "genie-agent-helm": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1795521064,
+        "narHash": "sha256-DqiV1SOTjW+XKD0OJSGKuPD5rT8LmSSW4vHwV9uYq0E=",
+        "owner": "sini",
+        "repo": "genie-agent",
+        "rev": "4d8e39cf6487270d472f8dddda9fb1b371993bdf",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sini",
+        "repo": "genie-agent",
+        "rev": "4d8e39cf6487270d472f8dddda9fb1b371993bdf",
+        "type": "github"
+      }
+    },
     "git-hooks": {
       "inputs": {
         "flake-compat": [
@@ -4509,6 +4526,7 @@
         "gen": "gen",
         "gen-lsp": "gen-lsp",
         "genie-agent": "genie-agent",
+        "genie-agent-helm": "genie-agent-helm",
         "git-hooks-nix": "git-hooks-nix",
         "graphify": "graphify",
         "gsesh": "gsesh",
@@ -4583,6 +4601,7 @@
         "ui-ux-pro-max-skill": "ui-ux-pro-max-skill",
         "umu": "umu",
         "xmsg": "xmsg",
+        "xmsg-chart": "xmsg-chart",
         "zen-browser": "zen-browser",
         "zjstatus": "zjstatus"
       }
@@ -5525,6 +5544,23 @@
       "original": {
         "owner": "sini",
         "repo": "xmsg",
+        "type": "github"
+      }
+    },
+    "xmsg-chart": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1795519514,
+        "narHash": "sha256-WJuz4qssGsQRLXGL6NgfuszdHF7PRrK2ewVdvA2xBrI=",
+        "owner": "sini",
+        "repo": "xmsg",
+        "rev": "a3efb129c8e99a873c7a39b6f78eb8768b5719c5",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sini",
+        "repo": "xmsg",
+        "rev": "a3efb129c8e99a873c7a39b6f78eb8768b5719c5",
         "type": "github"
       }
     },

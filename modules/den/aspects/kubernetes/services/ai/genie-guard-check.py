@@ -1,4 +1,4 @@
-"""Property check over genie-guard.nix's manifests (flag forced on): pod hardening,
+"""Property check over axon's rendered genie-guard resources: pod hardening,
 the leaf certificate, the egress policy, the register socket shared by both
 containers, and the leaf's xmsg arguments and peers file.
 
@@ -11,12 +11,20 @@ import posixpath
 import sys
 
 NS, SA = "genie", "genie-guard"
+# xmsg's leaf chart names the Deployment and ServiceAccount `<release>-xmsg`; the
+# SPIFFE id keeps sa/genie-guard, the node name the hubs know.
+POD = f"{SA}-xmsg"
 UID = 65532
 IDENTITY = f"spiffe://json64.dev/ns/{NS}/sa/{SA}"
 ISSUER = "xmsg-cluster-ca"
-# The hub's node name, and bitstream's LAN address and its owner's federation port.
-HUB = "sini.bitstream"
-EGRESS = {("10.9.1.1/32", "7788", "TCP")}
+# axon's hubs (bitstream, the cortex dev hub, bitstream's matrix-xmsg service node)
+# and their LAN addresses and federation ports.
+HUBS = {"sini.bitstream", "sini.cortex", "matrix-xmsg.bitstream"}
+EGRESS = {
+    ("10.9.1.1/32", "7788", "TCP"),
+    ("10.9.2.1/32", "7788", "TCP"),
+    ("10.9.1.1/32", "7791", "TCP"),
+}
 NS_KEY = "k8s:io.kubernetes.pod.namespace"
 SA_KEY = "k8s:io.cilium.k8s.policy.serviceaccount"
 
@@ -33,19 +41,20 @@ with open(sys.argv[1]) as f:
 res = app["resources"]
 check("namespace", app["namespace"] == NS, app.get("namespace"))
 check(
-    "no Service or ingress", not ({"services", "ingresses", "httpRoutes"} & res.keys())
+    "no Service or ingress",
+    not any(res.get(k) for k in ("services", "ingresses", "httpRoutes")),
 )
 
 # 1. Pod hardening.
-pod = res["deployments"][SA]["spec"]["template"]["spec"]
+pod = res["deployments"][POD]["spec"]["template"]["spec"]
 containers = {c["name"]: c for c in pod["containers"]}
 volumes = {v["name"]: v for v in pod.get("volumes", [])}
 check("two containers", set(containers) == {"xmsg", SA}, sorted(containers))
-check("pod service account", pod.get("serviceAccountName") == SA)
+check("pod service account", pod.get("serviceAccountName") == POD)
 check("pod token not automounted", pod.get("automountServiceAccountToken") is False)
 check(
     "SA token not automounted",
-    res["serviceAccounts"][SA].get("automountServiceAccountToken") is False,
+    res["serviceAccounts"][POD].get("automountServiceAccountToken") is False,
 )
 check("no runtimeClassName", "runtimeClassName" not in pod)
 for n, c in containers.items():
@@ -62,11 +71,16 @@ for n, c in containers.items():
         caps,
     )
     check(f"{n} image digest-pinned", "@sha256:" in c.get("image", ""), c.get("image"))
-    tmp = {m["name"] for m in c.get("volumeMounts", []) if m["mountPath"] == "/tmp"}
-    check(
-        f"{n} writable /tmp",
-        len(tmp) == 1 and all("emptyDir" in volumes.get(v, {}) for v in tmp),
-    )
+# The guard's runtime needs a writable /tmp under the read-only root.
+tmp = {
+    m["name"]
+    for m in containers.get(SA, {}).get("volumeMounts", [])
+    if m["mountPath"] == "/tmp"
+}
+check(
+    f"{SA} writable /tmp",
+    len(tmp) == 1 and all("emptyDir" in volumes.get(v, {}) for v in tmp),
+)
 
 # 2. Certificate.
 certs = res.get("certificates", {})
@@ -113,8 +127,8 @@ for n, p in policies.items():
         for e in sel.get("matchExpressions", [])
     }
     check(
-        f"{n} selects {NS}/{SA} only",
-        exprs == {(NS_KEY, "In", (NS,)), (SA_KEY, "In", (SA,))}
+        f"{n} selects {NS}/{POD} only",
+        exprs == {(NS_KEY, "In", (NS,)), (SA_KEY, "In", (POD,))}
         and not sel.get("matchLabels"),
         sel,
     )
@@ -146,10 +160,11 @@ check("leaf principal is the bare service name", principal == SA, principal)
 check("no retired svc: form", not any("svc:" in a for a in args), args)
 check("no --host-label (xmsg refuses it)", "--host-label" not in args, args)
 
-# 5. The hub entry: keyed by the hub's node name, and allowed to `list` this leaf.
-hub = json.loads(res["configMaps"][f"{SA}-xmsg-peers"]["data"]["peers.json"])
-check("one peer, the hub", set(hub) == {HUB}, sorted(hub))
-check("hub may list", "list" in hub.get(HUB, {}).get("allow", []), hub.get(HUB))
+# 5. The hub entries: keyed by each hub's node name, and allowed to `list` this leaf.
+hub = json.loads(res["configMaps"][f"{POD}-peers"]["data"]["peers.json"])["peers"]
+check("the peers are the hubs", set(hub) == HUBS, sorted(hub))
+for h in sorted(HUBS):
+    check(f"{h} may list", "list" in hub.get(h, {}).get("allow", []), hub.get(h))
 check("register socket named", sock is not None)
 if sock:
 
