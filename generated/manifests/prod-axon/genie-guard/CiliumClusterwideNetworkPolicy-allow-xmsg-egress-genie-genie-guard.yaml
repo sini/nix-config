@@ -32,4 +32,4 @@ spec:
       - key: k8s:io.cilium.k8s.policy.serviceaccount
         operator: In
         values:
-          - genie-guard-xmsg
+          - genie-guard

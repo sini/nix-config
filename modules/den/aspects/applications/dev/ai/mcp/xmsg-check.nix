@@ -91,8 +91,8 @@ let
 
   # The chart's ConfigMap, among the rendered objects.
   podPeers =
-    (lib.findFirst (o: o.kind == "ConfigMap" && o.metadata.name == "genie-guard-xmsg-peers")
-      (throw "xmsg-check: axon renders no genie-guard-xmsg-peers ConfigMap")
+    (lib.findFirst (o: o.kind == "ConfigMap" && o.metadata.name == "genie-guard-peers")
+      (throw "xmsg-check: axon renders no genie-guard-peers ConfigMap")
       config.flake.nixidyEnvs.x86_64-linux.axon.config.applications.genie-guard.objects
     ).data."peers.json";
   root = builtins.path {

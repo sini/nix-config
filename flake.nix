@@ -140,7 +140,7 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     genie-agent-helm = {
-      url = "github:sini/genie-agent/4d8e39cf6487270d472f8dddda9fb1b371993bdf";
+      url = "github:sini/genie-agent/8017e558234e56e8af65b31452f109bcc4468b61";
       flake = false;
     };
     git-hooks-nix.url = "github:cachix/git-hooks.nix";
@@ -391,7 +391,7 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     xmsg-chart = {
-      url = "github:sini/xmsg/a3efb129c8e99a873c7a39b6f78eb8768b5719c5";
+      url = "github:sini/xmsg/ea825d4d7c9ebe294b31ab336981996a848c7d93";
       flake = false;
     };
     zen-browser = {

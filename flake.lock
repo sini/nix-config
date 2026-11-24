@@ -1974,17 +1974,17 @@
     "genie-agent-helm": {
       "flake": false,
       "locked": {
-        "lastModified": 1795521064,
-        "narHash": "sha256-DqiV1SOTjW+XKD0OJSGKuPD5rT8LmSSW4vHwV9uYq0E=",
+        "lastModified": 1795522895,
+        "narHash": "sha256-Zw+1mqG6MpPwV4/TmI6gglApZ5MDtDuHUR42B0ObHek=",
         "owner": "sini",
         "repo": "genie-agent",
-        "rev": "4d8e39cf6487270d472f8dddda9fb1b371993bdf",
+        "rev": "8017e558234e56e8af65b31452f109bcc4468b61",
         "type": "github"
       },
       "original": {
         "owner": "sini",
         "repo": "genie-agent",
-        "rev": "4d8e39cf6487270d472f8dddda9fb1b371993bdf",
+        "rev": "8017e558234e56e8af65b31452f109bcc4468b61",
         "type": "github"
       }
     },
@@ -5550,17 +5550,17 @@
     "xmsg-chart": {
       "flake": false,
       "locked": {
-        "lastModified": 1795519514,
-        "narHash": "sha256-WJuz4qssGsQRLXGL6NgfuszdHF7PRrK2ewVdvA2xBrI=",
+        "lastModified": 1795522863,
+        "narHash": "sha256-i56R8tzj2yNpx1Nc1WDQ01ftFFPfYLxhaV0MK7kEeCc=",
         "owner": "sini",
         "repo": "xmsg",
-        "rev": "a3efb129c8e99a873c7a39b6f78eb8768b5719c5",
+        "rev": "ea825d4d7c9ebe294b31ab336981996a848c7d93",
         "type": "github"
       },
       "original": {
         "owner": "sini",
         "repo": "xmsg",
-        "rev": "a3efb129c8e99a873c7a39b6f78eb8768b5719c5",
+        "rev": "ea825d4d7c9ebe294b31ab336981996a848c7d93",
         "type": "github"
       }
     },

@@ -11,9 +11,6 @@ import posixpath
 import sys
 
 NS, SA = "genie", "genie-guard"
-# xmsg's leaf chart names the Deployment and ServiceAccount `<release>-xmsg`; the
-# SPIFFE id keeps sa/genie-guard, the node name the hubs know.
-POD = f"{SA}-xmsg"
 UID = 65532
 IDENTITY = f"spiffe://json64.dev/ns/{NS}/sa/{SA}"
 ISSUER = "xmsg-cluster-ca"
@@ -46,15 +43,15 @@ check(
 )
 
 # 1. Pod hardening.
-pod = res["deployments"][POD]["spec"]["template"]["spec"]
+pod = res["deployments"][SA]["spec"]["template"]["spec"]
 containers = {c["name"]: c for c in pod["containers"]}
 volumes = {v["name"]: v for v in pod.get("volumes", [])}
 check("two containers", set(containers) == {"xmsg", SA}, sorted(containers))
-check("pod service account", pod.get("serviceAccountName") == POD)
+check("pod service account", pod.get("serviceAccountName") == SA)
 check("pod token not automounted", pod.get("automountServiceAccountToken") is False)
 check(
     "SA token not automounted",
-    res["serviceAccounts"][POD].get("automountServiceAccountToken") is False,
+    res["serviceAccounts"][SA].get("automountServiceAccountToken") is False,
 )
 check("no runtimeClassName", "runtimeClassName" not in pod)
 for n, c in containers.items():
@@ -127,8 +124,8 @@ for n, p in policies.items():
         for e in sel.get("matchExpressions", [])
     }
     check(
-        f"{n} selects {NS}/{POD} only",
-        exprs == {(NS_KEY, "In", (NS,)), (SA_KEY, "In", (POD,))}
+        f"{n} selects {NS}/{SA} only",
+        exprs == {(NS_KEY, "In", (NS,)), (SA_KEY, "In", (SA,))}
         and not sel.get("matchLabels"),
         sel,
     )
@@ -161,7 +158,7 @@ check("no retired svc: form", not any("svc:" in a for a in args), args)
 check("no --host-label (xmsg refuses it)", "--host-label" not in args, args)
 
 # 5. The hub entries: keyed by each hub's node name, and allowed to `list` this leaf.
-hub = json.loads(res["configMaps"][f"{POD}-peers"]["data"]["peers.json"])["peers"]
+hub = json.loads(res["configMaps"][f"{SA}-peers"]["data"]["peers.json"])["peers"]
 check("the peers are the hubs", set(hub) == HUBS, sorted(hub))
 for h in sorted(HUBS):
     check(f"{h} may list", "list" in hub.get(h, {}).get("allow", []), hub.get(h))

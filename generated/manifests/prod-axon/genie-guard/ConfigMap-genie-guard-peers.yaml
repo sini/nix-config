@@ -6,5 +6,5 @@ metadata:
   labels:
     app.kubernetes.io/instance: genie-guard
     app.kubernetes.io/name: xmsg
-  name: genie-guard-xmsg-peers
+  name: genie-guard-peers
   namespace: genie

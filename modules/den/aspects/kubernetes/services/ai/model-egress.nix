@@ -50,8 +50,7 @@
       default = [
         {
           namespace = "genie";
-          # xmsg's leaf chart names the pod's ServiceAccount `<release>-xmsg`.
-          serviceAccount = "genie-guard-xmsg";
+          serviceAccount = "genie-guard";
         }
         {
           namespace = "genie";

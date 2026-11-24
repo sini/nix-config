@@ -11,9 +11,8 @@
 # ConfigMap), the overlay the guard container. This aspect sets only the instance:
 # the hubs, the images, and the objects around the pod.
 #
-# The chart names its ServiceAccount `<release>-xmsg`, so the pod runs as
-# genie-guard-xmsg while its SPIFFE id keeps sa/genie-guard (the node name). The
-# egress policies select the ServiceAccount the pod runs as.
+# The Deployment and ServiceAccount are named genie-guard (fullnameOverride,
+# serviceAccount.name), the SA the SPIFFE id names and the egress policies select.
 #
 # Identity (plan §6.7): a cert-manager Certificate from xmsg-cluster-ca whose one
 # URI SAN is spiffe://<environment domain>/ns/genie/sa/genie-guard. Its Secret's tls.crt is
@@ -40,8 +39,6 @@
 let
   namespace = "genie";
   name = "genie-guard";
-  # The chart's `<release>-xmsg` ServiceAccount, the one the pod runs as.
-  serviceAccount = "${name}-xmsg";
   issuer = "xmsg-cluster-ca";
   tlsSecret = "${name}-xmsg-tls";
 
@@ -76,11 +73,11 @@ in
   # Source-only pins of the chart and the overlay, apart from the `xmsg` and
   # `genie-agent` inputs that pin the fleet's daemon and package.
   flake-file.inputs.xmsg-chart = {
-    url = "github:sini/xmsg/a3efb129c8e99a873c7a39b6f78eb8768b5719c5";
+    url = "github:sini/xmsg/ea825d4d7c9ebe294b31ab336981996a848c7d93";
     flake = false;
   };
   flake-file.inputs.genie-agent-helm = {
-    url = "github:sini/genie-agent/4d8e39cf6487270d472f8dddda9fb1b371993bdf";
+    url = "github:sini/genie-agent/8017e558234e56e8af65b31452f109bcc4468b61";
     flake = false;
   };
 
@@ -187,6 +184,8 @@ in
           helm.releases.${name} = {
             chart = "${inputs.xmsg-chart}/charts/xmsg";
             values = lib.recursiveUpdate overlay {
+              fullnameOverride = name;
+              serviceAccount.name = name;
               image = { inherit (images."sini/xmsg") repository digest; };
               tls.existingSecret = tlsSecret;
               leaf = {
@@ -244,7 +243,7 @@ in
                 {
                   key = "k8s:io.cilium.k8s.policy.serviceaccount";
                   operator = "In";
-                  values = [ serviceAccount ];
+                  values = [ name ];
                 }
               ];
               egress = map (h: {

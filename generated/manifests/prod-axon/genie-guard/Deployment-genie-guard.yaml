@@ -4,7 +4,7 @@ metadata:
   labels:
     app.kubernetes.io/instance: genie-guard
     app.kubernetes.io/name: xmsg
-  name: genie-guard-xmsg
+  name: genie-guard
   namespace: genie
 spec:
   replicas: 1
@@ -17,7 +17,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/peers: ce8d1dc9f59e72caebbe20558b3e21c53b4e66c2ac76ba8657badbb3935598c9
+        checksum/peers: 7f8d5639b38f954805bb15077f904d9d793f9080b366002255ec4c771df7f849
       labels:
         app.kubernetes.io/instance: genie-guard
         app.kubernetes.io/name: xmsg
@@ -49,10 +49,7 @@ spec:
           image: ghcr.io/sini/xmsg@sha256:ddd2fa1543c2c6883823e6eebf8633f1e0bd0de7a606f5f8ed8ab59bbb28909c
           imagePullPolicy: IfNotPresent
           name: xmsg
-          resources:
-            requests:
-              cpu: 10m
-              memory: 32Mi
+          resources: {}
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -85,6 +82,10 @@ spec:
               value: /run
           image: ghcr.io/sini/genie-guard@sha256:ead3fbd648b3b67c58853d567d976bbe68af6df5309732d518b2ebae5972c9ce
           name: genie-guard
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -131,7 +132,7 @@ spec:
         runAsUser: 65532
         seccompProfile:
           type: RuntimeDefault
-      serviceAccountName: genie-guard-xmsg
+      serviceAccountName: genie-guard
       volumes:
         - emptyDir:
             medium: Memory
@@ -143,7 +144,7 @@ spec:
             defaultMode: 288
             secretName: genie-guard-xmsg-tls
         - configMap:
-            name: genie-guard-xmsg-peers
+            name: genie-guard-peers
           name: peers
         - emptyDir: {}
           name: tmp
