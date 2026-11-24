@@ -1,4 +1,24 @@
 { lib, ... }:
+let
+  # The mux can wedge while every upstream still answers (blade, 2026-11-23: after two
+  # weeks `ssh-add -l` against it hung, so every outbound ssh hung at agent lookup). A
+  # hung mux is alive to the service manager; this asks it for its identities under a
+  # timeout, twice 5 s apart, and restarts it if both hang. `sock` is shell for the mux
+  # socket; `restart` is the platform's restart command.
+  livenessCheck =
+    pkgs:
+    { sock, restart }:
+    pkgs.writeShellScript "ssh-agent-mux-liveness" ''
+      sock=${sock}
+      [ -S "$sock" ] || exit 0
+      hung() { SSH_AUTH_SOCK="$sock" ${pkgs.coreutils}/bin/timeout 10 ${pkgs.openssh}/bin/ssh-add -l >/dev/null 2>&1; [ $? -eq 124 ]; }
+      hung || exit 0
+      sleep 5
+      hung || exit 0
+      echo "ssh-agent-mux: $sock did not answer ssh-add -l in 10s, twice; restarting it" >&2
+      ${restart}
+    '';
+in
 {
   den.aspects.applications.dev.security.ssh-agent-mux = {
     settings.siniFork = lib.mkOption {
@@ -134,6 +154,26 @@
             Restart = "always";
           };
         };
+
+        systemd.user.services.ssh-agent-mux-liveness = {
+          Unit.Description = "Restart the SSH agent multiplexer if it stops answering";
+          Service = {
+            Type = "oneshot";
+            ExecStart = livenessCheck pkgs {
+              sock = ''"''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/ssh-agent-mux.sock"'';
+              restart = "${pkgs.systemd}/bin/systemctl --user restart ssh-agent-mux.service";
+            };
+          };
+        };
+        systemd.user.timers.ssh-agent-mux-liveness = {
+          Unit.Description = "Check the SSH agent multiplexer every minute";
+          Timer = {
+            OnActiveSec = "1min";
+            OnUnitActiveSec = "1min";
+            AccuracySec = "10s";
+          };
+          Install.WantedBy = [ "timers.target" ];
+        };
       };
 
     homeDarwin =
@@ -232,6 +272,21 @@
             ProgramArguments = [ "${wrapper}" ];
             RunAtLoad = true;
             KeepAlive = true;
+          };
+        };
+
+        launchd.agents.ssh-agent-mux-liveness = {
+          enable = true;
+          config = {
+            ProgramArguments = [
+              "${livenessCheck pkgs {
+                sock = ''"$(/usr/bin/getconf DARWIN_USER_TEMP_DIR)/ssh-agent-mux.sock"'';
+                restart = "/bin/launchctl kickstart -k gui/$(/usr/bin/id -u)/org.nix-community.home.ssh-agent-mux";
+              }}"
+            ];
+            StartInterval = 60;
+            RunAtLoad = false;
+            ProcessType = "Background";
           };
         };
 
