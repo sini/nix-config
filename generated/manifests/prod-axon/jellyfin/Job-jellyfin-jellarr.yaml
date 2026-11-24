@@ -23,7 +23,7 @@ spec:
               value: /run/secrets/jellarr/api-key
             - name: JELLARR_WAIT_TIMEOUT
               value: "1800"
-          image: ghcr.io/sini/jellarr@sha256:0890cddeef661fb77601041349fb92bc54ff519ea5b53d77df5a4c499d991ea6
+          image: ghcr.io/sini/jellarr@sha256:47f1a4ab88ea43a80beb9aab8f00d93874d88eda9029d684a04ed3f0c7f02af6
           name: jellarr
           securityContext:
             allowPrivilegeEscalation: false

@@ -13,30 +13,15 @@ in
     # for every instance (docs/jellyfin-to-k8s.md): uplink reads it as
     # host.settings.services.media.jellyfin.jellarr, the cluster as
     # cluster.settings.services.media.jellyfin.jellarr. Call it with what differs per
-    # instance; it returns the config with every `${` in a string escaped as `$${`
-    # (jellarr expands `${VAR}` in string values after parsing; `$${` is its literal
-    # `${`, and any other `$` stays as written), so builtins.toJSON of the result is
-    # the file for --configFile. A secret goes in as
-    # { _file = path; }, which jellarr replaces with the file's contents.
+    # instance; builtins.toJSON of the result is the file for --configFile. Strings go
+    # through as written: jellarr (0.6+) expands `${VAR}` only with `expandEnv`, which
+    # is off. A secret goes in as { _file = path; }, which jellarr replaces with the
+    # file's contents.
     settings.jellarr = lib.mkOption {
       type = lib.types.functionTo lib.types.attrs;
-      description = "Instance values -> jellarr's config (escaped).";
+      description = "Instance values -> jellarr's config.";
       default =
         let
-          # Every string, at any depth, with `${` written as `$${`, jellarr's escape for a
-          # literal `${`. Any other `$` passes through jellarr unchanged, so nothing else
-          # needs escaping. Attribute names are left alone: jellarr expands values only.
-          escape =
-            v:
-            if builtins.isString v then
-              lib.replaceStrings [ "\${" ] [ "$\${" ] v
-            else if builtins.isList v then
-              map escape v
-            else if builtins.isAttrs v then
-              lib.mapAttrs (_: escape) v
-            else
-              v;
-
           library = name: collectionType: dir: extra: {
             inherit name collectionType;
             libraryOptions = {
@@ -205,9 +190,12 @@ in
                 (library "Concerts" "musicvideos" "${mediaRoot}/concerts" { })
               ];
 
-              # Only Admin is declared; SSO creates the rest, and jellarr never reads or
-              # touches undeclared users. On a migrated database the first run resets
-              # Admin's password to this file (jellarr's passwordFile reconciliation).
+              # Admin's password is checked on every run and reset to the file if it
+              # drifted (opt-in since jellarr 0.6; it was the default before).
+              reconcilePasswords = true;
+
+              # Only Admin is declared; SSO creates the rest (authoritative.users in the
+              # cluster's call decides what happens to the ones that leave).
               users = [
                 {
                   name = "Admin";
@@ -284,7 +272,7 @@ in
               ];
             };
         in
-        args: escape (config args);
+        config;
     };
 
     includes = [
@@ -344,7 +332,7 @@ in
               host.settings.services.media.jellyfin.jellarr {
                 baseUrl = "http://127.0.0.1:8096";
                 inherit domain;
-                # LoadCredential below; a literal path, since the setting escapes `${`.
+                # LoadCredential below; a literal path (jellarr expands no `${VAR}`).
                 adminPasswordFile = "/run/credentials/jellarr.service/admin-password";
                 knownProxies = [ "127.0.0.1" ];
                 hardwareDecodingCodecs = [

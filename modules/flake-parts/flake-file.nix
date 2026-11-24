@@ -79,7 +79,7 @@
 
       # Jellyfin's settings over its API (docs/jellyfin-to-k8s.md); the fork at v0.3.4.
       jellarr = {
-        url = "github:sini/jellarr/v0.5.0";
+        url = "github:sini/jellarr/v0.6.0";
         inputs = {
           nixpkgs.follows = "nixpkgs-unstable";
           # The fork's checks only (its Jellyfin 10.11 VM tests).

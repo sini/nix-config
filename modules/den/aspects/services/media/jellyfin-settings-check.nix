@@ -1,14 +1,15 @@
 # The Jellyfin aspect's jellarr setting (services.media.jellyfin.settings.jellarr),
 # read from uplink's settings and called for a sample instance, against what jellarr and both instances rely on:
-#   escape     a `${` in a rendered value becomes `$${` (jellarr's literal `${`), and
-#              any other `$` is left as written
+#   verbatim   a rendered value is written exactly as declared: a `${` and any other `$`
+#              pass through (jellarr expands nothing; expandEnv is off), and no value
+#              carries jellarr's old `$${` escape
+#   reconcile  reconcilePasswords is on, so Admin's password converges every run
 #   libraries  the 8 declared names, matching uplink's virtual folders
 #   admin      the only declared user, with a passwordFile and no inline password
 #   pins       the plugins are pinned to uplink's installed versions
 #   shoko      Anime and AnimeMovies take Shoko as their only metadata fetcher and first
 #              image fetcher, with their path set only at creation (Shokofin's VFS)
-#   json       render is valid JSON (so valid YAML) that round-trips to the escaped
-#              config
+#   json       render is valid JSON (so valid YAML) that round-trips to the config
 #   nix build .#checks.x86_64-linux.jellyfin-settings
 { config, lib, ... }:
 let
@@ -25,12 +26,16 @@ let
   };
   cfg = jellarr args;
   # Values the setting renders (the domain reaches the SSO button): one with `${`,
-  # one with a lone `$` and a `$$`, which must pass through untouched.
+  # one with a lone `$` and a `$$`; both must pass through exactly as written.
   brace = jellarr (args // { domain = "jf\${x}.example.test"; });
   plain = jellarr (args // { domain = "jf$5$$6.example.test"; });
   names = map (f: f.name) cfg.library.virtualFolders;
   checks = {
-    escape = lib.hasInfix "https://jf$\${x}.example.test/sso" brace.branding.loginDisclaimer;
+    verbatim =
+      lib.hasInfix "https://jf\${x}.example.test/sso" brace.branding.loginDisclaimer
+      && !(lib.hasInfix "$\${" (builtins.toJSON brace))
+      && !(lib.hasInfix "$\${" (builtins.toJSON cfg));
+    reconcile = cfg.reconcilePasswords or false;
     untouched = lib.hasInfix "https://jf$5$$6.example.test/sso" plain.branding.loginDisclaimer;
     libraries =
       names == [
