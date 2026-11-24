@@ -395,7 +395,7 @@
       flake = false;
     };
     xmsg-mcp-gateway-chart = {
-      url = "github:sini/xmsg-mcp-gateway/56861f16c3b4ef8891954a45b6b8bc1258d2ca24";
+      url = "github:sini/xmsg-mcp-gateway/fecf6200a8392c2750eb5273abe93d3cd51d7be8";
       flake = false;
     };
     zen-browser = {

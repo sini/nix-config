@@ -28,32 +28,28 @@
 # never re-adds group write to them on a later mount. The gateway itself refuses an
 # Events key that is not 32 bytes (event_store.rs), at the first migrate-events.
 #
-# Grant store (events.md "Configure and migrate", serving.md "Repeatable migrations in a
-# shell-less init chain"). Initialization never overwrites, so the real store is
-# created only when absent. The gateway image has no shell, so the fresh path always
-# builds a store in a staging directory on the PVC (init, every migration, enroll: a
-# new grant is enrolled after migrate-events, so its never-enabled history is
-# explicit), and `store-install` (busybox) moves it into place only if state/grants.db
-# is absent. Otherwise it discards it. A crash between steps therefore never leaves a
-# half-built real store. A new grant is disabled at revision 1: `enable` is never run
-# here. It is a deliberate one-time cutover step
+# Grant store (events.md "Configure and migrate", serving.md). The chart's bootstrap
+# runs on the real store: `init --if-needed` creates it only when absent (an existing
+# one prints `already initialized` after a read-only open), then `store-backup`, every
+# migrate-* with --if-needed, `enroll --if-needed` per grant and `apply`. enroll after
+# the migrations makes a new grant's never-enabled history explicit; an existing grant
+# whose exact binding differs fails the pod (EnrollmentConflict), never rewritten. A
+# new grant is disabled at revision 1: `enable` is never run here. It is a deliberate
+# one-time cutover step
 # (`xmsg-mcp-gateway --state /var/lib/xmsg-mcp-gateway/state/grants.db enable chatgpt 1`).
 #
-# Migrations: every migrate-* runs with --if-needed, on the staged store and then on
-# the real one, in the gateway's order. --if-needed migrates a store that needs it and
-# otherwise prints `already migrated` and exits 0 without writing; unknown markers,
-# unsupported schemas and partial migrations still fail (serving.md). Retirement and
-# custody summaries are one-way (older images refuse their application_id), so
-# `store-backup` (the pinned python image, for its sqlite3 module) first asks the
-# gateway itself: it runs the gateway's `migrations-pending` on the real store (serving.md
-# "Inspect pending migrations": one read-only snapshot, exit 0 none pending, 10 pending,
-# 1 a missing, corrupt or unsupported store). The gateway binary comes from an image
-# volume of the gateway image (its /nix at /nix, so the binary's own loader resolves,
-# and its /bin), because a nonzero exit fails an initContainer: a gateway-image step
-# could not report exit 10 and let the chain go on. Only on exit 10 does it take an
-# online backup (the sqlite3 backup API, never cp) to
-# backups/grants.db.pre-migrate-<UTC time>; on 0, a fresh store included, none. Any
-# other exit fails the pod. Rolling back to an older image means restoring that backup.
+# Migrations: --if-needed migrates a store that needs it and otherwise prints `already
+# migrated` and exits 0 without writing; unknown markers, unsupported schemas and
+# partial migrations still fail (serving.md). Retirement and custody summaries are
+# one-way (older images refuse their application_id), so `store-backup`, in the
+# chart's store.preMigrate slot, is the gateway's `backup-if-pending` (serving.md
+# "Snapshot before a pending migration"): only with a migration pending does it publish
+# an online backup (the SQLite backup API) to backups/gateway-backup-v1-*/ and keep the
+# newest keepPreMigrate. A hot rollback journal left by a killed writer is recovered by
+# the first read-only open (store-init's), after byte copies of the database and journal
+# as found go to grants.db.recovery/ (serving.md "Crash recovery during inspection").
+# Any failure fails the pod before a migration. Rolling back to an older image means
+# restoring that backup.
 #
 # Outbound policy (outbound.md, `apply`): `store-apply`, the last step, then applies
 # policy.json, the grant's send and reply targets (every hub's sessions), to the real
@@ -61,7 +57,7 @@
 # at revision N`, writes nothing and exits 0, so a restart is a no-op. A change advances
 # the revision by one (and, like set-outbound-policy, pauses the Events subscription).
 # No --enabled or --disabled: apply keeps the grant's enablement. The grant always
-# exists here (store-install leaves an enrolled store), and a missing one fails the pod.
+# exists here (the bootstrap enrolls it), and a missing one fails the pod.
 #
 # Backup: the Events key encrypts the store's callback URLs, delivery secrets and
 # retained tokens, so the store is useless without it. The key lives in agenix (git)
@@ -74,12 +70,6 @@
 # applies, the leaf, the tunnel sidecar, the Service, the routes, the PVC and the custody
 # alerts. This aspect sets only the instance. fullnameOverride and serviceAccount.name
 # keep every object named xmsg-gateway (the SA the SPIFFE id names).
-#
-# shortcut: the staged-store chain (staging, staged-*, store-install, store-backup) rides
-# in the chart's store.preMigrate slot because the pinned gateway image predates `init
-# --if-needed`, `enroll --if-needed` and `backup-if-pending`; drop it for
-# store.bootstrap.enabled and a backup-if-pending hook once the image is at or past the
-# chart's rev. Transition shim, removed by bead xmsg-1as8 (check hot-journal recovery first).
 #
 # Gating check: xmsg-gateway-check.nix, over axon's rendered manifests.
 {
@@ -111,22 +101,17 @@ let
   port = 8787;
 
   # The in-pod paths are the chart's (_helpers.tpl); these name the ones the instance
-  # values and the staged chain refer to.
+  # values and the backup step refer to.
   tlsDir = "/etc/xmsg/tls";
   configDir = "/etc/xmsg-mcp-gateway";
   dataDir = "/var/lib/xmsg-mcp-gateway";
   stateDir = "${dataDir}/state";
-  stagingDir = "${dataDir}/staging";
   # The chart's `prepare` copies each secrets item to <keysDir>/<item key>.
   keysDir = "/run/xmsg-mcp-gateway/keys";
   grantStore = "${stateDir}/grants.db";
-  stagedStore = "${stagingDir}/grants.db";
   backupsDir = "${dataDir}/backups";
-  # store-backup keeps this many pre-migrate copies (xmsg-design, 2026-11-13).
+  # store-backup keeps this many pre-migrate backups (xmsg-design, 2026-11-13).
   keepPreMigrate = 3;
-  # The gateway image's /bin, mounted in store-backup (its symlink resolves into /nix).
-  gatewayBinDir = "/opt/xmsg-mcp-gateway/bin";
-  gatewayBin = "${gatewayBinDir}/xmsg-mcp-gateway";
   eventsKey = "${keysDir}/events-key";
   lookupSecret = "${keysDir}/lookup-secret";
   asClientSecret = "${keysDir}/as-client-secret";
@@ -187,7 +172,7 @@ in
 {
   # Source-only pin of the chart, apart from the image pin the pod runs.
   flake-file.inputs.xmsg-mcp-gateway-chart = {
-    url = "github:sini/xmsg-mcp-gateway/56861f16c3b4ef8891954a45b6b8bc1258d2ca24";
+    url = "github:sini/xmsg-mcp-gateway/fecf6200a8392c2750eb5273abe93d3cd51d7be8";
     flake = false;
   };
 
@@ -603,12 +588,10 @@ in
             { verifier = kanidmVerifier; }
         );
 
-        mount = vol: path: {
-          name = vol;
-          mountPath = path;
+        dataMount = {
+          name = "data";
+          mountPath = dataDir;
         };
-        roMount = vol: path: mount vol path // { readOnly = true; };
-        dataMount = mount "data" dataDir;
 
         gatewayImage = ref images."sini/xmsg-mcp-gateway";
         image = i: { inherit (images.${i}) repository digest; };
@@ -617,44 +600,6 @@ in
           "app.kubernetes.io/name" = "xmsg-mcp-gateway";
           "app.kubernetes.io/instance" = name;
         };
-
-        # Each store step is the gateway CLI itself: `prefix` names the store it runs on.
-        storeStep = prefix: store: args: {
-          name = "${prefix}-${lib.head args}";
-          image = gatewayImage;
-          args = [
-            "--state"
-            store
-          ]
-          ++ args;
-          securityContext = hardened;
-          volumeMounts = [
-            dataMount
-            (roMount "keys" (dirOf keysDir))
-            (roMount "config" configDir)
-          ];
-        };
-
-        # The gateway's migrations, in its order, each a no-op on a store that has it
-        # (the same list the chart runs on the real store).
-        migrations =
-          prefix: store:
-          map (args: storeStep prefix store (args ++ [ "--if-needed" ])) (
-            [
-              [ "migrate-custody" ]
-              [ "migrate-outbound" ]
-              [ "migrate-retirement" ]
-              [ "migrate-custody-summaries" ]
-              [
-                "migrate-events"
-                "--key-file"
-                eventsKey
-              ]
-              [ "migrate-profiles" ]
-              [ "migrate-attachments" ]
-            ]
-            ++ lib.optional asEnabled [ "migrate-authorization-server" ]
-          );
 
         # The grants the chart applies policy.json to (and whose binding-<id>.json it
         # writes), the first and, with the AS, the local one.
@@ -670,136 +615,23 @@ in
           inherit policy;
         };
 
-        # store.preMigrate: the staged fresh store, kept only if the real one is absent,
-        # then the backup decision; see the header.
-        stagedChain = [
-          {
-            name = "staging";
-            image = ref images."library/busybox";
-            command = [
-              "/bin/sh"
-              "-c"
-              ''
-                set -eu
-                umask 077
-                rm -rf ${stagingDir}
-                mkdir ${stagingDir}
-              ''
-            ];
-            securityContext = hardened;
-            volumeMounts = [ dataMount ];
-          }
-          (storeStep "staged" stagedStore [ "init" ])
-        ]
-        ++ migrations "staged" stagedStore
-        ++ map (
-          g:
-          storeStep (if g.id == grantId then "staged" else "staged-local") stagedStore [
-            "enroll"
-            g.id
-            "${configDir}/binding-${g.id}.json"
-          ]
-        ) grants
-        ++ [
-          {
-            name = "store-install";
-            image = ref images."library/busybox";
-            command = [
-              "/bin/sh"
-              "-c"
-              installScript
-            ];
-            securityContext = hardened;
-            volumeMounts = [ dataMount ];
-          }
-          {
-            name = "store-backup";
-            image = ref images."library/python";
-            command = [
-              "python3"
-              "-I"
-              "-c"
-              backupScript
-            ];
-            securityContext = hardened;
-            volumeMounts = [
-              dataMount
-              (roMount "gateway-image" "/nix" // { subPath = "nix"; })
-              (roMount "gateway-image" gatewayBinDir // { subPath = "bin"; })
-            ];
-          }
-        ];
-
-        installScript = ''
-          set -eu
-          if [ -e ${grantStore} ]; then
-            echo "${grantStore} present: left unchanged"
-          else
-            mv ${stagedStore} ${grantStore}
-            echo "${grantStore} created: grant ${grantId} enrolled, disabled at revision 1"
-          fi
-          rm -rf ${stagingDir}
-        '';
-
-        # The decision is the gateway's migrations-pending; only exit 10 backs the store
-        # up (the sqlite3 backup API, never cp), and the copy is verified. Any exit but
-        # 0 and 10 fails here, before any backup.
-        #
-        # A gateway killed mid-transaction (a node lost with the pod, 2026-11-13) leaves a
-        # hot rollback journal. migrations-pending opens read-only, which cannot roll it
-        # back, so every start would fail "authority store unavailable". So first: the
-        # database and its journal are copied as found (byte copies, the only faithful
-        # record of a hot journal), then one read-write open lets SQLite roll the journal
-        # back to the last committed state, as the gateway's own open would.
-        backupScript = ''
-          import os, shutil, sqlite3, subprocess, sys, time
-          os.umask(0o077)
-          journal = "${grantStore}-journal"
-          if os.path.exists(journal) and os.path.getsize(journal) > 0:
-              os.makedirs("${backupsDir}", mode=0o700, exist_ok=True)
-              out = "${backupsDir}/grants.db.hot-journal-" + time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
-              shutil.copyfile("${grantStore}", out)
-              shutil.copyfile(journal, out + "-journal")
-              fd = os.open("${backupsDir}", os.O_RDONLY)
-              os.fsync(fd)
-              os.close(fd)
-              db = sqlite3.connect("${grantStore}")
-              ok = db.execute("PRAGMA quick_check").fetchone()[0] == "ok"
-              db.close()
-              if not ok:
-                  sys.exit("${grantStore}: quick_check failed after rolling back the hot journal; copies at " + out)
-              print("${grantStore}: rolled back a hot journal; the database and journal as found are at " + out)
-          r = subprocess.run(["${gatewayBin}", "--state", "${grantStore}", "migrations-pending"], stdout=subprocess.PIPE, text=True)
-          if r.returncode == 0:
-              print("${grantStore}: no migration pending, no backup")
-              sys.exit(0)
-          if r.returncode != 10:
-              sys.exit("${grantStore}: migrations-pending exited " + str(r.returncode))
-          src = sqlite3.connect("file:${grantStore}?mode=ro", uri=True)
-          app = src.execute("PRAGMA application_id").fetchone()[0]
-          os.makedirs("${backupsDir}", mode=0o700, exist_ok=True)
-          out = "${backupsDir}/grants.db.pre-migrate-" + time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
-          dst = sqlite3.connect(out + ".partial")
-          src.backup(dst)
-          ok = dst.execute("PRAGMA application_id").fetchone()[0] == app and dst.execute("PRAGMA quick_check").fetchone()[0] == "ok"
-          dst.close()
-          if not ok:
-              sys.exit(out + ".partial: backup failed verification")
-          os.replace(out + ".partial", out)
-          fd = os.open("${backupsDir}", os.O_RDONLY)
-          os.fsync(fd)
-          os.close(fd)
-          print("${grantStore}: backed up to " + out + " before " + ", ".join(r.stdout.split()))
-          # A migration left pending on purpose (the AS cutover) backs up on every start:
-          # keep the newest ${toString keepPreMigrate} pre-migrate copies. Only that prefix; hot-journal
-          # copies and the gateway's <db>.recovery/ are never pruned. Names sort by time.
-          olds = sorted(f for f in os.listdir("${backupsDir}") if f.startswith("grants.db.pre-migrate-") and not f.endswith(".partial"))
-          for f in olds[:-${toString keepPreMigrate}]:
-              os.remove(os.path.join("${backupsDir}", f))
-              print("${backupsDir}: pruned " + f)
-          st = os.statvfs("${backupsDir}")
-          print("${backupsDir}: backup " + str(os.path.getsize(out)) + " B; volume free " + str(st.f_bavail * st.f_frsize) + " of " + str(st.f_blocks * st.f_frsize) + " B; kept " + str(min(len(olds), ${toString keepPreMigrate})) + " pre-migrate")
-        '';
+        # store.preMigrate: the gateway's own pre-migration backup, on the real store
+        # after the chart's `init --if-needed` and before its migrations; see the header.
+        backupStep = {
+          name = "store-backup";
+          image = gatewayImage;
+          args = [
+            "--state"
+            grantStore
+            "backup-if-pending"
+            "--backup-dir"
+            backupsDir
+            "--keep"
+            (toString keepPreMigrate)
+          ];
+          securityContext = hardened;
+          volumeMounts = [ dataMount ];
+        };
 
         egressRule =
           to: port:
@@ -871,7 +703,8 @@ in
                       # maintenance window (not a routine restart) first ran it (§2.10 step 3).
                       authorizationServer = asEnabled;
                       inherit grants;
-                      preMigrate = stagedChain;
+                      bootstrap.enabled = true;
+                      preMigrate = [ backupStep ];
                     };
                     xmsg = {
                       image = image "sini/xmsg";
@@ -926,13 +759,6 @@ in
                       namespace = "monitoring";
                       labels.loki_rule = "true";
                     };
-                    # The gateway image itself, for store-backup's migrations-pending.
-                    extraVolumes = [
-                      {
-                        name = "gateway-image";
-                        image.reference = gatewayImage;
-                      }
-                    ];
                   };
                 };
               };

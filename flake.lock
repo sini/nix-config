@@ -5568,17 +5568,17 @@
     "xmsg-mcp-gateway-chart": {
       "flake": false,
       "locked": {
-        "lastModified": 1795523630,
-        "narHash": "sha256-uD9hFLwQpC9Jb+cEmiNKJHhOB3hlHGX+onmxQ6a5RNE=",
+        "lastModified": 1795534193,
+        "narHash": "sha256-U8v5+gc8SkyevoxtrdNJ/pcfbDIf953uvfSmeRF165Q=",
         "owner": "sini",
         "repo": "xmsg-mcp-gateway",
-        "rev": "56861f16c3b4ef8891954a45b6b8bc1258d2ca24",
+        "rev": "fecf6200a8392c2750eb5273abe93d3cd51d7be8",
         "type": "github"
       },
       "original": {
         "owner": "sini",
         "repo": "xmsg-mcp-gateway",
-        "rev": "56861f16c3b4ef8891954a45b6b8bc1258d2ca24",
+        "rev": "fecf6200a8392c2750eb5273abe93d3cd51d7be8",
         "type": "github"
       }
     },

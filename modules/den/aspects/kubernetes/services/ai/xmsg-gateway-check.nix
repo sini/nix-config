@@ -147,36 +147,22 @@ let
   mutants = {
     # A plain migration on the real store: fails on an already-migrated one.
     "store-migrate-custody-summaries has --if-needed" = noIfNeeded "store-migrate-custody-summaries";
-    # And on the staged store, which migrate-custody already summarized.
-    "staged-migrate-custody-summaries has --if-needed" = noIfNeeded "staged-migrate-custody-summaries";
     # The summaries migration on a scratch copy instead of the real store.
     "no scratch copy" =
       rewrite "store-migrate-custody-summaries" "args" "/state/grants.db"
         "/staging/custody-summaries-scratch.db";
-    # A backup on exit 0 too, so every start backs up.
-    "backup, exit 0: no backup" =
-      inits:
-      rewrite "store-backup" "command" "if r.returncode == 0:" "if False:" (
-        rewrite "store-backup" "command" "if r.returncode != 10:" "if r.returncode not in (0, 10):" inits
-      );
-    # No backup on exit 10, so a pending migration runs unprotected.
-    "backup, exit 10: one owner-private backup" =
-      rewrite "store-backup" "command" "if r.returncode == 0:"
-        "if r.returncode in (0, 10):";
-    # An error exit (a missing or corrupt store) taken for "nothing pending".
-    "backup, any other exit: refuses, no backup" =
-      rewrite "store-backup" "command" "if r.returncode == 0:"
-        "if r.returncode != 10:";
-    # The done-rules copied back in as the decision.
-    "backup decision is migrations-pending, no probe copy" =
-      rewrite "store-backup" "command" "if r.returncode == 0:"
-        ''if sqlite3.connect("file:/var/lib/xmsg-mcp-gateway/state/grants.db?mode=ro", uri=True).execute("PRAGMA user_version").fetchone()[0] == 4:'';
-    # A failed backup taken for success.
-    "backup, backup impossible: refuses" =
-      rewrite "store-backup" "command" "os.makedirs("
-        "sys.exit(0); os.makedirs(";
+    # A plain init: fails on the existing store at every start.
+    "store-init has --if-needed" = noIfNeeded "store-init";
+    # A plain enroll: fails on the enrolled grant at every start.
+    "store-enroll-chatgpt has --if-needed" = noIfNeeded "store-enroll-chatgpt";
+    # migrations-pending exits 10 with work pending, so no backup and a failed pod.
+    "backup is backup-if-pending beside the state directory" =
+      rewrite "store-backup" "args" "backup-if-pending"
+        "migrations-pending";
+    # Every backup but the newest pruned.
+    "backup keeps the newest 3" = rewrite "store-backup" "args" "3" "1";
     # A real-store migration before the backup that protects it.
-    "backup runs after install, before the real store's migrations" =
+    "backup runs after init, before the real store's migrations" =
       moveAfter "store-backup" "store-migrate-custody";
     # The policy applied before the last migration.
     "apply is last" = moveAfter "store-apply-chatgpt" "store-backup";

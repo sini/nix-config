@@ -11,13 +11,9 @@ Exits non-zero, naming every failed property, when one does not hold.
 """
 
 import json
-import os
 import posixpath
 import re
-import sqlite3
-import subprocess
 import sys
-import tempfile
 
 NS = SA = "xmsg-gateway"
 UID = 10001
@@ -84,8 +80,6 @@ POD_LABELS = {
     "app.kubernetes.io/instance": SA,
 }
 INGRESS_POLICY = f"{SA}-ingress"
-# The store application_ids (gateway grants.rs).
-LEGACY, RETIREMENT, SUMMARY = 0x584D4757, 0x584D4752, 0x584D4753
 
 
 failed = []
@@ -326,50 +320,42 @@ check(
 )
 check("socket volume is an emptyDir", "emptyDir" in volumes.get(shared, {}), shared)
 
-# 5. Grant store: busybox prepare; the fresh store built on the staged store (init,
-# every migration, enroll each grant); an install that moves it into place only when
-# the real store is absent; a backup only when a migration will run; every migration
-# on the real store; apply each grant. The AS adds its migration to both stores.
+# 5. Grant store: busybox prepare, then the chart's bootstrap, all on the real store:
+# init --if-needed (a no-op on an existing store), the backup, every migration, enroll
+# --if-needed each grant (exact binding, no rewrite), apply each grant. The AS adds its
+# migration.
 names = [c["name"] for c in inits]
 migs = MIGRATIONS + ["migrate-authorization-server"]
+ENROLLS = [f"store-enroll-{GRANT}", f"store-enroll-{LOCAL_GRANT}"]
 APPLIES = [f"store-apply-{GRANT}", f"store-apply-{LOCAL_GRANT}"]
 check(
     "initContainer order",
     names
-    == ["prepare", "staging", "staged-init"]
-    + [f"staged-{m}" for m in migs]
-    + ["staged-enroll", "staged-local-enroll", "store-install", "store-backup"]
+    == ["prepare", "store-init", "store-backup"]
     + [f"store-{m}" for m in migs]
+    + ENROLLS
     + APPLIES,
     names,
 )
 store = serving.get("grant_store")
-staged = arg_after(
-    next((c for c in inits if c["name"] == "staged-init"), {}).get("args", []),
-    "--state",
-)
-check("staged store is not the real one", staged and staged != store, staged)
-for c in inits:
-    prefix, _, step = c["name"].partition("-")
-    if prefix not in ("staged", "store") or step in ("install", "backup"):
-        continue
-    if step.startswith("local-"):
-        step = step.removeprefix("local-")
-    if step.startswith("apply-"):
-        step = "apply"
+for c in inits[1:]:
     args = c.get("args", [])
     check(f"{c['name']} uses the gateway image", c.get("image") == gw.get("image"))
     check(f"{c['name']} has no command override", "command" not in c)
     check(
-        f"{c['name']} runs on the {'staged' if prefix == 'staged' else 'real'} store",
-        arg_after(args, "--state") == (staged if prefix == "staged" else store),
-        args,
+        f"{c['name']} runs on the real store", arg_after(args, "--state") == store, args
     )
-    check(f"{c['name']} runs its step", args[2:3] == [step], args)
+    step = c["name"].removeprefix("store-")
     if step.startswith("migrate-"):
+        check(f"{c['name']} runs its step", args[2:3] == [step], args)
         check(f"{c['name']} has --if-needed", "--if-needed" in args, args)
-# No scratch copy: the only store paths any step names are the staged and the real
-# (and the real store's rollback journal, which store-backup recovers when hot).
+init = next((c for c in inits if c["name"] == "store-init"), {})
+check(
+    "store-init has --if-needed",
+    init.get("args") == ["--state", store, "init", "--if-needed"],
+    init.get("args"),
+)
+# No scratch copy: the only store path any step names is the real one.
 STORE_PATH = re.compile(r"/var/lib/xmsg-mcp-gateway/(?:state|staging)/[\w.-]+")
 used = {
     p
@@ -379,196 +365,57 @@ used = {
 }
 check(
     "no scratch copy",
-    used <= {staged, store, f"{store}-journal"}
+    used <= {store}
     and not any("symlink" in s for c in inits for s in c.get("command", [])),
-    sorted(used - {staged, store, f"{store}-journal"}),
+    sorted(used - {store}),
 )
-for prefix in ("staged", "store"):
-    mig = next((c for c in inits if c["name"] == f"{prefix}-migrate-events"), {})
-    check(
-        f"{prefix}-migrate-events uses the events key",
-        arg_after(mig.get("args", []), "--key-file") == ev.get("key_file"),
-    )
-for step, grant in (("staged-enroll", GRANT), ("staged-local-enroll", LOCAL_GRANT)):
+mig = next((c for c in inits if c["name"] == "store-migrate-events"), {})
+check(
+    "store-migrate-events uses the events key",
+    arg_after(mig.get("args", []), "--key-file") == ev.get("key_file"),
+)
+for step, grant in zip(ENROLLS, (GRANT, LOCAL_GRANT)):
     enroll = next((c for c in inits if c["name"] == step), {})
     check(
-        f"{step} enrolls {grant} with its binding",
-        enroll.get("args", [])[3:]
-        == [grant, f"{posixpath.dirname(config_path)}/binding-{grant}.json"],
+        f"{step} has --if-needed",
+        enroll.get("args", [])[2:]
+        == [
+            "enroll",
+            grant,
+            f"{posixpath.dirname(config_path)}/binding-{grant}.json",
+            "--if-needed",
+        ],
         enroll.get("args"),
     )
 check(
     "Events on the local grant", ev.get("grant_id") == LOCAL_GRANT, ev.get("grant_id")
 )
-install = next((c for c in inits if c["name"] == "store-install"), {})
-script = " ".join(install.get("command", []))
-check(
-    "install moves the staged store only if the real one is absent",
-    f"if [ -e {store} ]" in script and f"mv {staged} {store}" in script,
-    script,
-)
 
-# 5a. The backup: python on the data volume and the gateway image, after install and
-# before every migration of the real store. The decision is the gateway's
-# migrations-pending (serving.md "Inspect pending migrations": exit 0 none pending, 10
-# pending, anything else an error). Its script is run against fixture stores with a stub
-# gateway that exits as told, so the decision is behaviour, not text: each fixture's
-# shape contradicts the stub's exit, so a copy of the done-rules decides wrongly.
+# 5a. The backup: the gateway's backup-if-pending (serving.md "Snapshot before a pending
+# migration"), after init and before every migration of the real store, keeping the
+# newest 3 (xmsg-design, 2026-11-13), into a directory on the data volume beside, not
+# inside, the state directory.
 bc = next((c for c in inits if c["name"] == "store-backup"), {})
-bmounts = {m["mountPath"]: m for m in bc.get("volumeMounts", [])}
-image_vol = volumes.get(bmounts.get("/nix", {}).get("name"), {})
-bin_dir = next(
-    (
-        p
-        for p, m in bmounts.items()
-        if m.get("subPath") == "bin" and m["name"] == image_vol.get("name")
-    ),
-    None,
+bargs = bc.get("args", [])
+bdir = arg_after(bargs, "--backup-dir") or ""
+data = posixpath.dirname(posixpath.dirname(store or "/x/x"))
+check("backup keeps the newest 3", arg_after(bargs, "--keep") == "3", bargs)
+check(
+    "backup is backup-if-pending beside the state directory",
+    bargs[2:3] == ["backup-if-pending"]
+    and posixpath.dirname(bdir) == data
+    and bdir != posixpath.dirname(store or "")
+    and set(mounts(bc).values()) == {"data"},
+    (bargs, mounts(bc)),
 )
 check(
-    "backup is python on the data volume and the gateway image",
-    bc.get("command", [])[:3] == ["python3", "-I", "-c"]
-    and set(mounts(bc).values()) == {"data", image_vol.get("name")}
-    and image_vol.get("image", {}).get("reference") == gw.get("image")
-    and bmounts.get("/nix", {}).get("subPath") == "nix"
-    and all(m.get("readOnly") for m in bmounts.values() if m["name"] != "data")
-    and bin_dir is not None,
-    (bc.get("command", [])[:3], bmounts),
-)
-check(
-    "backup runs after install, before the real store's migrations",
+    "backup runs after init, before the real store's migrations",
     "store-backup" in names
-    and names.index("store-install")
+    and names.index("store-init")
     < names.index("store-backup")
     < min(names.index(f"store-{m}") for m in MIGRATIONS if f"store-{m}" in names),
     names,
 )
-# The done-rules' inputs: none may reach the decision again.
-script_text = " ".join(bc.get("command", []))
-check(
-    "backup decision is migrations-pending, no probe copy",
-    f'"{bin_dir}/xmsg-mcp-gateway", "--state", "{store}", "migrations-pending"'
-    in script_text
-    and not re.search(
-        r"user_version|sqlite_master|table_info|recovery_until|outbound_retire|0x584d47",
-        script_text,
-        re.IGNORECASE,
-    ),
-    script_text,
-)
-
-RETIREMENT_TABLES = (
-    "outbound_retirement_schema",
-    "outbound_request_fences",
-    "outbound_retired",
-    "outbound_retirement_clock",
-)
-
-
-def make_store(path, app, version, retired):
-    """A fixture store with the markers the gateway's migration_applied reads."""
-    db = sqlite3.connect(path)
-    db.execute(f"PRAGMA application_id = {app}")
-    db.execute(f"PRAGMA user_version = {version}")
-    db.execute("CREATE TABLE grants(id TEXT)")
-    db.execute("INSERT INTO grants VALUES ('fixture')")
-    if version >= 3:
-        cols = "owner TEXT" + (", recovery_until INTEGER" if retired else "")
-        db.execute(f"CREATE TABLE outbound_reservations({cols})")
-    for t in RETIREMENT_TABLES if retired else ():
-        db.execute(f"CREATE TABLE {t}(x)")
-    db.commit()
-    db.close()
-
-
-def run_backup(store_shape, exit_code, sealed=False):
-    """Run the backup script with the data directory moved under a temp dir and a stub
-    gateway exiting exit_code (printing one pending command on 10). sealed makes the
-    data directory unwritable, so no backup can be made there.
-    Returns (exit code, stub argv, [(partial, group/other mode bits, marker, rows)])."""
-    cmd = bc.get("command", [])
-    data = posixpath.dirname(posixpath.dirname(store))
-    with tempfile.TemporaryDirectory() as tmp:
-        root = tmp + data
-        os.makedirs(root + posixpath.dirname(store).removeprefix(data))
-        if store_shape:
-            make_store(root + store.removeprefix(data), *store_shape)
-        stub, argv_file = tmp + "/gateway", tmp + "/argv"
-        with open(stub, "w") as f:
-            f.write(
-                f"#!{sys.executable} -I\nimport json, sys\n"
-                f"json.dump(sys.argv[1:], open({argv_file!r}, 'w'))\n"
-                f"print('migrate-custody-summaries' if {exit_code} == 10 else '', end='')\n"
-                f"sys.exit({exit_code})\n"
-            )
-        os.chmod(stub, 0o755)
-        script = (
-            cmd[3].replace(f"{bin_dir}/xmsg-mcp-gateway", stub).replace(data, root)
-            if len(cmd) > 3
-            else ""
-        )
-        if sealed:
-            os.chmod(root, 0o555)
-        code = subprocess.run(
-            [sys.executable, "-I", "-c", script], capture_output=True, check=False
-        ).returncode
-        os.chmod(root, 0o755)
-        argv = None
-        if os.path.exists(argv_file):
-            with open(argv_file) as f:
-                argv = [a.replace(root, data) for a in json.load(f)]
-        backups = []
-        for dirpath, _, files in os.walk(root):
-            for f in files:
-                if "pre-migrate-" in f:
-                    p = posixpath.join(dirpath, f)
-                    b = sqlite3.connect(p)
-                    backups.append(
-                        (
-                            f.endswith(".partial"),
-                            os.stat(p).st_mode & 0o077,
-                            b.execute("PRAGMA application_id").fetchone()[0],
-                            b.execute("SELECT id FROM grants").fetchall(),
-                        )
-                    )
-                    b.close()
-        return code, argv, backups
-
-
-ROWS = [("fixture",)]
-MIGRATED, UNMIGRATED = (SUMMARY, 4, True), (RETIREMENT, 4, True)
-if store and bin_dir and len(bc.get("command", [])) > 3:
-    code, argv, backups = run_backup(UNMIGRATED, 0)
-    check(
-        "backup, exit 0: no backup",
-        (code, backups) == (0, []),
-        (code, backups),
-    )
-    check(
-        "backup runs migrations-pending on the real store",
-        argv == ["--state", store, "migrations-pending"],
-        argv,
-    )
-    code, _, backups = run_backup(MIGRATED, 10)
-    check(
-        "backup, exit 10: one owner-private backup",
-        (code, backups) == (0, [(False, 0, SUMMARY, ROWS)]),
-        (code, backups),
-    )
-    # 1 is the gateway's error exit (missing, corrupt, unsupported); 2 a usage error.
-    for unknown in (1, 2, 3, 11, 137):
-        code, _, backups = run_backup(MIGRATED, unknown)
-        check(
-            "backup, any other exit: refuses, no backup",
-            code != 0 and backups == [],
-            (unknown, code, backups),
-        )
-    code, _, backups = run_backup(UNMIGRATED, 10, sealed=True)
-    check(
-        "backup, backup impossible: refuses",
-        code != 0 and all(p for p, *_ in backups),
-        (code, backups),
-    )
 
 # 5b. The outbound policy, applied to the real store after install, per grant: every
 # hub's sessions and the relayed nodes', for send and reply. No enablement flag, so
