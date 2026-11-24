@@ -13,7 +13,7 @@ spec:
       labels:
         app.kubernetes.io/name: seerr-bootstrap
     spec:
-      automountServiceAccountToken: false
+      automountServiceAccountToken: true
       containers:
         - command:
             - python3
@@ -42,6 +42,7 @@ spec:
         runAsUser: 65534
         seccompProfile:
           type: RuntimeDefault
+      serviceAccountName: seerr-bootstrap
       volumes:
         - configMap:
             name: seerr-bootstrap

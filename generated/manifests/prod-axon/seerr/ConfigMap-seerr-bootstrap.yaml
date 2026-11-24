@@ -141,6 +141,27 @@ data:
     if not public["initialized"]:
         ok(call("POST", "/settings/initialize")[0], "initialize")
         print("initialized")
+
+    # Seerr reads trustProxy, csrfProtection and proxy.enabled at start only, so a
+    # change to them (the first setup's trustProxy) waits on a restart: a rollout
+    # restart of the Deployment, the only thing this Job's account may change.
+    status, st = call("GET", "/status", key=None)
+    ok(status, "status")
+    if st.get("restartRequired"):
+        sa = "/var/run/secrets/kubernetes.io/serviceaccount"
+        with open(f"{sa}/token") as f:
+            token = f.read().strip()
+        import ssl
+        ctx = ssl.create_default_context(cafile=f"{sa}/ca.crt")
+        stamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        patch = {"spec": {"template": {"metadata": {"annotations": {"kubectl.kubernetes.io/restartedAt": stamp}}}}}
+        req = urllib.request.Request(
+            "https://kubernetes.default.svc/apis/apps/v1/namespaces/media/deployments/seerr",
+            data=json.dumps(patch).encode(), method="PATCH",
+            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/strategic-merge-patch+json"})
+        with urllib.request.urlopen(req, timeout=30, context=ctx) as r:
+            ok(r.status, "restart Seerr")
+        print("restarted Seerr (restart-only settings changed)")
     print("seerr bootstrap complete")
   declared.json: '{"applicationUrl":"https://seerr.json64.dev","external":{"radarr":"https://radarr.json64.dev","sonarr":"https://sonarr.json64.dev"},"externalJellyfin":"https://jellyfin.json64.dev","jellyfin":{"ip":"jellyfin.media.svc","port":8096,"urlBase":"","useSsl":false},"main":{"localLogin":false,"mediaServerLogin":false,"newPlexLogin":true},"network":{"trustProxy":true},"radarr":{"directory":"/data/media/movies","hostname":"radarr.media.svc","minimumAvailability":"released","name":"Radarr","port":7878,"profile":"1080p Efficient"},"sonarr":{"animeDirectory":"/data/media/anime","animeProfile":"Anime 1080p","animeSeriesType":"anime","directory":"/data/media/tv","enableSeasonFolders":true,"hostname":"sonarr.media.svc","monitorNewItems":"all","name":"Sonarr","port":8989,"profile":"1080p Efficient","seriesType":"standard"},"users":{"admins":["dvicory","json","pol","shuo","sini","theutz","vic"],"import":["dvicory","ellen","greco","hugs","jenn","jennism","json","json_user","louisabella","pol","shuo","sini","taiche","theutz","vic","vincentpierre","will","yiran","you","zogger"]}}'
 kind: ConfigMap

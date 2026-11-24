@@ -1,0 +1,14 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: seerr-bootstrap
+  namespace: media
+rules:
+  - apiGroups:
+      - apps
+    resourceNames:
+      - seerr
+    resources:
+      - deployments
+    verbs:
+      - patch

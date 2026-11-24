@@ -18,6 +18,9 @@
 #   - afterwards the Job uses Seerr's API key (media-arr-api-keys `seerr`, also
 #     Seerr's API_KEY), and converges the Jellyfin, Sonarr, Radarr, login and
 #     proxy settings, the libraries, and the users;
+#   - trustProxy, csrfProtection and proxy.enabled take effect only at Seerr's start,
+#     so when one changed the Job restarts the Deployment (its account may patch
+#     deployment/seerr and nothing else);
 #   - sign-in is Jellyfin Quick Connect only: both password logins are off, and
 #     Quick Connect creates the Seerr user of any Jellyfin user on first use. The
 #     people of media.access are imported up front, and media.admins are Seerr
@@ -222,6 +225,27 @@ let
     if not public["initialized"]:
         ok(call("POST", "/settings/initialize")[0], "initialize")
         print("initialized")
+
+    # Seerr reads trustProxy, csrfProtection and proxy.enabled at start only, so a
+    # change to them (the first setup's trustProxy) waits on a restart: a rollout
+    # restart of the Deployment, the only thing this Job's account may change.
+    status, st = call("GET", "/status", key=None)
+    ok(status, "status")
+    if st.get("restartRequired"):
+        sa = "/var/run/secrets/kubernetes.io/serviceaccount"
+        with open(f"{sa}/token") as f:
+            token = f.read().strip()
+        import ssl
+        ctx = ssl.create_default_context(cafile=f"{sa}/ca.crt")
+        stamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        patch = {"spec": {"template": {"metadata": {"annotations": {"kubectl.kubernetes.io/restartedAt": stamp}}}}}
+        req = urllib.request.Request(
+            "https://kubernetes.default.svc/apis/apps/v1/namespaces/media/deployments/seerr",
+            data=json.dumps(patch).encode(), method="PATCH",
+            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/strategic-merge-patch+json"})
+        with urllib.request.urlopen(req, timeout=30, context=ctx) as r:
+            ok(r.status, "restart Seerr")
+        print("restarted Seerr (restart-only settings changed)")
     print("seerr bootstrap complete")
   '';
 in
@@ -351,6 +375,17 @@ in
                 ];
               };
 
+              allow-apiserver-egress-seerr-bootstrap.spec = {
+                description = "Allow seerr-bootstrap to restart the seerr Deployment through the kube-apiserver.";
+                endpointSelector.matchLabels."app.kubernetes.io/name" = "seerr-bootstrap";
+                egress = [
+                  {
+                    toEntities = [ "kube-apiserver" ];
+                    toPorts = [ { ports = [ (tcp 6443) ]; } ];
+                  }
+                ];
+              };
+
               allow-postgres-egress-seerr.spec = {
                 description = "Allow seerr to reach the media-pg CNPG cluster.";
                 endpointSelector.matchLabels."app.kubernetes.io/name" = "seerr";
@@ -433,6 +468,30 @@ in
               };
             };
 
+            serviceAccounts.seerr-bootstrap.automountServiceAccountToken = false;
+            roles.seerr-bootstrap.rules = [
+              {
+                apiGroups = [ "apps" ];
+                resources = [ "deployments" ];
+                resourceNames = [ "seerr" ];
+                verbs = [ "patch" ];
+              }
+            ];
+            roleBindings.seerr-bootstrap = {
+              roleRef = {
+                apiGroup = "rbac.authorization.k8s.io";
+                kind = "Role";
+                name = "seerr-bootstrap";
+              };
+              subjects = [
+                {
+                  kind = "ServiceAccount";
+                  name = "seerr-bootstrap";
+                  namespace = "media";
+                }
+              ];
+            };
+
             configMaps.seerr-bootstrap.data = {
               "bootstrap.py" = bootstrapScript;
               "declared.json" = builtins.toJSON (
@@ -460,7 +519,10 @@ in
                   metadata.labels."app.kubernetes.io/name" = "seerr-bootstrap";
                   spec = {
                     restartPolicy = "OnFailure";
-                    automountServiceAccountToken = false;
+                    # Its token restarts Seerr when a restart-only setting changed
+                    # (roles below: patch on deployment/seerr and nothing else).
+                    serviceAccountName = "seerr-bootstrap";
+                    automountServiceAccountToken = true;
                     enableServiceLinks = false;
                     # The Secrets' files are root-owned; fsGroup makes them readable (0440).
                     securityContext = {
