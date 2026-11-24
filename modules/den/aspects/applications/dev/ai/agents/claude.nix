@@ -13,7 +13,12 @@
 # Switching blanket -> per-entry reuses the same /persist/.../.claude/* paths, so
 # existing data is preserved; an entry omitted from every bucket is not deleted,
 # only unmounted (recoverable by adding it to a bucket).
-{ inputs, ... }:
+{ config, inputs, ... }:
+let
+  # Hosts with no nix memory cap to apply (darwin: no systemd scopes). A nix command
+  # sent to one over ssh runs there, so this host's cap cannot wrap it.
+  uncappedHosts = builtins.attrNames (config.flake.darwinConfigurations or { });
+in
 {
   # Claude Code plugin marketplaces, store-pinned: CC resolves plugins from these
   # nix-store paths instead of fetching from GitHub at runtime (consistent with the
@@ -56,13 +61,18 @@
         # enforced, and then its rule, guard clause and brief sentence are left out.
         nixCap = lib.concatStringsSep " " config.agents.nixEvalCap;
         capped = config.agents.nixEvalCap != [ ];
+        # A command that is `ssh <uncapped host> ...` runs its nix there, where no cap exists.
+        uncappedSsh = lib.concatStringsSep "|" uncappedHosts;
         capGuard = lib.optionalString capped ''
-          if ! printf '%s' "$cmd" | grep -q 'MemoryMax=' \
-            && printf '%s\n' "$cmd" | grep -Eq "''${at}(nix[[:space:]]+(eval|build|flake[[:space:]]+check|develop[[:space:]].*(-c|--command)[[:space:]]+ci)|nix-unit)([[:space:]]|\$)"; then
-            refuse "Refused: run nix eval/build/flake check/nix-unit uncapped. Re-run as:
-          ${nixCap} $cmd
-          (rc 137 under the cap is a finding; never re-run it uncapped.)"
-          fi
+                    if ! printf '%s' "$cmd" | grep -q 'MemoryMax=' \
+          ${
+            lib.optionalString (uncappedHosts != [ ])
+              "            && ! printf '%s' \"$cmd\" | grep -Eq '^[[:space:]]*ssh([[:space:]]+-[^[:space:]]+([[:space:]]+[^-[:space:]][^[:space:]]*)?)*[[:space:]]+([^@[:space:]]+@)?(${uncappedSsh})([.][^[:space:]]*)?[[:space:]]' \\\n"
+          }            && printf '%s\n' "$cmd" | grep -Eq "''${at}(nix[[:space:]]+(eval|build|flake[[:space:]]+check|develop[[:space:]].*(-c|--command)[[:space:]]+ci)|nix-unit)([[:space:]]|\$)"; then
+                      refuse "Refused: run nix eval/build/flake check/nix-unit uncapped. Re-run as:
+                    ${nixCap} $cmd
+                    (rc 137 under the cap is a finding; never re-run it uncapped.)"
+                    fi
         '';
         extensionsList = lib.flatten agent-extensions;
 
