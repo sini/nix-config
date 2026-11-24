@@ -59,6 +59,7 @@ in
           "sini.cortex"
           "sini.bitstream"
           "sini.patch"
+          "sini.blade"
         ];
         # json's kanidm person UUID, the same owner `sub` the gateway admits (clusters/axon.nix).
         subject = "b01ebf55-9b81-4d78-a308-8c2b9e5b46c0";

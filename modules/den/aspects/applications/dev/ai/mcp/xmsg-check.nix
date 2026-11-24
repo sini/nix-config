@@ -1,7 +1,7 @@
 # xmsg-check: two checks over what nix-config renders for xmsg.
 #
 # xmsg-peers: every peers file loads in the xmsg it runs (`xmsg check-peers`, the
-# loader `xmsg serve` uses): bitstream's and cortex's, each checked against its own
+# loader `xmsg serve` uses): bitstream's, cortex's and blade's, each checked against its own
 # node certificate, and the genie-guard pod's ConfigMap. The pod's `ca` is a path
 # inside the pod (cert-manager's ca.crt, the xmsg root), and the loader reads it, so
 # the check points it at the committed root .crt instead.
@@ -22,6 +22,7 @@ let
   hosts = [
     "bitstream"
     "cortex"
+    "blade"
   ];
   nixosOf = h: config.flake.nixosConfigurations.${h};
   homeOf = h: (nixosOf h).config.home-manager.users.sini;
@@ -41,7 +42,7 @@ let
         name = "${h}: opencode loads the xmsg plugin";
         ok = (homeOf h).xdg.configFile ? "opencode/plugin/xmsg.ts";
       }
-    ]) (hosts ++ [ "blade" ])
+    ]) hosts
     ++ [
       {
         # darwin runs its node under launchd (the xmsg module's agent), not systemd.

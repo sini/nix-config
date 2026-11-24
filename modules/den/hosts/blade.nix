@@ -17,6 +17,12 @@
         wipeRootOnBoot = true;
         wipeHomeOnBoot = false;
       };
+      # sini's xmsg node here; its links to sini's other nodes are derived
+      # (policies/xmsg.nix), authenticated by the xmsg CA.
+      applications.dev.ai.mcp.xmsg.federation.nodes.sini = { };
+      applications.dev.ai.mcp.xmsg.federation.observedBy = [ "sini.collector" ];
+      # cortex relays the xmsg gateway's sends here (clusters/axon.nix xmsg-gateway.relayed).
+      applications.dev.ai.mcp.xmsg.federation.relayedBy = [ "sini.cortex" ];
       applications.dev.ai.mcp.hindsight.handoffRepos = [ "Documents/repos/sini/den-ag-design" ];
       applications.dev.security.ssh-agent-mux.siniFork = true;
       applications.dev.security.opkssh-client.siniFork = true;

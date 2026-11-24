@@ -49,9 +49,13 @@ in
         "bitstream"
         "uplink-dev"
       ];
-      # Artemis reaches patch's sessions through cortex (owner-approved 2026-11-21); patch
-      # is never a gateway peer, and grants cortex `relayed` (hosts/patch.nix).
-      relayed = [ "sini.patch" ];
+      # Artemis reaches patch's and blade's sessions through cortex (owner-approved
+      # 2026-11-21 and 2026-11-24); neither is a gateway peer, and each grants cortex
+      # `relayed` (hosts/patch.nix, hosts/blade.nix).
+      relayed = [
+        "sini.patch"
+        "sini.blade"
+      ];
       # kanidm's host: the gateway's resource origin and its introspection address.
       kanidmHost = "axon-01";
       # The OpenAI Secure MCP Tunnel the ChatGPT connector reaches the gateway through (owner
