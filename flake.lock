@@ -4602,6 +4602,7 @@
         "umu": "umu",
         "xmsg": "xmsg",
         "xmsg-chart": "xmsg-chart",
+        "xmsg-mcp-gateway-chart": "xmsg-mcp-gateway-chart",
         "zen-browser": "zen-browser",
         "zjstatus": "zjstatus"
       }
@@ -5561,6 +5562,23 @@
         "owner": "sini",
         "repo": "xmsg",
         "rev": "ea825d4d7c9ebe294b31ab336981996a848c7d93",
+        "type": "github"
+      }
+    },
+    "xmsg-mcp-gateway-chart": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1795523630,
+        "narHash": "sha256-uD9hFLwQpC9Jb+cEmiNKJHhOB3hlHGX+onmxQ6a5RNE=",
+        "owner": "sini",
+        "repo": "xmsg-mcp-gateway",
+        "rev": "56861f16c3b4ef8891954a45b6b8bc1258d2ca24",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sini",
+        "repo": "xmsg-mcp-gateway",
+        "rev": "56861f16c3b4ef8891954a45b6b8bc1258d2ca24",
         "type": "github"
       }
     },

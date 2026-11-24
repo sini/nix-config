@@ -1,72 +1,54 @@
 # xmsg-gateway-check: the hardening, shared uid, owner configuration, grant-store
 # initContainers, secret modes, hub peers, xmsg-leaves record and egress of
-# xmsg-gateway.nix, asserted over the
-# aspect's manifests with the flag forced on and the pinned images, so the check holds
-# whatever axon's flags are. A second render with the tunnel on (stand-in image and
-# id) shows the sidecar appears only then, pointed at the loopback listener.
+# xmsg-gateway.nix, asserted over axon's rendered resources (the gateway's chart and the
+# objects around it), so it checks what the chart produces for axon's instance.
 #   nix build .#checks.x86_64-linux.xmsg-gateway-pod
 { config, lib, ... }:
 let
   aspect = config.den.aspects.kubernetes.services.ai.xmsg-gateway;
-  cluster = tunnel: {
-    name = "axon";
-    environment = "prod";
-    # The gateway VIP, the kanidm pin (axon's own assignment).
-    networks.kubernetes-loadbalancers.assignments.default-gateway =
-      config.den.clusters.axon.networks.kubernetes-loadbalancers.assignments.default-gateway;
-    domainFor = svc: if svc == "kanidm" then "idm.json64.dev" else "${svc}.json64.dev";
-    # schema/cluster.nix resourceNameOf: the last two labels, hyphenated.
-    resourceForDomain =
-      domain:
-      lib.concatStringsSep "-" (
-        lib.reverseList (lib.take 2 (lib.reverseList (lib.splitString "." domain)))
-      );
-    settings.kubernetes.services.ai.xmsg-gateway = {
-      enable = true;
-      hub = "cortex";
-      extraHubs = [ "bitstream" ];
-      kanidmHost = "axon-01";
-      # A stand-in: the real value is measured at cutover.
-      subject = "00000000-0000-4000-8000-000000000000";
-      inherit tunnel;
-    };
-  };
-  render =
-    tunnel:
-    aspect.k8s-manifests {
-      config.age.secrets = {
-        xmsg-gateway-events-key.sopsRef = "ref+sops://stand-in";
-        xmsg-gateway-lookup-oidc-client-secret.sopsRef = "ref+sops://stand-in";
-        xmsg-gateway-tunnel-runtime-key.sopsRef = "ref+sops://stand-in";
-      };
-      cluster = cluster tunnel;
-      images = config.flake.imageRefs.x86_64-linux // {
-        "openai/tunnel-client" = {
-          repository = "ghcr.io/openai/tunnel-client";
-          digest = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
-        };
-      };
-    };
+  app = config.flake.nixidyEnvs.x86_64-linux.axon.config.applications.xmsg-gateway;
+  # The rendered objects (chart and hand-set alike), keyed as nixidy's resources are.
+  byKind =
+    kind:
+    lib.listToAttrs (
+      map (o: lib.nameValuePair o.metadata.name o) (lib.filter (o: o.kind == kind) app.objects)
+    );
   manifests = {
-    off = render {
-      enable = false;
-      id = null;
+    axon.applications.xmsg-gateway = {
+      inherit (app) namespace;
+      resources = lib.mapAttrs (_: byKind) {
+        deployments = "Deployment";
+        serviceAccounts = "ServiceAccount";
+        certificates = "Certificate";
+        configMaps = "ConfigMap";
+        persistentVolumeClaims = "PersistentVolumeClaim";
+        ciliumClusterwideNetworkPolicies = "CiliumClusterwideNetworkPolicy";
+        ciliumNetworkPolicies = "CiliumNetworkPolicy";
+        services = "Service";
+        ingresses = "Ingress";
+        httpRoutes = "HTTPRoute";
+      };
     };
-    on = render {
-      enable = true;
-      id = "tunnel_stand_in";
-    };
+    # The record axon's hubs take the leaf from.
     leaves = aspect.xmsg-leaves {
-      cluster = cluster {
-        enable = false;
-        id = null;
+      cluster = {
+        name = "axon";
+        environment = "prod";
+        settings.kubernetes.services.ai.xmsg-gateway = {
+          enable = true;
+          inherit (config.den.clusters.axon.settings.kubernetes.services.ai.xmsg-gateway)
+            hub
+            extraHubs
+            relayed
+            ;
+        };
       };
     };
   };
 
   # Negative controls: each mutant must fail the check on the named property. The
-  # `mutants` rewrite the tunnel-off pod's initContainers; `wholeMutants` rewrite any
-  # part of the render.
+  # `mutants` rewrite the pod's initContainers; `wholeMutants` rewrite any part of the
+  # render.
   resPath = [
     "applications"
     "xmsg-gateway"
@@ -76,20 +58,29 @@ let
     path: update:
     manifests
     // {
-      off = lib.updateManyAttrsByPath [ { inherit path update; } ] manifests.off;
+      axon = lib.updateManyAttrsByPath [ { inherit path update; } ] manifests.axon;
     };
   bitstreamIp = "10.9.1.1/32";
   wholeMutants = {
     # The leaf federates with cortex only.
-    "one peer per hub" = atOff (
-      resPath
-      ++ [
-        "configMaps"
-        "xmsg-gateway-xmsg-peers"
-        "data"
-        "peers.json"
-      ]
-    ) (s: builtins.toJSON (removeAttrs (builtins.fromJSON s) [ "sini.bitstream" ]));
+    "one peer per hub" =
+      atOff
+        (
+          resPath
+          ++ [
+            "configMaps"
+            "xmsg-gateway-peers"
+            "data"
+            "peers.json"
+          ]
+        )
+        (
+          s:
+          let
+            f = builtins.fromJSON s;
+          in
+          builtins.toJSON (f // { peers = removeAttrs f.peers [ "sini.bitstream" ]; })
+        );
     # The peers entry kept, its egress dropped.
     "allow-xmsg-egress-xmsg-gateway-xmsg-gateway egress" = atOff (
       resPath
@@ -105,13 +96,13 @@ let
       leaves = map (l: l // { hubs = lib.take 1 l.hubs; }) manifests.leaves;
     };
     # The policy drops a hub, so sends to its sessions are refused.
-    "policy.json is every hub's sessions, send and reply" = atOff (
+    "policy-chatgpt.json is every hub's sessions, send and reply" = atOff (
       resPath
       ++ [
         "configMaps"
         "xmsg-gateway-config"
         "data"
-        "policy.json"
+        "policy-chatgpt.json"
       ]
     ) (lib.replaceStrings [ ''"*@sini.bitstream"'' ] [ ''"*@sini.cortex"'' ]);
     # The hubs grant the leaf no `list`, so xmsg_list comes back empty.
@@ -188,21 +179,12 @@ let
     "backup runs after install, before the real store's migrations" =
       moveAfter "store-backup" "store-migrate-custody";
     # The policy applied before the last migration.
-    "apply is last" =
-      inits:
-      let
-        n = lib.length inits;
-      in
-      lib.take (n - 2) inits
-      ++ [
-        (lib.last inits)
-        (lib.elemAt inits (n - 2))
-      ];
+    "apply is last" = moveAfter "store-apply-chatgpt" "store-backup";
     # The chain gone, so the policy is never applied.
-    "apply step present" = lib.filter (c: c.name != "store-apply");
+    "apply step present" = lib.filter (c: c.name != "store-apply-chatgpt");
     # apply also enabling the grant at every start.
     "apply has no --enabled" = map (
-      c: if c.name == "store-apply" then c // { args = c.args ++ [ "--enabled" ]; } else c
+      c: if c.name == "store-apply-chatgpt" then c // { args = c.args ++ [ "--enabled" ]; } else c
     );
     # The gateway's `enable` verb in the chain.
     "never runs enable" =

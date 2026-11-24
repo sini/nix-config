@@ -7,7 +7,8 @@ spec:
   description: 'xmsg-gateway: envoy-gateway only, on 8787.'
   endpointSelector:
     matchLabels:
-      app.kubernetes.io/name: xmsg-gateway
+      app.kubernetes.io/instance: xmsg-gateway
+      app.kubernetes.io/name: xmsg-mcp-gateway
   ingress:
     - fromEndpoints:
         - matchLabels:

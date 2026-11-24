@@ -21,11 +21,12 @@
 #
 # The gateway refuses group- or world-accessible credential files and a state
 # directory others can write, and its Events key must be exactly 0600 and owned by
-# the owner of its directory. Kubernetes Secret files are root-owned, so the `prepare`
-# initContainer (busybox, as this uid) copies the secrets into a memory emptyDir
-# directory it owns (lookup secret 0400, Events key 0600), and makes the PVC's state
-# directories 0700. The PVC keeps fsGroupChangePolicy OnRootMismatch, so kubelet never
-# re-adds group write to them on a later mount.
+# the owner of its directory. Kubernetes Secret files are root-owned, so the chart's
+# `prepare` initContainer (busybox, as this uid) copies the secrets into a memory
+# emptyDir directory it owns (lookup secret 0400, Events key 0600), and makes the PVC's
+# state directories 0700. The PVC keeps fsGroupChangePolicy OnRootMismatch, so kubelet
+# never re-adds group write to them on a later mount. The gateway itself refuses an
+# Events key that is not 32 bytes (event_store.rs), at the first migrate-events.
 #
 # Grant store (events.md "Configure and migrate", serving.md "Repeatable migrations in a
 # shell-less init chain"). Initialization never overwrites, so the real store is
@@ -67,11 +68,24 @@
 # and the PVC joins Longhorn's nightly off-cluster backup group (media-config). Restore
 # both together.
 #
-# Gating check: xmsg-gateway-check.nix, over this aspect's manifests with the flag
-# forced on.
+# The pod is the gateway's own chart (charts/xmsg-mcp-gateway, the
+# `xmsg-mcp-gateway-chart` input): it owns the hardening, the shared uid, the in-pod
+# paths and serving.json's pod-owned fields, `prepare`, the real store's migrations and
+# applies, the leaf, the tunnel sidecar, the Service, the routes, the PVC and the custody
+# alerts. This aspect sets only the instance. fullnameOverride and serviceAccount.name
+# keep every object named xmsg-gateway (the SA the SPIFFE id names).
+#
+# shortcut: the staged-store chain (staging, staged-*, store-install, store-backup) rides
+# in the chart's store.preMigrate slot because the pinned gateway image predates `init
+# --if-needed`, `enroll --if-needed` and `backup-if-pending`; drop it for
+# store.bootstrap.enabled and a backup-if-pending hook once the image is at or past the
+# chart's rev.
+#
+# Gating check: xmsg-gateway-check.nix, over axon's rendered manifests.
 {
   den,
   lib,
+  inputs,
   rootPath,
   ...
 }:
@@ -95,18 +109,16 @@ let
   uid = 10001;
   issuer = "xmsg-cluster-ca";
   port = 8787;
-  listen = "127.0.0.1:${toString port}";
 
-  runtimeDir = "/run/user";
+  # The in-pod paths are the chart's (_helpers.tpl); these name the ones the instance
+  # values and the staged chain refer to.
   tlsDir = "/etc/xmsg/tls";
-  peersDir = "/etc/xmsg/peers";
   configDir = "/etc/xmsg-mcp-gateway";
   dataDir = "/var/lib/xmsg-mcp-gateway";
   stateDir = "${dataDir}/state";
   stagingDir = "${dataDir}/staging";
-  leafDb = "${dataDir}/xmsg/xmsg.db";
+  # The chart's `prepare` copies each secrets item to <keysDir>/<item key>.
   keysDir = "/run/xmsg-mcp-gateway/keys";
-  secretsDir = "/run/secrets/${name}";
   grantStore = "${stateDir}/grants.db";
   stagedStore = "${stagingDir}/grants.db";
   backupsDir = "${dataDir}/backups";
@@ -115,22 +127,10 @@ let
   # The gateway image's /bin, mounted in store-backup (its symlink resolves into /nix).
   gatewayBinDir = "/opt/xmsg-mcp-gateway/bin";
   gatewayBin = "${gatewayBinDir}/xmsg-mcp-gateway";
-  eventsKey = "${keysDir}/events.key";
+  eventsKey = "${keysDir}/events-key";
   lookupSecret = "${keysDir}/lookup-secret";
   asClientSecret = "${keysDir}/as-client-secret";
   livenessToken = "${keysDir}/liveness-token";
-
-  # The node limits the gateway's manifest must equal. They are xmsg's defaults
-  # (xmsg src/main.rs ServeArgs at 27429b7: --reply-ttl 604800, --idempotency-ttl 86400,
-  # --svc-queue-cap storage::MAX_SVC_QUEUE_PER_SESSION = 100, --max-body
-  # storage::DEFAULT_MAX_BODY_BYTES = 65536), passed to the leaf explicitly from this
-  # one binding, so the two sides agree by construction.
-  node-limits = {
-    reply-ttl = 604800;
-    idempotency-ttl = 86400;
-    svc-queue-cap = 100;
-    max-body = 65536;
-  };
 
   # Budgets (serving.md, events.md). The store's busy wait is the gateway's own 30 s
   # (grants.rs Store::open).
@@ -140,7 +140,7 @@ let
     submission = 20000;
     dispatch = 16000;
     request = 60000;
-    # The gateway's default, explicit so the attachment budget below checks it
+    # The gateway's default, explicit so the chart's attachment budget rule checks it
     # (serving.md: attachment tools refuse <= 11000, the daemon's 10 s pending wait).
     operation = 15000;
   };
@@ -183,39 +183,14 @@ let
     allowPrivilegeEscalation = false;
     capabilities.drop = [ "ALL" ];
   };
-
-  # The budget rules the gateway enforces at startup, refused here at eval instead.
-  budgetAssertions = [
-    {
-      ok = timeouts.dispatch >= timeouts.verifier + 11000 && timeouts.dispatch <= 60000;
-      msg = "events.dispatch_timeout_ms must be >= verifier.timeout_ms + 11000 and <= 60000";
-    }
-    {
-      ok = timeouts.request >= 2 * timeouts.verifier + 41000 && timeouts.request <= 60000;
-      msg = "request_timeout_ms must be >= 2 * verifier.timeout_ms + 41000 and <= 60000";
-    }
-    {
-      ok =
-        timeouts.submission <= 25000
-        && timeouts.request >= timeouts.verifier + timeouts.storeWait + timeouts.submission;
-      msg = "request_timeout_ms must cover verifier.timeout_ms + the 30 s store wait + submission_timeout_ms (<= 25000)";
-    }
-    # File tools (gateway 9cd91bc serving.rs): the read operation's own budget.
-    {
-      ok =
-        timeouts.operation > 11000
-        && timeouts.request >= timeouts.verifier + timeouts.storeWait + timeouts.operation;
-      msg = "xmsg.operation_timeout_ms must be > 11000, and request_timeout_ms must cover verifier.timeout_ms + the 30 s store wait + it";
-    }
-  ];
-  checkBudgets =
-    v:
-    let
-      bad = lib.filter (a: !a.ok) budgetAssertions;
-    in
-    if bad == [ ] then v else throw "xmsg-gateway: ${lib.concatMapStringsSep "; " (a: a.msg) bad}";
 in
 {
+  # Source-only pin of the chart, apart from the image pin the pod runs.
+  flake-file.inputs.xmsg-mcp-gateway-chart = {
+    url = "github:sini/xmsg-mcp-gateway/56861f16c3b4ef8891954a45b6b8bc1258d2ca24";
+    flake = false;
+  };
+
   den.aspects.kubernetes.services.ai.xmsg-gateway = {
     # The public name the HTTPRoute serves (kanidm.nix's xmsgGateway.origin default).
     served-domains =
@@ -469,14 +444,16 @@ in
           }) hubs
         );
 
-        # The grant's outbound policy: each hub's sessions, for send and for reply. Written
-        # by hand in the gateway's own field order (send, reply; targets, required_scope),
-        # which builtins.toJSON would sort; apply compares typed values either way.
-        outboundTargets = builtins.toJSON (
-          map (h: "*@${h.name}") hubs ++ map (n: "*@${n}") (cfg.relayed or [ ])
-        );
-        permission = scope: ''{"targets":${outboundTargets},"required_scope":${builtins.toJSON scope}}'';
-        policy = ''{"send":${permission "xmsg:send"},"reply":${permission "xmsg:reply"}}'';
+        # The grant's outbound policy: each hub's sessions, for send and for reply. The
+        # chart writes it as JSON (keys sorted); apply compares typed values.
+        permission = scope: {
+          targets = map (h: "*@${h.name}") hubs ++ map (n: "*@${n}") (cfg.relayed or [ ]);
+          required_scope = scope;
+        };
+        policy = {
+          send = permission "xmsg:send";
+          reply = permission "xmsg:reply";
+        };
 
         # The exact enrollment document; the verifier's values below are the same.
         binding = {
@@ -556,100 +533,90 @@ in
           };
         };
 
-        serving =
-          checkBudgets {
-            bind = "0.0.0.0:${toString port}";
-            allow_non_loopback_bind = true;
-            grant_store = grantStore;
-            request_timeout_ms = timeouts.request;
-            allowed_hosts = [
-              "127.0.0.1"
-              "localhost"
-              (lib.removePrefix "https://" origin)
-            ];
-            allowed_origins = [ ];
-            messaging = {
-              xmsg = {
-                inherit service;
-                expected_node = node;
-                daemon_uid = uid;
-                register_socket = "${runtimeDir}/xmsg/register.sock";
-                agent_socket = "${runtimeDir}/xmsg/agent.sock";
-                operation_timeout_ms = timeouts.operation;
-              };
-              manifest = {
-                reply_ttl_secs = node-limits.reply-ttl;
-                idempotency_ttl_secs = node-limits.idempotency-ttl;
-                svc_queue_cap = node-limits.svc-queue-cap;
-                # Half the node's idempotency window: a retry always lands well inside it.
-                dedup_lifetime_secs = node-limits.idempotency-ttl / 2;
-                max_framed_bytes = node-limits.max-body;
-              };
-              submission_timeout_ms = timeouts.submission;
-              max_reservations = 1000;
-              max_retained_bytes = 67108864;
+        # serving.json without the chart's pod-owned fields (bind, allow_non_loopback_bind,
+        # grant_store, messaging.xmsg's service/uid/sockets, messaging.manifest), which it
+        # writes over these; the chart also refuses the gateway's budget rules at render.
+        serving = {
+          request_timeout_ms = timeouts.request;
+          allowed_hosts = [
+            "127.0.0.1"
+            "localhost"
+            (lib.removePrefix "https://" origin)
+          ];
+          allowed_origins = [ ];
+          messaging = {
+            xmsg = {
+              expected_node = node;
+              operation_timeout_ms = timeouts.operation;
             };
-            # Events moves to the local grant only after cutover-events (§2.10 steps
-            # 5-6); until then it stays on the OLD grant.
-            events = {
-              key_file = eventsKey;
-              grant_id = eventsGrant;
-              dispatch_timeout_ms = timeouts.dispatch;
-              # Custody admission counts every row, expired tombstones and other grants'
-              # rows included, and a row holds its slot for content + metadata retention
-              # (7 + 7 days). At the default 1000 rows that filled on 2026-11-22: every new
-              # message was deferred silently, the leaf never acked, and Artemis's inbound
-              # wedged (xmsg-lxd2). Sized for ~20x the measured volume (1000 rows, 1.87 MB
-              # over 14 days), within the 1Gi data volume. All seven fields are required.
-              custody_limits = {
-                max_items = 20000;
-                max_bytes = 128 * 1024 * 1024;
-                max_item_bytes = 256 * 1024;
-                content_retention_secs = 604800;
-                max_metadata = 1000;
-                metadata_retention_secs = 604800;
-                max_gap_intervals = 1000;
-              };
+            submission_timeout_ms = timeouts.submission;
+            max_reservations = 1000;
+            max_retained_bytes = 67108864;
+          };
+          # Events moves to the local grant only after cutover-events (§2.10 steps
+          # 5-6); until then it stays on the OLD grant.
+          events = {
+            key_file = eventsKey;
+            grant_id = eventsGrant;
+            dispatch_timeout_ms = timeouts.dispatch;
+            # Custody admission counts every row, expired tombstones and other grants'
+            # rows included, and a row holds its slot for content + metadata retention
+            # (7 + 7 days). At the default 1000 rows that filled on 2026-11-22: every new
+            # message was deferred silently, the leaf never acked, and Artemis's inbound
+            # wedged (xmsg-lxd2). Sized for ~20x the measured volume (1000 rows, 1.87 MB
+            # over 14 days), within the 1Gi data volume. All seven fields are required.
+            custody_limits = {
+              max_items = 20000;
+              max_bytes = 128 * 1024 * 1024;
+              max_item_bytes = 256 * 1024;
+              content_retention_secs = 604800;
+              max_metadata = 1000;
+              metadata_retention_secs = 604800;
+              max_gap_intervals = 1000;
             };
-          }
-          // (
-            if asEnabled then
-              {
-                verifier_profiles = [
-                  (
-                    kanidmVerifier
-                    // {
-                      advertised = false;
-                      opaque_default = false;
-                    }
-                  )
-                  (
-                    localBinding
-                    // {
-                      local = true;
-                      opaque_default = true;
-                      advertised = true;
-                      required_scopes = requiredScopes;
-                    }
-                  )
-                ];
-                authorization_server = authorizationServer;
-              }
-            else
-              { verifier = kanidmVerifier; }
-          );
+          };
+        }
+        // (
+          if asEnabled then
+            {
+              verifier_profiles = [
+                (
+                  kanidmVerifier
+                  // {
+                    advertised = false;
+                    opaque_default = false;
+                  }
+                )
+                (
+                  localBinding
+                  // {
+                    local = true;
+                    opaque_default = true;
+                    advertised = true;
+                    required_scopes = requiredScopes;
+                  }
+                )
+              ];
+              authorization_server = authorizationServer;
+            }
+          else
+            { verifier = kanidmVerifier; }
+        );
 
         mount = vol: path: {
           name = vol;
           mountPath = path;
         };
         roMount = vol: path: mount vol path // { readOnly = true; };
-        tmpMount = mount "tmp" "/tmp";
         dataMount = mount "data" dataDir;
 
-        busybox = ref images."library/busybox";
-        python = ref images."library/python";
         gatewayImage = ref images."sini/xmsg-mcp-gateway";
+        image = i: { inherit (images.${i}) repository digest; };
+        # The chart's selector labels (_helpers.tpl gw.selectorLabels), for the policies.
+        selectorLabels = {
+          "app.kubernetes.io/name" = "xmsg-mcp-gateway";
+          "app.kubernetes.io/instance" = name;
+        };
 
         # Each store step is the gateway CLI itself: `prefix` names the store it runs on.
         storeStep = prefix: store: args: {
@@ -668,55 +635,100 @@ in
           ];
         };
 
-        # The gateway's migrations, in its order, each a no-op on a store that has it.
+        # The gateway's migrations, in its order, each a no-op on a store that has it
+        # (the same list the chart runs on the real store).
         migrations =
           prefix: store:
-          map (args: storeStep prefix store (args ++ [ "--if-needed" ])) [
-            [ "migrate-custody" ]
-            [ "migrate-outbound" ]
-            [ "migrate-retirement" ]
-            [ "migrate-custody-summaries" ]
+          map (args: storeStep prefix store (args ++ [ "--if-needed" ])) (
             [
-              "migrate-events"
-              "--key-file"
-              eventsKey
+              [ "migrate-custody" ]
+              [ "migrate-outbound" ]
+              [ "migrate-retirement" ]
+              [ "migrate-custody-summaries" ]
+              [
+                "migrate-events"
+                "--key-file"
+                eventsKey
+              ]
+              [ "migrate-profiles" ]
+              [ "migrate-attachments" ]
             ]
-            # Exact-binding grant uniqueness (docs/auth-profiles.md, gateway 617187e).
-            [ "migrate-profiles" ]
-            # File references on custody and outbound reservations (serving.md
-            # "Deploying file exchange", gateway 9cd91bc). Writers are stopped: the
-            # Deployment is Recreate, and store-backup runs first.
-            [ "migrate-attachments" ]
-          ]
-          # Hash-only OAuth state; with the AS on only, so the owner's maintenance
-          # window (not a routine restart) is what first runs it (§2.10 step 3).
-          ++ lib.optional asEnabled (
-            storeStep prefix store [
-              "migrate-authorization-server"
-              "--if-needed"
-            ]
+            ++ lib.optional asEnabled [ "migrate-authorization-server" ]
           );
 
-        prepareScript = ''
-          set -eu
-          umask 077
-          mkdir -p ${stateDir} ${dirOf leafDb} ${keysDir}
-          chmod 0700 ${stateDir} ${dirOf leafDb} ${keysDir}
-          rm -rf ${stagingDir}
-          mkdir ${stagingDir}
-          rm -f ${lookupSecret} ${eventsKey}
-          cp ${secretsDir}/lookup-secret ${lookupSecret}
-          chmod 0400 ${lookupSecret}
-          base64 -d ${secretsDir}/events-key > ${eventsKey}
-          chmod 0600 ${eventsKey}
-          [ "$(wc -c < ${eventsKey})" -eq 32 ] || { echo "events key is not 32 bytes" >&2; exit 1; }
-        ''
-        + lib.optionalString asEnabled ''
-          rm -f ${asClientSecret} ${livenessToken}
-          cp ${secretsDir}/as-client-secret ${asClientSecret}
-          cp ${secretsDir}/liveness-token ${livenessToken}
-          chmod 0400 ${asClientSecret} ${livenessToken}
-        '';
+        # The grants the chart applies policy.json to (and whose binding-<id>.json it
+        # writes), the first and, with the AS, the local one.
+        grants = [
+          {
+            id = grantId;
+            inherit binding policy;
+          }
+        ]
+        ++ lib.optional asEnabled {
+          id = localGrantId;
+          binding = localBinding;
+          inherit policy;
+        };
+
+        # store.preMigrate: the staged fresh store, kept only if the real one is absent,
+        # then the backup decision; see the header.
+        stagedChain = [
+          {
+            name = "staging";
+            image = ref images."library/busybox";
+            command = [
+              "/bin/sh"
+              "-c"
+              ''
+                set -eu
+                umask 077
+                rm -rf ${stagingDir}
+                mkdir ${stagingDir}
+              ''
+            ];
+            securityContext = hardened;
+            volumeMounts = [ dataMount ];
+          }
+          (storeStep "staged" stagedStore [ "init" ])
+        ]
+        ++ migrations "staged" stagedStore
+        ++ map (
+          g:
+          storeStep (if g.id == grantId then "staged" else "staged-local") stagedStore [
+            "enroll"
+            g.id
+            "${configDir}/binding-${g.id}.json"
+          ]
+        ) grants
+        ++ [
+          {
+            name = "store-install";
+            image = ref images."library/busybox";
+            command = [
+              "/bin/sh"
+              "-c"
+              installScript
+            ];
+            securityContext = hardened;
+            volumeMounts = [ dataMount ];
+          }
+          {
+            name = "store-backup";
+            image = ref images."library/python";
+            command = [
+              "python3"
+              "-I"
+              "-c"
+              backupScript
+            ];
+            securityContext = hardened;
+            volumeMounts = [
+              dataMount
+              (roMount "gateway-image" "/nix" // { subPath = "nix"; })
+              (roMount "gateway-image" gatewayBinDir // { subPath = "bin"; })
+            ];
+          }
+        ];
 
         installScript = ''
           set -eu
@@ -789,69 +801,6 @@ in
           print("${backupsDir}: backup " + str(os.path.getsize(out)) + " B; volume free " + str(st.f_bavail * st.f_frsize) + " of " + str(st.f_blocks * st.f_frsize) + " B; kept " + str(min(len(olds), ${toString keepPreMigrate})) + " pre-migrate")
         '';
 
-        tunnelContainer = {
-          name = "tunnel-client";
-          image = ref images."openai/tunnel-client";
-          # The image's entrypoint is `tunnel-client run`; these follow it. tunnel-client
-          # fetches the authorization server's metadata only from trusted origins (measured
-          # 2026-11-10: "destination origin is not trusted" for kanidm), and the issuer the
-          # gateway advertises (verifierIssuer) lives on kanidm's origin. The gateway's own
-          # public origin serves the protected-resource metadata discovery starts from
-          # (measured 2026-11-16: "destination origin is not trusted" for it), and harpoon,
-          # the channel OpenAI sends tool calls on, forwards to kanidm's OAuth endpoints only
-          # from an approved origin; without both, harpoon registers no targets and every
-          # tool call is refused as an unsupported channel.
-          args = [
-            "--mcp.oauth-trusted-origin"
-            "https://${kanidmDomain}"
-            "--mcp.oauth-trusted-origin"
-            origin
-            "--harpoon.oauth-forward-origin"
-            "https://${kanidmDomain}"
-            # harpoon is OpenAI's internal OAuth-discovery session; it fetches the
-            # protected-resource metadata from the gateway's public origin. Tool calls
-            # still arrive on main once discovery completes.
-            "--harpoon.oauth-forward-origin"
-            origin
-            # harpoon's MCP target is the gateway on the pod's loopback, plain HTTP; it
-            # refuses non-https targets without this ("base URL must use https").
-            "--harpoon.allow-plaintext-http"
-          ];
-          env = [
-            {
-              name = "CONTROL_PLANE_TUNNEL_ID";
-              value = cfg.tunnel.id;
-            }
-            {
-              name = "CONTROL_PLANE_BASE_URL";
-              value = "https://api.openai.com";
-            }
-            {
-              name = "MCP_SERVER_URL";
-              value = "http://${listen}/mcp";
-            }
-            # The gateway may bind after the sidecar starts; wait before the first poll
-            # so a queued command is not consumed early (kubernetes-sidecar.md).
-            {
-              name = "MCP_STARTUP_WAIT_TIMEOUT";
-              value = "60s";
-            }
-            {
-              name = "HOME";
-              value = "/tmp";
-            }
-            {
-              name = "CONTROL_PLANE_API_KEY";
-              valueFrom.secretKeyRef = {
-                inherit name;
-                key = "tunnel-runtime-key";
-              };
-            }
-          ];
-          securityContext = hardened;
-          volumeMounts = [ tmpMount ];
-        };
-
         egressRule =
           to: port:
           to
@@ -872,9 +821,123 @@ in
         applications.${name} = {
           inherit namespace;
 
-          resources = {
-            serviceAccounts.${name}.automountServiceAccountToken = false;
+          # The chart always renders the Deployment, so the release is withheld whole.
+          helm.releases =
+            lib.optionalAttrs
+              (lib.warnIf (cfg.subject == null)
+                "xmsg-gateway: settings.subject is unset, so the gateway release is withheld. Set it to the owner's kanidm `sub` (person UUID) measured from one real token's introspection."
+                (cfg.subject != null)
+              )
+              {
+                ${name} = {
+                  chart = "${inputs.xmsg-mcp-gateway-chart}/charts/xmsg-mcp-gateway";
+                  values = {
+                    fullnameOverride = name;
+                    serviceAccount.name = name;
+                    image = image "sini/xmsg-mcp-gateway";
+                    helperImage = image "library/busybox";
+                    # Bound on the pod network for envoy (allow_non_loopback_bind); the
+                    # ingress policy below admits only the gateways namespace.
+                    gateway.podNetwork = true;
+                    inherit serving;
+                    # Read only by `prepare`, which copies them owner-private into keys/.
+                    secrets = {
+                      existingSecret = name;
+                      items = [
+                        {
+                          key = "lookup-secret";
+                          mode = "0400";
+                        }
+                        {
+                          key = "events-key";
+                          mode = "0600";
+                          base64Decode = true;
+                        }
+                      ]
+                      ++ lib.optionals asEnabled [
+                        {
+                          key = "as-client-secret";
+                          mode = "0400";
+                        }
+                        {
+                          key = "liveness-token";
+                          mode = "0400";
+                        }
+                      ];
+                    };
+                    store = {
+                      eventsKey = "events-key";
+                      # Hash-only OAuth state; with the AS on only, so the owner's
+                      # maintenance window (not a routine restart) first ran it (§2.10 step 3).
+                      authorizationServer = asEnabled;
+                      inherit grants;
+                      preMigrate = stagedChain;
+                    };
+                    xmsg = {
+                      image = image "sini/xmsg";
+                      principal = service;
+                      tls.existingSecret = "${name}-xmsg-tls";
+                      inherit peers;
+                    };
+                    tunnel = {
+                      enabled = cfg.tunnel.enable;
+                    }
+                    // lib.optionalAttrs cfg.tunnel.enable {
+                      image = image "openai/tunnel-client";
+                      inherit (cfg.tunnel) id;
+                      apiKeySecret.name = name;
+                      # tunnel-client fetches the authorization server's metadata only from
+                      # trusted origins (measured 2026-11-10: "destination origin is not
+                      # trusted" for kanidm), and harpoon, the channel OpenAI sends tool calls
+                      # on, forwards OAuth only to an approved origin: kanidm's, where the
+                      # advertised issuer lives, and the gateway's public origin, which serves
+                      # the protected-resource metadata (measured 2026-11-16).
+                      oauthOrigins = [
+                        "https://${kanidmDomain}"
+                        origin
+                      ];
+                    };
+                    # SQLite grant store, custody and the leaf's db. The media-config label
+                    # enrolls it in Longhorn's nightly off-cluster backup (storage/longhorn).
+                    persistence = {
+                      storageClassName = "longhorn";
+                      labels."recurring-job-group.longhorn.io/media-config" = "enabled";
+                    };
+                    # Only OAuth discovery and the authorization server's endpoints are
+                    # public; an unmatched path on this host 404s at envoy. Route B
+                    # (ingress-route amendment, ng1.32), /mcp over direct HTTPS for the
+                    # connector the gateway's AS serves, with the AS only.
+                    httpRoute = {
+                      enabled = true;
+                      hostnames = [ (lib.removePrefix "https://" origin) ];
+                      parentRefs = [
+                        {
+                          name = "default-gateway";
+                          namespace = "gateways";
+                          sectionName = "${cluster.resourceForDomain (lib.removePrefix "https://" origin)}-https";
+                        }
+                      ];
+                      mcp = asEnabled;
+                    };
+                    # The Loki ruler's rule ConfigMaps (monitoring/loki.nix). The store
+                    # filling silently wedged Artemis's inbound on 2026-11-22 (xmsg-lxd2).
+                    custodyAlerts = {
+                      enabled = true;
+                      namespace = "monitoring";
+                      labels.loki_rule = "true";
+                    };
+                    # The gateway image itself, for store-backup's migrations-pending.
+                    extraVolumes = [
+                      {
+                        name = "gateway-image";
+                        image.reference = gatewayImage;
+                      }
+                    ];
+                  };
+                };
+              };
 
+          resources = {
             certificates.${name}.spec = {
               secretName = "${name}-xmsg-tls";
               issuerRef = {
@@ -900,75 +963,6 @@ in
               };
             };
 
-            configMaps."${name}-xmsg-peers".data."peers.json" = builtins.toJSON peers;
-
-            # Custody alerts from the gateway's log (Loki ruler, monitoring/loki.nix). The
-            # store filling silently wedged Artemis's inbound on 2026-11-22 (xmsg-lxd2):
-            # a deferral is the outage itself, 80% is the warning before it, and a missing
-            # capacity line (logged every 300 s) means the others can't be trusted.
-            configMaps."${name}-custody-alerts" = {
-              metadata = {
-                namespace = "monitoring";
-                labels.loki_rule = "true";
-              };
-              data."xmsg-gateway-custody.yaml" =
-                let
-                  sel = ''{namespace="${namespace}", container="gateway"}'';
-                  field = f: ''${sel} |= "custody capacity" | regexp `${f}=(?P<v>\d+)` | unwrap v [15m]'';
-                  ratio = num: den: "max(max_over_time(${field num})) / max(max_over_time(${field den}))";
-                in
-                builtins.toJSON {
-                  groups = [
-                    {
-                      name = "xmsg-gateway-custody";
-                      rules = [
-                        {
-                          alert = "XmsgGatewayCustodyDeferred";
-                          expr = ''sum by (reason) (count_over_time(${sel} |= "custody intake deferred" | regexp `reason=(?P<reason>[a-z_]+)` [5m])) > 0'';
-                          labels.severity = "critical";
-                          annotations = {
-                            summary = "xmsg gateway custody is deferring intake ({{ $labels.reason }})";
-                            description = "New messages are not stored or acked: the hubs' queues for the gateway leaf grow and Artemis gets nothing. Raise events.custody_limits (xmsg-gateway.nix) or clear the cause.";
-                          };
-                        }
-                        {
-                          alert = "XmsgGatewayCustodyUnavailable";
-                          expr = ''sum(count_over_time(${sel} |~ "custody (store )?unavailable" [5m])) > 0'';
-                          labels.severity = "critical";
-                          annotations.summary = "xmsg gateway custody store is unavailable";
-                        }
-                        {
-                          alert = "XmsgGatewayCustodyNearFull";
-                          expr = "${ratio "active_rows" "max_items"} >= 0.8";
-                          labels.severity = "warning";
-                          annotations.summary = "xmsg gateway custody active rows at {{ $value | humanizePercentage }} of max_items";
-                        }
-                        {
-                          alert = "XmsgGatewayCustodyRetiredNearFull";
-                          expr = "${ratio "retired_rows" "max_retired_items"} >= 0.8";
-                          labels.severity = "warning";
-                          annotations.summary = "xmsg gateway retired-grant custody rows at {{ $value | humanizePercentage }} of max_retired_items";
-                        }
-                        {
-                          alert = "XmsgGatewayCustodyCapacityLogMissing";
-                          expr = ''absent_over_time(${sel} |= "custody capacity" [20m])'';
-                          labels.severity = "warning";
-                          annotations.summary = "no xmsg gateway custody capacity line in 20 minutes; the custody alerts are blind";
-                        }
-                      ];
-                    }
-                  ];
-                };
-            };
-
-            # Nonsecret: world-readable, never writable (serving.md "Owner configuration").
-            configMaps."${name}-config".data = {
-              "serving.json" = builtins.toJSON serving;
-              "binding.json" = builtins.toJSON binding;
-              "policy.json" = policy;
-            }
-            // lib.optionalAttrs asEnabled { "local-binding.json" = builtins.toJSON localBinding; };
-
             secrets.${name}.stringData = {
               events-key = config.age.secrets.xmsg-gateway-events-key.sopsRef;
               lookup-secret = config.age.secrets.xmsg-gateway-lookup-oidc-client-secret.sopsRef;
@@ -978,333 +972,6 @@ in
               as-client-secret = config.age.secrets.xmsg-gateway-as-client-secret.sopsRef;
               liveness-token = config.age.secrets.xmsg-gateway-liveness-token.sopsRef;
             };
-
-            # SQLite grant store, custody and the leaf's db. The media-config label
-            # enrolls it in Longhorn's nightly off-cluster backup (storage/longhorn).
-            persistentVolumeClaims.${name} = {
-              metadata.labels."recurring-job-group.longhorn.io/media-config" = "enabled";
-              spec = {
-                accessModes = [ "ReadWriteOnce" ];
-                storageClassName = "longhorn";
-                resources.requests.storage = "1Gi";
-              };
-            };
-
-            deployments =
-              lib.optionalAttrs
-                (lib.warnIf (cfg.subject == null)
-                  "xmsg-gateway: settings.subject is unset, so the Deployment is withheld. Set it to the owner's kanidm `sub` (person UUID) measured from one real token's introspection."
-                  (cfg.subject != null)
-                )
-                {
-                  ${name}.spec = {
-                    replicas = 1;
-                    # One SQLite writer on a ReadWriteOnce volume.
-                    strategy.type = "Recreate";
-                    selector.matchLabels."app.kubernetes.io/name" = name;
-                    template = {
-                      metadata.labels."app.kubernetes.io/name" = name;
-                      # A config change must restart the pod: the gateway reads serving.json and
-                      # the leaf reads peers.json only at start.
-                      metadata.annotations."json64.dev/config-hash" = builtins.hashString "sha256" (
-                        builtins.toJSON [
-                          serving
-                          binding
-                          peers
-                          policy
-                        ]
-                      );
-                      spec = {
-                        serviceAccountName = name;
-                        automountServiceAccountToken = false;
-                        enableServiceLinks = false;
-                        securityContext = {
-                          runAsUser = uid;
-                          runAsGroup = uid;
-                          runAsNonRoot = true;
-                          fsGroup = uid;
-                          fsGroupChangePolicy = "OnRootMismatch";
-                          seccompProfile.type = "RuntimeDefault";
-                        };
-                        initContainers = [
-                          {
-                            name = "prepare";
-                            image = busybox;
-                            command = [
-                              "/bin/sh"
-                              "-c"
-                              prepareScript
-                            ];
-                            securityContext = hardened;
-                            volumeMounts = [
-                              dataMount
-                              (mount "keys" (dirOf keysDir))
-                              (roMount "secrets" secretsDir)
-                            ];
-                          }
-                        ]
-                        # The fresh store, kept only if the real one is absent.
-                        ++ [ (storeStep "staged" stagedStore [ "init" ]) ]
-                        ++ migrations "staged" stagedStore
-                        ++ [
-                          (storeStep "staged" stagedStore [
-                            "enroll"
-                            grantId
-                            "${configDir}/binding.json"
-                          ])
-                        ]
-                        # A fresh store gets the local grant too, disabled like the first.
-                        ++ lib.optional asEnabled (
-                          storeStep "staged-local" stagedStore [
-                            "enroll"
-                            localGrantId
-                            "${configDir}/local-binding.json"
-                          ]
-                        )
-                        ++ [
-                          {
-                            name = "store-install";
-                            image = busybox;
-                            command = [
-                              "/bin/sh"
-                              "-c"
-                              installScript
-                            ];
-                            securityContext = hardened;
-                            volumeMounts = [ dataMount ];
-                          }
-                          {
-                            name = "store-backup";
-                            image = python;
-                            command = [
-                              "python3"
-                              "-I"
-                              "-c"
-                              backupScript
-                            ];
-                            securityContext = hardened;
-                            volumeMounts = [
-                              dataMount
-                              (roMount "gateway-image" "/nix" // { subPath = "nix"; })
-                              (roMount "gateway-image" gatewayBinDir // { subPath = "bin"; })
-                            ];
-                          }
-                        ]
-                        ++ migrations "store" grantStore
-                        ++ [
-                          (storeStep "store" grantStore [
-                            "apply"
-                            "--id"
-                            grantId
-                            "--policy"
-                            "${configDir}/policy.json"
-                          ])
-                        ]
-                        # The same outbound policy on the local grant, which the window
-                        # enrolled; a missing grant fails the pod, as for the first.
-                        ++ lib.optional asEnabled (
-                          storeStep "store-local" grantStore [
-                            "apply"
-                            "--id"
-                            localGrantId
-                            "--policy"
-                            "${configDir}/policy.json"
-                          ]
-                        );
-                        containers = [
-                          {
-                            name = "xmsg";
-                            image = ref images."sini/xmsg";
-                            args = [
-                              "serve"
-                              "--leaf"
-                              "--leaf-principal"
-                              service
-                              # Required by --leaf; loopback in the pod's own netns.
-                              "--listen"
-                              "127.0.0.1:7787"
-                              "--leaf-register-sock"
-                              "${runtimeDir}/xmsg/register.sock"
-                              "--agent-sock"
-                              "${runtimeDir}/xmsg/agent.sock"
-                              "--db-path"
-                              leafDb
-                              "--peers-file"
-                              "${peersDir}/peers.json"
-                              "--fed-cert"
-                              "${tlsDir}/tls.crt"
-                              "--fed-key"
-                              "${tlsDir}/tls.key"
-                            ]
-                            ++ lib.concatLists (
-                              lib.mapAttrsToList (flag: v: [
-                                "--${flag}"
-                                (toString v)
-                              ]) node-limits
-                            );
-                            env = [
-                              {
-                                name = "XDG_RUNTIME_DIR";
-                                value = runtimeDir;
-                              }
-                            ];
-                            securityContext = hardened;
-                            volumeMounts = [
-                              (mount "run" runtimeDir)
-                              tmpMount
-                              dataMount
-                              (roMount "tls" tlsDir)
-                              (roMount "peers" peersDir)
-                            ];
-                          }
-                          {
-                            name = "gateway";
-                            image = gatewayImage;
-                            args = [
-                              "serve"
-                              "--config"
-                              "${configDir}/serving.json"
-                            ];
-                            ports = [
-                              {
-                                name = "http";
-                                containerPort = port;
-                              }
-                            ];
-                            securityContext = hardened;
-                            volumeMounts = [
-                              (mount "run" runtimeDir)
-                              tmpMount
-                              dataMount
-                              (roMount "keys" (dirOf keysDir))
-                              (roMount "config" configDir)
-                            ];
-                          }
-                        ]
-                        ++ lib.optional cfg.tunnel.enable tunnelContainer;
-                        volumes = [
-                          {
-                            name = "run";
-                            emptyDir.medium = "Memory";
-                          }
-                          {
-                            name = "keys";
-                            emptyDir.medium = "Memory";
-                          }
-                          {
-                            name = "tmp";
-                            emptyDir = { };
-                          }
-                          {
-                            name = "data";
-                            persistentVolumeClaim.claimName = name;
-                          }
-                          # The gateway image itself, for store-backup's migrations-pending.
-                          {
-                            name = "gateway-image";
-                            image.reference = gatewayImage;
-                          }
-                          {
-                            name = "tls";
-                            secret = {
-                              secretName = "${name}-xmsg-tls";
-                              defaultMode = 288; # 0440, read through fsGroup
-                            };
-                          }
-                          {
-                            name = "peers";
-                            configMap.name = "${name}-xmsg-peers";
-                          }
-                          {
-                            name = "config";
-                            configMap = {
-                              name = "${name}-config";
-                              defaultMode = 292; # 0444
-                            };
-                          }
-                          # Read only by `prepare` (through fsGroup), which copies them
-                          # owner-private into the keys emptyDir.
-                          {
-                            name = "secrets";
-                            secret = {
-                              secretName = name;
-                              items =
-                                map
-                                  (key: {
-                                    inherit key;
-                                    path = key;
-                                  })
-                                  (
-                                    [
-                                      "events-key"
-                                      "lookup-secret"
-                                    ]
-                                    ++ lib.optionals asEnabled [
-                                      "as-client-secret"
-                                      "liveness-token"
-                                    ]
-                                  );
-                              defaultMode = 288;
-                            };
-                          }
-                        ];
-                      };
-                    };
-                  };
-                };
-
-            services.${name}.spec = {
-              selector."app.kubernetes.io/name" = name;
-              ports = [
-                {
-                  name = "http";
-                  inherit port;
-                  targetPort = "http";
-                }
-              ];
-            };
-
-            # Only OAuth discovery and the authorization server's endpoints are public;
-            # an unmatched path on this host 404s at envoy.
-            httpRoutes =
-              let
-                route = matches: {
-                  spec = {
-                    hostnames = [ (lib.removePrefix "https://" origin) ];
-                    parentRefs = [
-                      {
-                        name = "default-gateway";
-                        namespace = "gateways";
-                        sectionName = "${cluster.resourceForDomain (lib.removePrefix "https://" origin)}-https";
-                      }
-                    ];
-                    rules = [
-                      {
-                        inherit matches;
-                        backendRefs = [ { inherit name port; } ];
-                      }
-                    ];
-                  };
-                };
-                path = type: value: { path = { inherit type value; }; };
-              in
-              {
-                ${name} = route [
-                  (path "PathPrefix" "/.well-known/oauth-protected-resource")
-                  (path "Exact" "/.well-known/oauth-authorization-server")
-                  (path "PathPrefix" "/oauth")
-                ];
-                # Its own route so the rate limit below covers this path alone; the
-                # longer prefix wins over /oauth.
-                "${name}-authorize" = route [ (path "PathPrefix" "/oauth/authorize") ];
-              }
-              # Route B (ingress-route amendment, ng1.32): the MCP endpoint itself over
-              # direct HTTPS, for the connector the gateway's AS serves; route A, the
-              # tunnel, keeps serving the old one. /mcp/.well-known/* (PRM) rides the
-              # prefix. With the AS only: before it, only the tunnel carries MCP.
-              // lib.optionalAttrs asEnabled {
-                "${name}-mcp" = route [ (path "PathPrefix" "/mcp") ];
-              };
 
             # Per client address, as envoy-gateway detects it: Cloudflare's forwarded
             # client when the peer is a Cloudflare edge, else the peer itself
@@ -1377,7 +1044,7 @@ in
             # reaches the plaintext listener. The tunnel sidecar connects over loopback.
             ciliumNetworkPolicies."${name}-ingress".spec = {
               description = "xmsg-gateway: envoy-gateway only, on ${toString port}.";
-              endpointSelector.matchLabels."app.kubernetes.io/name" = name;
+              endpointSelector.matchLabels = selectorLabels;
               ingress = [
                 {
                   fromEndpoints = [ { matchLabels."k8s:io.kubernetes.pod.namespace" = "gateways"; } ];

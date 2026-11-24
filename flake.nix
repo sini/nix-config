@@ -394,6 +394,10 @@
       url = "github:sini/xmsg/ea825d4d7c9ebe294b31ab336981996a848c7d93";
       flake = false;
     };
+    xmsg-mcp-gateway-chart = {
+      url = "github:sini/xmsg-mcp-gateway/56861f16c3b4ef8891954a45b6b8bc1258d2ca24";
+      flake = false;
+    };
     zen-browser = {
       url = "github:0xc000022070/zen-browser-flake";
       inputs = {

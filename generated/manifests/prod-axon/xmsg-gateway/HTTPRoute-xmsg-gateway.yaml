@@ -1,6 +1,9 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
+  labels:
+    app.kubernetes.io/instance: xmsg-gateway
+    app.kubernetes.io/name: xmsg-mcp-gateway
   name: xmsg-gateway
   namespace: xmsg-gateway
 spec:

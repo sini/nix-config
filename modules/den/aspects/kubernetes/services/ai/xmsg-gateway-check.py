@@ -1,11 +1,12 @@
-"""Property check over xmsg-gateway.nix's manifests (flag forced on): one uid on
-every container, pod hardening, no tunnel sidecar unless enabled, the owner
-configuration and binding, the grant-store initContainers, secret modes, the leaf
-certificate, the egress policy, and the public OAuth ingress (a Service, routes that
-carry only discovery and /oauth, and an ingress policy that admits envoy alone).
+"""Property check over axon's rendered xmsg-gateway resources (the gateway's chart
+and the objects around it): one uid on every container, pod hardening, the tunnel
+sidecar, the owner configuration and bindings, the grant-store initContainers, secret
+modes, the leaf certificate, the egress policy, and the public ingress (a Service,
+routes that carry only discovery, /oauth and, with the AS, /mcp, and an ingress policy
+that admits envoy alone).
 
 Usage: xmsg-gateway-check.py <manifests.json>
-  manifests.json: {"off": <render, tunnel off>, "on": <render, tunnel on>}
+  manifests.json: {"axon": <axon's resources>, "leaves": <the xmsg-leaves record>}
 Exits non-zero, naming every failed property, when one does not hold.
 """
 
@@ -22,7 +23,8 @@ NS = SA = "xmsg-gateway"
 UID = 10001
 IDENTITY = f"spiffe://json64.dev/ns/{NS}/sa/{SA}"
 ISSUER = "xmsg-cluster-ca"
-# The hub and the extra hub: each one's LAN address, federation port and identity.
+UPLINK_DEV_IP = "10.10.11.1"
+# axon's hub and extra hubs: each one's LAN address, federation port and identity.
 HUBS = {
     "sini.cortex": ("10.9.2.1", "7788", "spiffe://json64.dev/host/cortex/user/sini"),
     "sini.bitstream": (
@@ -30,7 +32,16 @@ HUBS = {
         "7788",
         "spiffe://json64.dev/host/bitstream/user/sini",
     ),
+    "sini.uplink-dev": (
+        UPLINK_DEV_IP,
+        "7788",
+        "spiffe://json64.dev/host/uplink-dev/user/sini",
+    ),
 }
+# Reached through cortex by forwarding, never peers (axon's relayed).
+RELAYED = ["sini.patch", "sini.blade"]
+# The first grant, and the AS's local one (axon has the AS on, Events on the local).
+GRANT, LOCAL_GRANT = "chatgpt", "chatgpt-as"
 HUB_RIGHTS = ["list", "reply", "send"]
 # Each hub's federation port; public HTTPS for Events callbacks. kanidm is reached at
 # the cluster gateway VIP, inside the cluster, so it needs no CIDR rule.
@@ -58,12 +69,19 @@ MIGRATIONS = [
     "migrate-profiles",
     "migrate-attachments",
 ]
-# The public OAuth ingress (xmsg-gateway.nix): what envoy may route, and from where.
+# The public ingress (xmsg-gateway.nix): what envoy may route, and from where. /mcp
+# is route B, on with the authorization server.
 PUBLIC_PATHS = {
     ("PathPrefix", "/.well-known/oauth-protected-resource"),
     ("Exact", "/.well-known/oauth-authorization-server"),
     ("PathPrefix", "/oauth"),
     ("PathPrefix", "/oauth/authorize"),
+    ("PathPrefix", "/mcp"),
+}
+# The chart's selector labels (_helpers.tpl gw.selectorLabels).
+POD_LABELS = {
+    "app.kubernetes.io/name": "xmsg-mcp-gateway",
+    "app.kubernetes.io/instance": SA,
 }
 INGRESS_POLICY = f"{SA}-ingress"
 # The store application_ids (gateway grants.rs).
@@ -85,12 +103,12 @@ def arg_after(args, flag):
 with open(sys.argv[1]) as f:
     renders = json.load(f)
 
-app = renders["off"]["applications"][SA]
+app = renders["axon"]["applications"][SA]
 res = app["resources"]
 check("namespace", app["namespace"] == NS, app.get("namespace"))
-check("no Ingress object", "ingresses" not in res)
-# The Service exposes the listener's one port, and the routes carry only discovery
-# and /oauth: everything else on the host, /mcp included, 404s at envoy.
+check("no Ingress object", not res.get("ingresses"))
+# The Service exposes the listener's one port, and the routes carry only discovery,
+# /oauth and /mcp: everything else on the host 404s at envoy.
 svc_ports = [
     (p.get("port"), p.get("targetPort"))
     for p in res.get("services", {}).get(SA, {}).get("spec", {}).get("ports", [])
@@ -107,11 +125,6 @@ check(
     route_paths == PUBLIC_PATHS,
     sorted(route_paths),
 )
-check(
-    "no route to /mcp",
-    not any(v.startswith("/mcp") for _, v in route_paths),
-    sorted(route_paths),
-)
 
 dep = res["deployments"][SA]["spec"]
 pod = dep["template"]["spec"]
@@ -119,19 +132,10 @@ containers = {c["name"]: c for c in pod["containers"]}
 inits = pod.get("initContainers", [])
 volumes = {v["name"]: v for v in pod.get("volumes", [])}
 
-# 1. One Deployment, one replica, Recreate; no tunnel container when tunnel is off.
+# 1. One Deployment, one replica, Recreate; the leaf, the gateway and the tunnel.
 check("one replica", dep.get("replicas") == 1, dep.get("replicas"))
 check(
     "Recreate", dep.get("strategy", {}).get("type") == "Recreate", dep.get("strategy")
-)
-check(
-    "tunnel off: leaf and gateway only",
-    set(containers) == {"xmsg", "gateway"},
-    sorted(containers),
-)
-check(
-    "tunnel off: no tunnel image anywhere",
-    "tunnel-client" not in json.dumps(pod),
 )
 check("no runtimeClassName", "runtimeClassName" not in pod)
 check("pod service account", pod.get("serviceAccountName") == SA)
@@ -150,16 +154,6 @@ check(
 )
 
 # 2. Hardening, and the same uid on every container (the leaf's is the daemon uid).
-on_pod = renders["on"]["applications"][SA]["resources"]["deployments"][SA]["spec"][
-    "template"
-]["spec"]
-for c in on_pod["containers"] + on_pod.get("initContainers", []):
-    check(
-        f"tunnel on: {c['name']} never runs enable",
-        not re.search(
-            r"\benable\b", " ".join(c.get("args", []) + c.get("command", []))
-        ),
-    )
 for c in pod["containers"] + inits:
     n = c["name"]
     sc = c.get("securityContext", {})
@@ -185,7 +179,7 @@ for c in pod["containers"] + inits:
 # 3. The owner configuration and the binding.
 cfg_files = res["configMaps"][f"{SA}-config"]["data"]
 serving = json.loads(cfg_files["serving.json"])
-binding = json.loads(cfg_files["binding.json"])
+binding = json.loads(cfg_files[f"binding-{GRANT}.json"])
 gw = containers["gateway"]
 config_path = arg_after(gw.get("args", []), "--config")
 check("gateway serves its config", gw.get("args", [])[:1] == ["serve"], gw.get("args"))
@@ -195,7 +189,7 @@ for field in (
     "request_timeout_ms",
     "allowed_hosts",
     "allowed_origins",
-    "verifier",
+    "verifier_profiles",
     "messaging",
     "events",
 ):
@@ -212,7 +206,11 @@ check(
     serving.get("allow_non_loopback_bind") is True,
     serving.get("allow_non_loopback_bind"),
 )
-v = serving.get("verifier", {})
+# The Kanidm profile, the first grant's verifier.
+v = next(
+    (p for p in serving.get("verifier_profiles", []) if not p.get("local")),
+    {},
+)
 for k, want in VERIFIER.items():
     check(f"verifier.{k}", v.get(k) == want, v.get(k))
 check(
@@ -227,7 +225,7 @@ check(
     v.get("subject"),
 )
 check(
-    "binding equals the verifier profile",
+    "binding equals the Kanidm verifier profile",
     binding
     == {
         "service": v.get("service"),
@@ -329,18 +327,20 @@ check(
 check("socket volume is an emptyDir", "emptyDir" in volumes.get(shared, {}), shared)
 
 # 5. Grant store: busybox prepare; the fresh store built on the staged store (init,
-# every migration, enroll); an install that moves it into place only when the real
-# store is absent; a backup only when a migration will run; every migration on the
-# real store; apply.
+# every migration, enroll each grant); an install that moves it into place only when
+# the real store is absent; a backup only when a migration will run; every migration
+# on the real store; apply each grant. The AS adds its migration to both stores.
 names = [c["name"] for c in inits]
+migs = MIGRATIONS + ["migrate-authorization-server"]
+APPLIES = [f"store-apply-{GRANT}", f"store-apply-{LOCAL_GRANT}"]
 check(
     "initContainer order",
     names
-    == ["prepare", "staged-init"]
-    + [f"staged-{m}" for m in MIGRATIONS]
-    + ["staged-enroll", "store-install", "store-backup"]
-    + [f"store-{m}" for m in MIGRATIONS]
-    + ["store-apply"],
+    == ["prepare", "staging", "staged-init"]
+    + [f"staged-{m}" for m in migs]
+    + ["staged-enroll", "staged-local-enroll", "store-install", "store-backup"]
+    + [f"store-{m}" for m in migs]
+    + APPLIES,
     names,
 )
 store = serving.get("grant_store")
@@ -353,6 +353,10 @@ for c in inits:
     prefix, _, step = c["name"].partition("-")
     if prefix not in ("staged", "store") or step in ("install", "backup"):
         continue
+    if step.startswith("local-"):
+        step = step.removeprefix("local-")
+    if step.startswith("apply-"):
+        step = "apply"
     args = c.get("args", [])
     check(f"{c['name']} uses the gateway image", c.get("image") == gw.get("image"))
     check(f"{c['name']} has no command override", "command" not in c)
@@ -385,12 +389,16 @@ for prefix in ("staged", "store"):
         f"{prefix}-migrate-events uses the events key",
         arg_after(mig.get("args", []), "--key-file") == ev.get("key_file"),
     )
-enroll = next((c for c in inits if c["name"] == "staged-enroll"), {})
+for step, grant in (("staged-enroll", GRANT), ("staged-local-enroll", LOCAL_GRANT)):
+    enroll = next((c for c in inits if c["name"] == step), {})
+    check(
+        f"{step} enrolls {grant} with its binding",
+        enroll.get("args", [])[3:]
+        == [grant, f"{posixpath.dirname(config_path)}/binding-{grant}.json"],
+        enroll.get("args"),
+    )
 check(
-    "enroll uses the events grant and the binding",
-    enroll.get("args", [])[3:]
-    == [ev.get("grant_id"), f"{posixpath.dirname(config_path)}/binding.json"],
-    enroll.get("args"),
+    "Events on the local grant", ev.get("grant_id") == LOCAL_GRANT, ev.get("grant_id")
 )
 install = next((c for c in inits if c["name"] == "store-install"), {})
 script = " ".join(install.get("command", []))
@@ -562,46 +570,46 @@ if store and bin_dir and len(bc.get("command", [])) > 3:
         (code, backups),
     )
 
-# 5b. The outbound policy, applied to the real store after install: every hub's sessions
-# for send and reply, in the gateway's field order. No enablement flag, so apply keeps
-# the grant's enablement.
-apply = next((c for c in inits if c["name"] == "store-apply"), None)
-check("apply step present", apply is not None, names)
-aargs = (apply or {}).get("args", [])
-check(
-    "apply is last",
-    apply is not None and names[-1] == "store-apply",
-    names,
-)
-check(
-    "apply has no --enabled",
-    apply is not None and "--enabled" not in aargs and "--disabled" not in aargs,
-    aargs,
-)
-check(
-    "apply on the real store with policy.json",
-    aargs
-    == [
-        "--state",
-        store,
-        "apply",
-        "--id",
-        ev.get("grant_id"),
-        "--policy",
-        f"{posixpath.dirname(config_path)}/policy.json",
-    ]
-    and (apply or {}).get("image") == gw.get("image")
-    and "command" not in (apply or {}),
-    aargs,
-)
-targets = json.dumps([f"*@{h}" for h in HUBS], separators=(",", ":"))
-check(
-    "policy.json is every hub's sessions, send and reply",
-    cfg_files.get("policy.json")
-    == f'{{"send":{{"targets":{targets},"required_scope":"xmsg:send"}},'
-    f'"reply":{{"targets":{targets},"required_scope":"xmsg:reply"}}}}',
-    cfg_files.get("policy.json"),
-)
+# 5b. The outbound policy, applied to the real store after install, per grant: every
+# hub's sessions and the relayed nodes', for send and reply. No enablement flag, so
+# apply keeps the grant's enablement.
+check("apply step present", APPLIES[0] in names, names)
+check("apply is last", names[-len(APPLIES) :] == APPLIES, names)
+targets = [f"*@{h}" for h in HUBS] + [f"*@{n}" for n in RELAYED]
+for grant, step in zip((GRANT, LOCAL_GRANT), APPLIES):
+    apply = next((c for c in inits if c["name"] == step), None)
+    aargs = (apply or {}).get("args", [])
+    check(
+        "apply has no --enabled",
+        apply is not None and "--enabled" not in aargs and "--disabled" not in aargs,
+        aargs,
+    )
+    check(
+        f"{step} on the real store with policy-{grant}.json",
+        aargs
+        == [
+            "--state",
+            store,
+            "apply",
+            "--id",
+            grant,
+            "--policy",
+            f"{posixpath.dirname(config_path)}/policy-{grant}.json",
+        ]
+        and (apply or {}).get("image") == gw.get("image")
+        and "command" not in (apply or {}),
+        aargs,
+    )
+    pol = json.loads(cfg_files.get(f"policy-{grant}.json", "{}"))
+    check(
+        f"policy-{grant}.json is every hub's sessions, send and reply",
+        pol
+        == {
+            "send": {"targets": targets, "required_scope": "xmsg:send"},
+            "reply": {"targets": targets, "required_scope": "xmsg:reply"},
+        },
+        pol,
+    )
 
 # 6. Secrets: copied owner-private by prepare; the raw Secret volume only in prepare.
 prep = " ".join(inits[0].get("command", [])) if inits else ""
@@ -652,7 +660,7 @@ for n, cert in certs.items():
         check(f"{n} no {fld}", not spec.get(fld), spec.get(fld))
     check(f"{n} not a CA", not spec.get("isCA"))
 
-peers = json.loads(res["configMaps"][f"{SA}-xmsg-peers"]["data"]["peers.json"])
+peers = json.loads(res["configMaps"][f"{SA}-peers"]["data"]["peers.json"])["peers"]
 check("one peer per hub", set(peers) == set(HUBS), sorted(peers))
 for key, (ip, port, ident) in HUBS.items():
     p = peers.get(key, {})
@@ -692,7 +700,7 @@ check(
 ingress = res.get("ciliumNetworkPolicies", {}).get(INGRESS_POLICY, {}).get("spec", {})
 check(
     "ingress policy selects the gateway pod",
-    ingress.get("endpointSelector") == {"matchLabels": {"app.kubernetes.io/name": SA}},
+    ingress.get("endpointSelector") == {"matchLabels": POD_LABELS},
     ingress.get("endpointSelector"),
 )
 ingress_from = [
@@ -751,10 +759,10 @@ for n, p in policies.items():
                     allowed.add((kind, d, port.get("port")))
     check(f"{n} egress", allowed == EGRESS, sorted(allowed))
 
-# 9. Tunnel on: the sidecar appears, on the gateway's loopback listener.
-on = {c["name"]: c for c in on_pod["containers"]}
+# 9. The tunnel sidecar, on the gateway's loopback listener.
+on = containers
 check(
-    "tunnel on: sidecar present",
+    "tunnel sidecar present",
     set(on) == {"xmsg", "gateway", "tunnel-client"},
     sorted(on),
 )
