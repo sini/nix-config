@@ -79,7 +79,7 @@
 # in the chart's store.preMigrate slot because the pinned gateway image predates `init
 # --if-needed`, `enroll --if-needed` and `backup-if-pending`; drop it for
 # store.bootstrap.enabled and a backup-if-pending hook once the image is at or past the
-# chart's rev.
+# chart's rev. Transition shim, removed by bead xmsg-1as8 (check hot-journal recovery first).
 #
 # Gating check: xmsg-gateway-check.nix, over axon's rendered manifests.
 {
