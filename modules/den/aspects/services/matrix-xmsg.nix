@@ -243,15 +243,6 @@ in
         networking.nftables.enable = lib.mkIf (leafRules != "") true;
         networking.firewall.extraInputRules = lib.mkIf (leafRules != "") leafRules;
 
-        # The bot looks for its daemon's sockets in /run/matrix-xmsg-xmsg/xmsg (its module's
-        # xmsgSocket); pin them there rather than xmsg's managed namespace (PR-A). A
-        # TRANSITION pin, removed with xmsg-mqsh once matrix-xmsg resolves the namespace.
-        systemd.services.matrix-xmsg-xmsg.environment = lib.mkIf (cfg.rooms != [ ]) {
-          XMSG_HTTP_SOCK = "/run/matrix-xmsg-xmsg/xmsg/http.sock";
-          XMSG_AGENT_SOCK = "/run/matrix-xmsg-xmsg/xmsg/agent.sock";
-          XMSG_REGISTER_SOCK = "/run/matrix-xmsg-xmsg/xmsg/register.sock";
-        };
-
         services.matrix-xmsg = lib.mkIf (cfg.rooms != [ ]) {
           enable = true;
           package = inputs'.matrix-xmsg.packages.default;
@@ -261,8 +252,9 @@ in
           accessTokenFile = config.age.secrets.matrix-genie-token.path;
           storePassphraseFile = config.age.secrets.matrix-xmsg-store-key.path;
           recoveryKeyFile = config.age.secrets.matrix-xmsg-recovery-key.path;
-          # The system user matrix-xmsg, on its own node; xmsgSocket is the module's
-          # default, that node's socket dir.
+          # The system user matrix-xmsg, on its own node. Its daemon pins its sockets here
+          # (upstream); set explicitly so the bot never falls back to socket discovery.
+          xmsgSocket = "/run/matrix-xmsg-xmsg/xmsg";
           dynamicUser = false;
           user = svcUser;
           trustedMxids = trusted;
