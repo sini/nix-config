@@ -10,9 +10,9 @@
 # services, and the federation peers with their allow lists.
 #
 # Federation: each user listed in a host's `federation.nodes` runs a node named
-# `<user>.<host>`. Its peers are derived, never listed: the node emits an xmsg-nodes
-# record, and the peering rules (policies/xmsg.nix: same user, trusted pairs)
-# deliver it to the nodes that federate with it, so each link exists on both ends by
+# `<user>.<host>`. Its peers are derived, never listed: `lib.fleet.xmsg.nodes`
+# collects the nodes across `fleet.hosts` and `lib.fleet.xmsg.peersFor` pairs
+# them (same user, trusted pairs), so each link exists on both ends by
 # construction. Nodes authenticate by CA (xmsg
 # X16, federation plan §6.7): each presents a leaf signed by the host intermediate,
 # whose URI SAN is its spiffe://<environment domain>/host/<host>/user/<user> identity, and
@@ -21,11 +21,11 @@
 # `agenix generate` decrypts them, never a host. The cluster intermediate is
 # cert-manager's issuer (not wired here).
 #
-# Leaves (xmsg X19, federation plan §2.1): a cluster aspect running a leaf pod emits an
-# xmsg-leaves record naming the nodes it wants as hubs; each of those nodes takes it
-# as a CA peer marked `leaf`, so a send to `<ref>@<leaf>` is queued for the pod to
-# collect and never pushed, and admits the cluster's node addresses (pods masquerade
-# to them) to its federation port.
+# Leaves (xmsg X19, federation plan §2.1): each cluster aspect running a leaf pod
+# registers in `lib.fleet.xmsg.leaves` naming the nodes it wants as hubs; each of those
+# nodes takes it as a CA peer marked `leaf`, so a send to `<ref>@<leaf>` is queued for
+# the pod to collect and never pushed, and admits the cluster's node addresses (pods
+# masquerade to them) to its federation port.
 #
 # genie-guard (github:sini/genie-agent): on a host that runs the @genie bot, the
 # owner's user service registers on this bus as the service genie-guard and answers guard-in

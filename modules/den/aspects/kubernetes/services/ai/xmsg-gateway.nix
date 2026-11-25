@@ -197,14 +197,14 @@ in
         type = lib.types.nullOr lib.types.str;
         default = null;
         example = "cortex";
-        description = "The host whose owner's xmsg is the leaf's hub. That node takes the leaf from the xmsg-leaves record this aspect emits. Required with enable.";
+        description = "The host whose owner's xmsg is the leaf's hub. That node takes the leaf from `lib.fleet.xmsg.leaves`. Required with enable.";
       };
 
       extraHubs = lib.mkOption {
         type = lib.types.listOf lib.types.str;
         default = [ ];
         example = [ "bitstream" ];
-        description = "More hosts whose owner's xmsg is also the leaf's hub, so the gateway reaches and lists their sessions too. Each takes the leaf from the same xmsg-leaves record.";
+        description = "More hosts whose owner's xmsg is also the leaf's hub, so the gateway reaches and lists their sessions too. Each takes the leaf from `lib.fleet.xmsg.leaves`.";
       };
 
       relayed = lib.mkOption {

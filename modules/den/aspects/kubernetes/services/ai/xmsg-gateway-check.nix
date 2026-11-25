@@ -1,5 +1,5 @@
 # xmsg-gateway-check: the hardening, shared uid, owner configuration, grant-store
-# initContainers, secret modes, hub peers, xmsg-leaves record and egress of
+# initContainers, secret modes, hub peers, fleet leaf entry and egress of
 # xmsg-gateway.nix, asserted over axon's rendered resources (the gateway's chart and the
 # objects around it), so it checks what the chart produces for axon's instance.
 #   nix build .#checks.x86_64-linux.xmsg-gateway-pod

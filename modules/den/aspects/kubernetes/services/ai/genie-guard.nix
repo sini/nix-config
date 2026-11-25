@@ -94,7 +94,7 @@ in
       type = lib.types.nullOr lib.types.str;
       default = null;
       example = "bitstream";
-      description = "The host whose owner's xmsg is the leaf's hub. That node takes the leaf from the xmsg-leaves record this aspect emits. Required with enable.";
+      description = "The host whose owner's xmsg is the leaf's hub. That node takes the leaf from `lib.fleet.xmsg.leaves`. Required with enable.";
     };
 
     settings.devHubs = lib.mkOption {
