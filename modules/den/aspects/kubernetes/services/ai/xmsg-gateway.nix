@@ -275,40 +275,6 @@ in
       };
     };
 
-    # The hub takes the leaf from this record (applications/dev/ai/mcp/xmsg.nix).
-    xmsg-leaves =
-      { cluster, ... }:
-      let
-        cfg = cluster.settings.kubernetes.services.ai.xmsg-gateway;
-      in
-      lib.optionals cfg.enable [
-        {
-          identity = "spiffe://${domainOf cluster}/ns/${namespace}/sa/${name}";
-          cluster = cluster.name;
-          hubs = map (h: "${den.hosts.x86_64-linux.${h}.system-owner}.${h}") (
-            [ (hostSetting cfg "hub") ] ++ cfg.extraHubs
-          );
-          # It sends and replies to the hubs' sessions and lists them; inbound sends
-          # need no right.
-          allow = [
-            "send"
-            "reply"
-            "list"
-          ];
-          # `forward` at the primary hub only, for the `relayed` nodes (mcp/xmsg.nix adds it).
-          forwardAt = lib.optionals ((cfg.relayed or [ ]) != [ ]) [
-            "${den.hosts.x86_64-linux.${hostSetting cfg "hub"}.system-owner}.${hostSetting cfg "hub"}"
-          ];
-          # Explicitly every target. One `targets` list gates both what the hub queues
-          # to the leaf and what the leaf may reach on the hub. The hub's agent sessions
-          # are instance ids, which no fixed list can name, so a list would refuse every
-          # send to them. Inbound, the leaf hosts the one principal and refuses any
-          # other name. The gateway's per-grant outbound policy (policy.json, applied at
-          # start) is what narrows its sends.
-          targets = null;
-        }
-      ];
-
     # Declared with the flag off too, so the sops store holds every value before the
     # pod needs it.
     age-secrets =

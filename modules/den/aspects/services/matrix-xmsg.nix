@@ -56,32 +56,7 @@ in
   };
 
   # The bot's node, for the service-node rule and the pod guards it screens through.
-  # Its own aspect, included by the host schema so it emits at the host's scope alone:
-  # an emit on the bot aspect, a host include, would also run in each user's scope
-  # there and reach that user's node with no rule delivering it. Only the
-  # service-node rule (policies/xmsg.nix) delivers this record.
-  den.aspects.services.matrix-xmsg-node.xmsg-nodes =
-    { environment, host, ... }:
-    let
-      cfg = host.settings.services.matrix-xmsg or { rooms = [ ]; };
-    in
-    lib.optionals (cfg.rooms != [ ]) [
-      {
-        name = xl.nodeName host.name svcUser;
-        address = "${host.name}.ts.${environment.domain}:${toString cfg.xmsgPort}";
-        lanIp = builtins.head host.ipv4;
-        port = cfg.xmsgPort;
-        identity = xl.spiffeOf environment.domain host.name svcUser;
-        owner = host.system-owner;
-        allow = [
-          "send"
-          "reply"
-        ];
-        guards = guardsOf cfg;
-      }
-    ];
-
-  den.schema.host.includes = [ den.aspects.services.matrix-xmsg-node ];
+  # Handled in xmsg-fleet.nix.
 
   den.aspects.services.matrix-xmsg = {
     settings = {
@@ -163,8 +138,6 @@ in
         inputs',
         k3s-nodes,
         pkgs,
-        xmsg-leaves,
-        xmsg-nodes,
         ...
       }:
       let
@@ -187,25 +160,24 @@ in
           )
         );
         rootCa = xl.caCrt (xl.caDir + "/root.crt");
-        # The system owner's nodes (policies/xmsg.nix collects them here).
-        ownerNodes = lib.filter (n: n.name != self' && !(n ? guards)) xmsg-nodes;
-        # The pod leaves this bot screens through, by the node part of each guard ref.
-        guardNodes = map (g: lib.last (lib.splitString "@" g)) (guardsOf cfg);
-        leafNodeOf =
-          leaf:
-          let
-            m = builtins.match "spiffe://[^/]+/ns/([^/]+)/sa/([^/]+)" leaf.identity;
-          in
-          "${lib.elemAt m 1}.${lib.elemAt m 0}";
-        leaves = lib.filter (l: lib.elem (leafNodeOf l) guardNodes) xmsg-leaves;
+        # The system owner's nodes (derived from lib.fleet.reachableFor).
+        ownerNodes =
+          (inputs.xmsg.lib.fleet.reachableFor {
+            fleet = topConfig.xmsg.fleet;
+            self = self';
+          }).direct;
+        leafNames = lib.filter (
+          leafName: (topConfig.xmsg.fleet.grants.${self'}.${leafName}.mailbox or false)
+        ) (builtins.attrNames (topConfig.xmsg.fleet.grants.${self'} or { }));
         leafRules = lib.concatMapStrings (
-          leaf:
-          lib.concatMapStrings
-            (n: ''
-              ip saddr ${n.ip} tcp dport ${toString cfg.xmsgPort} accept comment "xmsg leaf ${leafNodeOf leaf} of ${self'}: ${n.hostname}"
-            '')
-            (lib.sort (a: b: a.hostname < b.hostname) (lib.filter (n: n.clusterName == leaf.cluster) k3s-nodes))
-        ) leaves;
+          leafName:
+          let
+            cluster = topConfig.xmsg.leafClusters.${leafName};
+          in
+          lib.concatMapStrings (n: ''
+            ip saddr ${n.ip} tcp dport ${toString cfg.xmsgPort} accept comment "xmsg leaf ${leafName} of ${self'}: ${n.hostname}"
+          '') (lib.sort (a: b: a.hostname < b.hostname) (lib.filter (n: n.clusterName == cluster) k3s-nodes))
+        ) leafNames;
         leafSecretName = xl.leafName svcUser;
         # A tier-1 answer can take its queue wait plus its turn deadline; waiting less
         # sends the owner a false timeout DM.
@@ -310,19 +282,7 @@ in
             }
             // lib.optionalAttrs (r.screenMentions != null) { inherit (r) screenMentions; }
           ) cfg.roomRoutes;
-          openThreadNodes =
-            let
-              nodes = map (n: n.name) ownerNodes;
-              expected =
-                (inputs.xmsg.lib.fleet.reachableFor {
-                  fleet = topConfig.xmsg.fleet;
-                  self = self';
-                }).direct;
-            in
-            assert lib.assertMsg (
-              lib.sort lib.lessThan nodes == expected
-            ) "matrix-xmsg: openThreadNodes does not match lib.fleet.reachableFor for ${self'}.";
-            nodes;
+          openThreadNodes = ownerNodes;
           answerTimeoutSecs = lib.mkIf (answerTimeoutSecs != null) answerTimeoutSecs;
 
           xmsg = {

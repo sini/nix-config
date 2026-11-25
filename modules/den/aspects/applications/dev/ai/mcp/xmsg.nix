@@ -239,28 +239,7 @@ in
     inputs.nixpkgs.follows = "nixpkgs-unstable";
   };
 
-  # This user's node here, for the peering rules (policies/xmsg.nix) to deliver. A
-  # user-scoped aspect, so the record is emitted at the user's own scope, where a
-  # broadcast picks it up (the syncthing `peer` pattern); the xmsg aspect itself is
-  # often a host include.
-  den.aspects.applications.dev.ai.mcp.xmsg-node.xmsg-nodes =
-    {
-      environment,
-      host,
-      user,
-      ...
-    }:
-    lib.optionals ((fedOf host).nodes ? ${user.name}) [
-      {
-        name = nodeName host.name user.name;
-        address = "${host.name}.ts.${environment.domain}:${toString (fedOf host).nodes.${user.name}.port}";
-        identity = spiffeOf environment.domain host.name user.name;
-      }
-    ];
-
-  den.schema.user.includes = [ den.aspects.applications.dev.ai.mcp.xmsg-node ];
-
-  # Who a user federates with beyond their own nodes (policies/xmsg.nix), read both
+  # Who a user federates with beyond their own nodes, read both
   # ways: naming a user in either's list makes the pair.
   den.schema.user.imports = [
     {
@@ -391,27 +370,31 @@ in
         environment,
         host,
         k3s-nodes,
-        xmsg-leaves,
         ...
       }:
       let
         nodes = (fedOf host).nodes;
         self' = user: nodeName host.name user;
-        leavesOf = name: lib.filter (l: lib.elem name l.hubs) xmsg-leaves;
+        leavesOf =
+          name:
+          lib.filter (leafName: (topConfig.xmsg.fleet.grants.${name}.${leafName}.mailbox or false)) (
+            builtins.attrNames (topConfig.xmsg.fleet.grants.${name} or { })
+          );
         leafRules = lib.concatStrings (
           lib.concatLists (
             lib.mapAttrsToList (
               user: node:
               lib.concatMap (
-                leaf:
+                leafName:
                 let
-                  ks = lib.filter (n: n.clusterName == leaf.cluster) k3s-nodes;
+                  cluster = topConfig.xmsg.leafClusters.${leafName};
+                  ks = lib.filter (n: n.clusterName == cluster) k3s-nodes;
                 in
                 assert lib.assertMsg (
                   ks != [ ]
-                ) "xmsg federation: leaf ${leafNode leaf}'s cluster ${leaf.cluster} has no nodes";
+                ) "xmsg federation: leaf ${leafName}'s cluster ${cluster} has no nodes";
                 map (n: ''
-                  ip saddr ${n.ip} tcp dport ${toString node.port} accept comment "xmsg leaf ${leafNode leaf}: ${n.hostname}"
+                  ip saddr ${n.ip} tcp dport ${toString node.port} accept comment "xmsg leaf ${leafName}: ${n.hostname}"
                 '') (lib.sort (a: b: a.hostname < b.hostname) ks)
               ) (leavesOf (self' user))
             ) nodes
@@ -535,8 +518,6 @@ in
         inputs',
         osConfig,
         pkgs,
-        xmsg-leaves,
-        xmsg-nodes,
         ...
       }:
       let
@@ -577,23 +558,16 @@ in
         collectorDir = "${config.xdg.configHome}/xmsg/observe-collector";
       in
       {
-        # A service node is another user's only through a trusted pair; a record that
-        # reached this node by any other path fails the build instead of linking.
-        assertions =
-          map (p: {
-            assertion = xl.trusts den.users.registry me p.owner;
-            message = "xmsg federation: ${self'} would peer ${p.name}, a service of ${p.owner}, who is neither ${me} nor in xmsg.trusts with them.";
-          }) (lib.filter (p: p ? owner) xmsg-nodes)
-          ++ lib.optional collectorOn {
-            assertion =
-              lib.sort lib.lessThan collector.sources == map (s: s.node) (
-                inputs.xmsg.lib.fleet.collectorSourcesFor {
-                  fleet = topConfig.xmsg.fleet;
-                  self = "${me}.collector";
-                }
-              );
-            message = "xmsg collector: collector.sources does not match lib.fleet.collectorSourcesFor for ${me}.collector.";
-          };
+        assertions = lib.optional collectorOn {
+          assertion =
+            lib.sort lib.lessThan collector.sources == map (s: s.node) (
+              inputs.xmsg.lib.fleet.collectorSourcesFor {
+                fleet = topConfig.xmsg.fleet;
+                self = "${me}.collector";
+              }
+            );
+          message = "xmsg collector: collector.sources does not match lib.fleet.collectorSourcesFor for ${me}.collector.";
+        };
 
         programs.xmsg = {
           enable = true;
@@ -648,17 +622,9 @@ in
               sources = map (
                 name:
                 let
-                  # A node's own record never reaches it (policies/xmsg.nix), so this host's
-                  # node is added from its own settings, as xmsg-node emits it.
-                  self = {
-                    name = self';
-                    address = "${host.name}.ts.${environment.domain}:${toString node.port}";
-                    identity = spiffeOf environment.domain host.name me;
-                  };
                   p =
-                    lib.findFirst (n: n.name == name)
-                      (throw "xmsg collector: source ${name} is not an xmsg node this user federates with.")
-                      ([ self ] ++ xmsg-nodes);
+                    topConfig.xmsg.fleet.nodes.${name}
+                      or (throw "xmsg collector: source ${name} is not an xmsg node this user federates with.");
                 in
                 {
                   node = name;
