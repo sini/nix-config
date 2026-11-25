@@ -1,7 +1,7 @@
 # headroom (github:headroomlabs-ai/headroom): Context compression layer for AI agents.
 # Ships a store-pinned plugin containing native startup and compression hooks,
 # backed by a local proxy server and CLI binary (pkgs.local.headroom-ai).
-{ inputs, ... }:
+{ inputs, lib, ... }:
 let
   # One proxy per user, all on loopback: offset by uid so users sharing a host never collide
   # (uid 1000 keeps 8787). Every consumer below reads this.
@@ -33,11 +33,25 @@ in
   };
 
   den.aspects.applications.dev.ai.mcp.headroom = {
+    # Off: agents reach the API directly. The proxy (headroom.service, its liveness check)
+    # still runs, so a session started while this was on keeps a live proxy until it ends;
+    # a session started after it is off never touches the proxy.
+    settings.claude = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Route Claude through the headroom proxy (ANTHROPIC_BASE_URL), and give agents headroom's MCP server and its Bash permission.";
+    };
+
     agent-extensions =
-      { lib, pkgs, ... }:
+      {
+        host,
+        lib,
+        pkgs,
+        ...
+      }:
       {
         type = "mcp";
-        mcpServers = {
+        mcpServers = lib.optionalAttrs host.settings.applications.dev.ai.mcp.headroom.claude {
           headroom = {
             command = "${lib.getExe pkgs.local.headroom-ai}";
             args = [
@@ -50,6 +64,7 @@ in
 
     homeManager =
       {
+        host,
         pkgs,
         lib,
         user,
@@ -61,7 +76,7 @@ in
           pkgs.uv
         ];
 
-        programs.claude-code = {
+        programs.claude-code = lib.mkIf host.settings.applications.dev.ai.mcp.headroom.claude {
           # ★ THE PLUGIN IS NOT INSTALLED — it was a reference, and installing it was a
           # mistake (owner, 2026-09-02). Its hooks are `headroom init hook ensure` on
           # SessionStart and PreToolUse, and what that ENSURES is a self-heal hook written
