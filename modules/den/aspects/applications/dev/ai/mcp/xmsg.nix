@@ -31,12 +31,15 @@
 # owner's user service registers on this bus as the service genie-guard and answers guard-in
 # requests with a model's verdict; xmsg admits that name only from its own binary.
 {
+  config,
   den,
+  inputs,
   lib,
   self,
   ...
 }:
 let
+  topConfig = config;
   xl = import ./_xmsg-lib.nix { inherit lib self; };
   # TRANSITION SHIM (xmsg PR-A, 912ca97a; removed with xmsg-mqsh): the scripts that keep
   # the legacy socket path <rt>/xmsg linked to xmsg's managed namespace, given the
@@ -568,58 +571,6 @@ in
         node = (fedOf host).nodes.${me} or null;
         rootCa = caCrt (caDir + "/root.crt");
         self' = nodeName host.name me;
-        # Each entry trusts the root with the peer's one identity, keyed by the node name
-        # that identity derives. A leaf entry's `address` is required but never dialled,
-        # since sends to a leaf are queued and replies to it not pushed, so it names a host
-        # that cannot resolve. No `from`: the host data carries no tailnet address.
-        peers =
-          lib.listToAttrs (
-            map (
-              p:
-              lib.nameValuePair p.name {
-                inherit (p) address;
-                # A service node's record names what it may do here (policies/xmsg.nix); a hub
-                # this host trusts to relay to it also gets `relayed`.
-                allow =
-                  p.allow or [
-                    "send"
-                    "reply"
-                    "list"
-                  ]
-                  ++ lib.optional (lib.elem p.name (fedOf host).relayedBy) "relayed";
-                ca = rootCa;
-                identities = [ p.identity ];
-              }
-            ) (lib.filter (p: p.name != self') xmsg-nodes)
-          )
-          // lib.listToAttrs (
-            map (
-              leaf:
-              lib.nameValuePair (leafNode leaf) {
-                address = "${leafNode leaf}.invalid:${toString node.port}";
-                ca = rootCa;
-                identities = [ leaf.identity ];
-                leaf = true;
-                # `forward` only where the leaf record names this node (single-hop relay).
-                allow = leaf.allow ++ lib.optional (lib.elem self' (leaf.forwardAt or [ ])) "forward";
-                inherit (leaf) targets;
-              }
-            ) (lib.filter (l: lib.elem self' l.hubs) xmsg-leaves)
-          )
-          # The pilot collector's grant: observe only, node-wide (targets omitted is this
-          # node's own endpoints), no labels. The collector dials; its address is never used.
-          // lib.listToAttrs (
-            map (
-              c:
-              lib.nameValuePair c {
-                address = "${c}.invalid:${toString node.port}";
-                ca = rootCa;
-                identities = [ (spiffeOf environment.domain "collector" (lib.removeSuffix ".collector" c)) ];
-                allow = [ "observe" ];
-              }
-              # Only a collector's own user's nodes: another user's node here is not its to observe.
-            ) (lib.filter (c: c == "${me}.collector") (lib.optionals (node != null) (fedOf host).observedBy))
-          );
 
         collector = (fedOf host).collector;
         collectorOn = collector.enable && me == collector.user;
@@ -628,10 +579,21 @@ in
       {
         # A service node is another user's only through a trusted pair; a record that
         # reached this node by any other path fails the build instead of linking.
-        assertions = map (p: {
-          assertion = xl.trusts den.users.registry me p.owner;
-          message = "xmsg federation: ${self'} would peer ${p.name}, a service of ${p.owner}, who is neither ${me} nor in xmsg.trusts with them.";
-        }) (lib.filter (p: p ? owner) xmsg-nodes);
+        assertions =
+          map (p: {
+            assertion = xl.trusts den.users.registry me p.owner;
+            message = "xmsg federation: ${self'} would peer ${p.name}, a service of ${p.owner}, who is neither ${me} nor in xmsg.trusts with them.";
+          }) (lib.filter (p: p ? owner) xmsg-nodes)
+          ++ lib.optional collectorOn {
+            assertion =
+              lib.sort lib.lessThan collector.sources == map (s: s.node) (
+                inputs.xmsg.lib.fleet.collectorSourcesFor {
+                  fleet = topConfig.xmsg.fleet;
+                  self = "${me}.collector";
+                }
+              );
+            message = "xmsg collector: collector.sources does not match lib.fleet.collectorSourcesFor for ${me}.collector.";
+          };
 
         programs.xmsg = {
           enable = true;
@@ -659,7 +621,11 @@ in
             federation = lib.mkIf (node != null) {
               enable = true;
               inherit (node) port;
-              inherit peers;
+              fleet = {
+                value = topConfig.xmsg.fleet;
+                self = self';
+                hostOwned = [ ];
+              };
               cert = caCrt (host.secretPath + "/${leafName me}.crt");
               key = osConfig.age.secrets.${leafName me}.path;
             };
