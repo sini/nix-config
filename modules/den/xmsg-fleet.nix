@@ -46,6 +46,7 @@ let
         value = {
           kind = "node";
           address = "${h.name}.ts.${trustDomain}:${toString port}";
+          addresses.lan = "${builtins.head h.ipv4}:${toString port}";
           listenPort = port;
           identity = xl.spiffeOf trustDomain h.name u;
           acceptRelayed = fed.relayedBy or [ ];
@@ -83,9 +84,14 @@ let
       name = xl.nodeName h.name "matrix-xmsg";
       owner = h.system-owner;
       host = h;
+      guardsGuard =
+        (mx.screenMentions or false)
+        || (mx.screenSolicited or false)
+        || lib.any (r: r.screenMentions or false == true) (lib.attrValues (mx.roomRoutes or { }));
       value = {
         kind = "node";
         address = "${h.name}.ts.${trustDomain}:${toString port}";
+        addresses.lan = "${builtins.head h.ipv4}:${toString port}";
         listenPort = port;
         identity = xl.spiffeOf trustDomain h.name "matrix-xmsg";
       };
@@ -116,6 +122,8 @@ let
       targets = null;
       node = {
         kind = "leaf";
+        network = "lan";
+        ca = "/etc/xmsg/tls/ca.crt";
       };
     }
   ) allClusters;
@@ -135,6 +143,8 @@ let
       targets = [ "genie-guard" ];
       node = {
         kind = "leaf";
+        network = "lan";
+        ca = "/etc/xmsg/tls/ca.crt";
       };
     }
   ) allClusters;
@@ -258,7 +268,29 @@ let
     ]) l.hubs
   ) allLeaves;
 
-  allGrantPairs = collectorGrants ++ serviceGrants ++ leafGrants;
+  serviceGuardGrants = lib.concatMap (
+    svc:
+    lib.optionals (svc.guardsGuard && builtins.any (l: l.name == "genie-guard.genie") allLeaves) [
+      {
+        granter = svc.name;
+        grantee = "genie-guard.genie";
+        grant = {
+          mailbox = true;
+          allow = [ "reply" ];
+          targets = [ "genie-guard" ];
+        };
+      }
+      {
+        granter = "genie-guard.genie";
+        grantee = svc.name;
+        grant = {
+          allow = [ "reply" ];
+        };
+      }
+    ]
+  ) serviceNodeEntries;
+
+  allGrantPairs = collectorGrants ++ serviceGrants ++ leafGrants ++ serviceGuardGrants;
   grants = lib.foldl' (
     acc: g:
     acc
