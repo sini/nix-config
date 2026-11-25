@@ -104,25 +104,6 @@ in
       description = "More hosts whose owner's xmsg the leaf also pulls from, for development and testing. The model endpoint stays the primary hub's.";
     };
 
-    # The hubs take the leaf from this record (applications/dev/ai/mcp/xmsg.nix).
-    xmsg-leaves =
-      { cluster, ... }:
-      let
-        cfg = cluster.settings.kubernetes.services.ai.genie-guard;
-      in
-      lib.optionals cfg.enable [
-        {
-          identity = "spiffe://${domainOf cluster}/ns/${namespace}/sa/${name}";
-          cluster = cluster.name;
-          hubs = map (h: "${den.hosts.x86_64-linux.${h}.system-owner}.${h}") ([ (hubOf cfg) ] ++ cfg.devHubs);
-          # It answers what it collects, and is sent nothing but guard requests.
-          allow = [ "reply" ];
-          targets = [ name ];
-        }
-      ];
-
-    # Declared with the flag off too, so the sops store holds the key before the pod
-    # needs it and turning the flag on needs only the image.
     age-secrets = _: {
       age.secrets = {
         # The key the bitstream guard reads (services/ai/hyperqwen-client.nix);
@@ -143,53 +124,29 @@ in
         cluster,
         images,
         lib,
-        xmsg-nodes ? [ ],
         ...
       }:
       let
         cfg = cluster.settings.kubernetes.services.ai.genie-guard;
         hub = den.hosts.x86_64-linux.${hubOf cfg};
-        # The leaf pulls from every peer in its file, each mailbox on its own.
-        hubs = map (h: rec {
-          name = h;
-          host = den.hosts.x86_64-linux.${h};
-          ip = lib.head host.ipv4;
-          port = host.settings.applications.dev.ai.mcp.xmsg.federation.nodes.${host.system-owner}.port;
-        }) ([ (hubOf cfg) ] ++ cfg.devHubs or [ ]);
-        # Service nodes that screen through this pod (services/matrix-xmsg.nix `guards`)
-        # are hubs too: the pod collects their guard requests from them.
-        serviceHubs = lib.filter (n: lib.elem "${name}@${name}.${namespace}" (n.guards or [ ])) xmsg-nodes;
         # The chart's leaf.hubs. A hub is keyed by the node name its identity derives,
         # `<user>.<host>` (xmsg README 7.0); the leaf routes each reply to the peer of
         # the origin's node.
-        chartHubs =
-          let
-            rawHubs =
-              map (h: {
-                name = "${h.host.system-owner}.${h.name}";
-                address = "${h.ip}:${toString h.port}";
-                identity = "spiffe://${domainOf h.host}/host/${h.name}/user/${h.host.system-owner}";
-              }) hubs
-              ++ map (n: {
-                inherit (n) name identity;
-                address = "${n.lanIp}:${toString n.port}";
-              }) serviceHubs;
-            fleetHubs = inputs.xmsg.lib.fleet.peersFor {
-              fleet = topConfig.xmsg.fleet;
-              self = "${name}.${namespace}";
-            };
-            expected = lib.sort (a: b: a.name < b.name) (
-              lib.mapAttrsToList (n: p: {
-                name = n;
-                inherit (p) address;
-                identity = builtins.head p.identities;
-              }) fleetHubs
-            );
-          in
-          assert lib.assertMsg (
-            lib.sort (a: b: a.name < b.name) rawHubs == expected
-          ) "genie-guard: chartHubs does not match lib.fleet.peersFor for ${name}.${namespace}.";
-          rawHubs;
+        fleetHubs = inputs.xmsg.lib.fleet.peersFor {
+          fleet = topConfig.xmsg.fleet;
+          self = "${name}.${namespace}";
+        };
+        primaryHubOrder = map (h: "${den.hosts.x86_64-linux.${h}.system-owner}.${h}") (
+          [ (hubOf cfg) ] ++ (cfg.devHubs or [ ])
+        );
+        orderedHubNames =
+          primaryHubOrder
+          ++ (lib.filter (n: !(builtins.elem n primaryHubOrder)) (builtins.attrNames fleetHubs));
+        chartHubs = map (n: {
+          name = n;
+          inherit (fleetHubs.${n}) address;
+          identity = builtins.head fleetHubs.${n}.identities;
+        }) orderedHubNames;
         # lib is nixidy's module lib here, whose lib.kube parses the overlay's YAML.
         overlay = lib.head (
           lib.kube.fromYAML (
@@ -266,19 +223,27 @@ in
                   values = [ name ];
                 }
               ];
-              egress = map (h: {
-                toCIDR = [ "${h.ip}/32" ];
-                toPorts = [
-                  {
-                    ports = [
-                      {
-                        port = toString h.port;
-                        protocol = "TCP";
-                      }
-                    ];
-                  }
-                ];
-              }) (hubs ++ map (n: { inherit (n) ip port; }) (map (n: n // { ip = n.lanIp; }) serviceHubs));
+              egress = map (
+                h:
+                let
+                  m = builtins.match "^([^:]+):([0-9]+)$" h.address;
+                  ip = builtins.elemAt m 0;
+                  port = builtins.elemAt m 1;
+                in
+                {
+                  toCIDR = [ "${ip}/32" ];
+                  toPorts = [
+                    {
+                      ports = [
+                        {
+                          inherit port;
+                          protocol = "TCP";
+                        }
+                      ];
+                    }
+                  ];
+                }
+              ) chartHubs;
             };
           };
         };

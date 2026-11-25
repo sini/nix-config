@@ -29,21 +29,26 @@ let
         httpRoutes = "HTTPRoute";
       };
     };
-    # The record axon's hubs take the leaf from.
-    leaves = aspect.xmsg-leaves {
-      cluster = {
-        name = "axon";
-        environment = "prod";
-        settings.kubernetes.services.ai.xmsg-gateway = {
-          enable = true;
-          inherit (config.den.clusters.axon.settings.kubernetes.services.ai.xmsg-gateway)
-            hub
-            extraHubs
-            relayed
-            ;
-        };
-      };
-    };
+    # Independent oracle: expected leaf record from den.hosts and cluster settings (never xmsg.fleet).
+    leaves =
+      let
+        gw = config.den.clusters.axon.settings.kubernetes.services.ai.xmsg-gateway;
+      in
+      [
+        {
+          identity = "spiffe://json64.dev/ns/xmsg-gateway/sa/xmsg-gateway";
+          cluster = "axon";
+          hubs = map (h: "${config.den.hosts.x86_64-linux.${h}.system-owner}.${h}") (
+            [ gw.hub ] ++ (gw.extraHubs or [ ])
+          );
+          allow = [
+            "send"
+            "reply"
+            "list"
+          ];
+          targets = null;
+        }
+      ];
   };
 
   # Negative controls: each mutant must fail the check on the named property. The

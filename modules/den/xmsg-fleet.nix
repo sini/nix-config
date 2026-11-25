@@ -113,6 +113,7 @@ let
     in
     lib.optional (gw.enable or false) {
       name = "xmsg-gateway.xmsg-gateway";
+      cluster = cl.name;
       inherit hubs primaryHub relayed;
       allow = [
         "send"
@@ -136,6 +137,7 @@ let
     in
     lib.optional (gg.enable or false) {
       name = "genie-guard.genie";
+      cluster = cl.name;
       inherit hubs;
       primaryHub = ownerNodeOf gg.hub;
       relayed = [ ];
@@ -222,6 +224,9 @@ let
     let
       ownerNodes = userNodesByUser.${svc.owner} or [ ];
     in
+    assert lib.assertMsg (lib.all (
+      o: xl.trusts den.users.registry o.user svc.owner
+    ) ownerNodes) "xmsg federation: untrusted service node ${svc.name} for owner ${svc.owner}.";
     lib.concatMap (o: [
       {
         granter = o.name;
@@ -320,6 +325,11 @@ in
     description = "Fleet topology value derived from den.hosts, den.users.registry, services, and den.clusters.";
   };
 
+  options.xmsg.leafClusters = lib.mkOption {
+    type = lib.types.attrsOf lib.types.str;
+    description = "Cluster name for each fleet leaf node, used by host firewall rules.";
+  };
+
   config.xmsg.fleet = {
     inherit
       trustDomain
@@ -330,4 +340,11 @@ in
       ;
     ca = rootCa;
   };
+
+  config.xmsg.leafClusters = builtins.listToAttrs (
+    map (l: {
+      name = l.name;
+      value = l.cluster;
+    }) allLeaves
+  );
 }
