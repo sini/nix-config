@@ -83,7 +83,7 @@ spec:
             - serve
             - --config
             - /etc/xmsg-mcp-gateway/serving.json
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:c92c04deb692b674b532b74c4fbda9714027f572e237085158529a3b22feb430
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:13abd9ecd209d0598e413a2200610661da0aef1675dc6be7d20c71cbf01f2b14
           imagePullPolicy: IfNotPresent
           livenessProbe:
             initialDelaySeconds: 30
@@ -212,7 +212,7 @@ spec:
             - /var/lib/xmsg-mcp-gateway/state/grants.db
             - init
             - --if-needed
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:c92c04deb692b674b532b74c4fbda9714027f572e237085158529a3b22feb430
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:13abd9ecd209d0598e413a2200610661da0aef1675dc6be7d20c71cbf01f2b14
           imagePullPolicy: IfNotPresent
           name: store-init
           securityContext:
@@ -241,7 +241,7 @@ spec:
             - /var/lib/xmsg-mcp-gateway/backups
             - --keep
             - "3"
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:c92c04deb692b674b532b74c4fbda9714027f572e237085158529a3b22feb430
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:13abd9ecd209d0598e413a2200610661da0aef1675dc6be7d20c71cbf01f2b14
           name: store-backup
           securityContext:
             allowPrivilegeEscalation: false
@@ -260,7 +260,7 @@ spec:
             - /var/lib/xmsg-mcp-gateway/state/grants.db
             - migrate-custody
             - --if-needed
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:c92c04deb692b674b532b74c4fbda9714027f572e237085158529a3b22feb430
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:13abd9ecd209d0598e413a2200610661da0aef1675dc6be7d20c71cbf01f2b14
           imagePullPolicy: IfNotPresent
           name: store-migrate-custody
           securityContext:
@@ -286,7 +286,7 @@ spec:
             - /var/lib/xmsg-mcp-gateway/state/grants.db
             - migrate-outbound
             - --if-needed
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:c92c04deb692b674b532b74c4fbda9714027f572e237085158529a3b22feb430
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:13abd9ecd209d0598e413a2200610661da0aef1675dc6be7d20c71cbf01f2b14
           imagePullPolicy: IfNotPresent
           name: store-migrate-outbound
           securityContext:
@@ -312,7 +312,7 @@ spec:
             - /var/lib/xmsg-mcp-gateway/state/grants.db
             - migrate-retirement
             - --if-needed
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:c92c04deb692b674b532b74c4fbda9714027f572e237085158529a3b22feb430
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:13abd9ecd209d0598e413a2200610661da0aef1675dc6be7d20c71cbf01f2b14
           imagePullPolicy: IfNotPresent
           name: store-migrate-retirement
           securityContext:
@@ -338,7 +338,7 @@ spec:
             - /var/lib/xmsg-mcp-gateway/state/grants.db
             - migrate-custody-summaries
             - --if-needed
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:c92c04deb692b674b532b74c4fbda9714027f572e237085158529a3b22feb430
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:13abd9ecd209d0598e413a2200610661da0aef1675dc6be7d20c71cbf01f2b14
           imagePullPolicy: IfNotPresent
           name: store-migrate-custody-summaries
           securityContext:
@@ -366,7 +366,7 @@ spec:
             - --if-needed
             - --key-file
             - /run/xmsg-mcp-gateway/keys/events-key
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:c92c04deb692b674b532b74c4fbda9714027f572e237085158529a3b22feb430
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:13abd9ecd209d0598e413a2200610661da0aef1675dc6be7d20c71cbf01f2b14
           imagePullPolicy: IfNotPresent
           name: store-migrate-events
           securityContext:
@@ -392,7 +392,7 @@ spec:
             - /var/lib/xmsg-mcp-gateway/state/grants.db
             - migrate-profiles
             - --if-needed
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:c92c04deb692b674b532b74c4fbda9714027f572e237085158529a3b22feb430
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:13abd9ecd209d0598e413a2200610661da0aef1675dc6be7d20c71cbf01f2b14
           imagePullPolicy: IfNotPresent
           name: store-migrate-profiles
           securityContext:
@@ -418,7 +418,7 @@ spec:
             - /var/lib/xmsg-mcp-gateway/state/grants.db
             - migrate-attachments
             - --if-needed
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:c92c04deb692b674b532b74c4fbda9714027f572e237085158529a3b22feb430
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:13abd9ecd209d0598e413a2200610661da0aef1675dc6be7d20c71cbf01f2b14
           imagePullPolicy: IfNotPresent
           name: store-migrate-attachments
           securityContext:
@@ -444,7 +444,7 @@ spec:
             - /var/lib/xmsg-mcp-gateway/state/grants.db
             - migrate-authorization-server
             - --if-needed
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:c92c04deb692b674b532b74c4fbda9714027f572e237085158529a3b22feb430
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:13abd9ecd209d0598e413a2200610661da0aef1675dc6be7d20c71cbf01f2b14
           imagePullPolicy: IfNotPresent
           name: store-migrate-authorization-server
           securityContext:
@@ -472,7 +472,7 @@ spec:
             - chatgpt
             - /etc/xmsg-mcp-gateway/binding-chatgpt.json
             - --if-needed
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:c92c04deb692b674b532b74c4fbda9714027f572e237085158529a3b22feb430
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:13abd9ecd209d0598e413a2200610661da0aef1675dc6be7d20c71cbf01f2b14
           imagePullPolicy: IfNotPresent
           name: store-enroll-chatgpt
           securityContext:
@@ -500,7 +500,7 @@ spec:
             - chatgpt-as
             - /etc/xmsg-mcp-gateway/binding-chatgpt-as.json
             - --if-needed
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:c92c04deb692b674b532b74c4fbda9714027f572e237085158529a3b22feb430
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:13abd9ecd209d0598e413a2200610661da0aef1675dc6be7d20c71cbf01f2b14
           imagePullPolicy: IfNotPresent
           name: store-enroll-chatgpt-as
           securityContext:
@@ -529,7 +529,7 @@ spec:
             - chatgpt
             - --policy
             - /etc/xmsg-mcp-gateway/policy-chatgpt.json
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:c92c04deb692b674b532b74c4fbda9714027f572e237085158529a3b22feb430
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:13abd9ecd209d0598e413a2200610661da0aef1675dc6be7d20c71cbf01f2b14
           imagePullPolicy: IfNotPresent
           name: store-apply-chatgpt
           securityContext:
@@ -558,7 +558,7 @@ spec:
             - chatgpt-as
             - --policy
             - /etc/xmsg-mcp-gateway/policy-chatgpt-as.json
-          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:c92c04deb692b674b532b74c4fbda9714027f572e237085158529a3b22feb430
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:13abd9ecd209d0598e413a2200610661da0aef1675dc6be7d20c71cbf01f2b14
           imagePullPolicy: IfNotPresent
           name: store-apply-chatgpt-as
           securityContext:
