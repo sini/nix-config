@@ -30,6 +30,7 @@
 #
 # Gating check: genie-guard-check.nix, over axon's rendered manifests.
 {
+  config,
   den,
   lib,
   inputs,
@@ -37,6 +38,7 @@
   ...
 }:
 let
+  topConfig = config;
   namespace = "genie";
   name = "genie-guard";
   issuer = "xmsg-cluster-ca";
@@ -161,15 +163,33 @@ in
         # `<user>.<host>` (xmsg README 7.0); the leaf routes each reply to the peer of
         # the origin's node.
         chartHubs =
-          map (h: {
-            name = "${h.host.system-owner}.${h.name}";
-            address = "${h.ip}:${toString h.port}";
-            identity = "spiffe://${domainOf h.host}/host/${h.name}/user/${h.host.system-owner}";
-          }) hubs
-          ++ map (n: {
-            inherit (n) name identity;
-            address = "${n.lanIp}:${toString n.port}";
-          }) serviceHubs;
+          let
+            rawHubs =
+              map (h: {
+                name = "${h.host.system-owner}.${h.name}";
+                address = "${h.ip}:${toString h.port}";
+                identity = "spiffe://${domainOf h.host}/host/${h.name}/user/${h.host.system-owner}";
+              }) hubs
+              ++ map (n: {
+                inherit (n) name identity;
+                address = "${n.lanIp}:${toString n.port}";
+              }) serviceHubs;
+            fleetHubs = inputs.xmsg.lib.fleet.peersFor {
+              fleet = topConfig.xmsg.fleet;
+              self = "${name}.${namespace}";
+            };
+            expected = lib.sort (a: b: a.name < b.name) (
+              lib.mapAttrsToList (n: p: {
+                name = n;
+                inherit (p) address;
+                identity = builtins.head p.identities;
+              }) fleetHubs
+            );
+          in
+          assert lib.assertMsg (
+            lib.sort (a: b: a.name < b.name) rawHubs == expected
+          ) "genie-guard: chartHubs does not match lib.fleet.peersFor for ${name}.${namespace}.";
+          rawHubs;
         # lib is nixidy's module lib here, whose lib.kube parses the overlay's YAML.
         overlay = lib.head (
           lib.kube.fromYAML (

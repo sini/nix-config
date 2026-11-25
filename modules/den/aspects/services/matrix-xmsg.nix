@@ -18,6 +18,7 @@
 # as a hub (kubernetes/services/ai/genie-guard.nix): its record's `guards` names that
 # guard while screening is on, and the node adopts the pod's leaf in turn.
 {
+  config,
   den,
   inputs,
   lib,
@@ -25,6 +26,7 @@
   ...
 }:
 let
+  topConfig = config;
   adminGroup = "admins";
   xl = import ../applications/dev/ai/mcp/_xmsg-lib.nix { inherit lib self; };
   svcUser = "matrix-xmsg";
@@ -308,7 +310,19 @@ in
             }
             // lib.optionalAttrs (r.screenMentions != null) { inherit (r) screenMentions; }
           ) cfg.roomRoutes;
-          openThreadNodes = map (n: n.name) ownerNodes;
+          openThreadNodes =
+            let
+              nodes = map (n: n.name) ownerNodes;
+              expected =
+                (inputs.xmsg.lib.fleet.reachableFor {
+                  fleet = topConfig.xmsg.fleet;
+                  self = self';
+                }).direct;
+            in
+            assert lib.assertMsg (
+              lib.sort lib.lessThan nodes == expected
+            ) "matrix-xmsg: openThreadNodes does not match lib.fleet.reachableFor for ${self'}.";
+            nodes;
           answerTimeoutSecs = lib.mkIf (answerTimeoutSecs != null) answerTimeoutSecs;
 
           xmsg = {
@@ -323,30 +337,22 @@ in
               cert = xl.caCrt (host.secretPath + "/${leafSecretName}.crt");
               key = config.age.secrets.${leafSecretName}.path;
               peers =
-                lib.listToAttrs (
-                  map (
-                    n:
-                    lib.nameValuePair n.name (
-                      xl.caPeer rootCa [
-                        "send"
-                        "reply"
-                        "list"
-                      ] n
-                    )
-                  ) ownerNodes
-                )
-                // lib.listToAttrs (
-                  map (
-                    leaf:
-                    lib.nameValuePair (leafNodeOf leaf) {
-                      address = "${leafNodeOf leaf}.invalid:${toString cfg.xmsgPort}";
-                      ca = rootCa;
-                      identities = [ leaf.identity ];
-                      leaf = true;
-                      inherit (leaf) allow targets;
-                    }
-                  ) leaves
-                );
+                let
+                  fleetPeers = inputs.xmsg.lib.fleet.peersRenderedFor {
+                    fleet = topConfig.xmsg.fleet;
+                    self = self';
+                  };
+                  finalChecks = inputs.xmsg.lib.fleet.checkFinal {
+                    value = topConfig.xmsg.fleet;
+                    self = self';
+                    file = fleetPeers;
+                    hostOwned = [ ];
+                  };
+                in
+                assert lib.assertMsg (
+                  finalChecks == [ ]
+                ) "matrix-xmsg: checkFinal failed for ${self'}: ${builtins.toJSON finalChecks}";
+                fleetPeers;
             };
           };
         };

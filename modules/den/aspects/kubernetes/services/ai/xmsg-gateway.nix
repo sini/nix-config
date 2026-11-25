@@ -73,6 +73,7 @@
 #
 # Gating check: xmsg-gateway-check.nix, over axon's rendered manifests.
 {
+  config,
   den,
   lib,
   inputs,
@@ -80,6 +81,7 @@
   ...
 }:
 let
+  topConfig = config;
   namespace = "xmsg-gateway";
   name = "xmsg-gateway";
   # The xmsg service the gateway registers, which is also its grant service.
@@ -404,37 +406,45 @@ in
         verifierIssuer = "https://${kanidmDomain}/oauth2/openid/${hostedClient}";
 
         primary = lib.head hubs;
-        peers = lib.listToAttrs (
-          map (h: {
-            inherit (h) name;
-            value =
-              # The relayed nodes aren't peers: unknown explicit destinations go to the
-              # primary hub, which forwards them (one hop).
-              lib.optionalAttrs ((cfg.relayed or [ ]) != [ ] && h.name == primary.name) { default_route = true; }
-              // {
-                address = "${h.ip}:${toString h.port}";
-                ca = "${tlsDir}/ca.crt";
-                identities = [ h.identity ];
-                # What the hub may ask of the leaf. `list` lets it answer the hub's list
-                # query from its mailbox, so the hub's sessions see the gateway (xmsg XA6).
-                # `send` and `reply` gate only fed requests, which a leaf never listens for
-                # (xmsg refuses --leaf with --fed-listen); a pulled send reaches only the
-                # leaf principal.
-                allow = [
-                  "send"
-                  "reply"
-                  "list"
-                ];
-              };
-          }) hubs
-        );
+        gatewaySelf = "${name}.${namespace}";
+        fleetPeers = inputs.xmsg.lib.fleet.peersRenderedFor {
+          fleet = topConfig.xmsg.fleet;
+          self = gatewaySelf;
+        };
+        fleetFinal = inputs.xmsg.lib.fleet.checkFinal {
+          value = topConfig.xmsg.fleet;
+          self = gatewaySelf;
+          file = fleetPeers;
+          hostOwned = [ ];
+        };
+        fleetReach = inputs.xmsg.lib.fleet.reachableFor {
+          fleet = topConfig.xmsg.fleet;
+          self = gatewaySelf;
+        };
+        expectedRelayed = lib.optionals ((cfg.relayed or [ ]) != [ ]) [
+          {
+            via = primary.name;
+            to = lib.sort builtins.lessThan (cfg.relayed or [ ]);
+          }
+        ];
+        peers =
+          assert lib.assertMsg (
+            fleetFinal == [ ]
+          ) "xmsg-gateway: checkFinal failed: ${builtins.toJSON fleetFinal}";
+          fleetPeers;
 
         # The grant's outbound policy: each hub's sessions, for send and for reply. The
         # chart writes it as JSON (keys sorted); apply compares typed values.
-        permission = scope: {
-          targets = map (h: "*@${h.name}") hubs ++ map (n: "*@${n}") (cfg.relayed or [ ]);
-          required_scope = scope;
-        };
+        permission =
+          scope:
+          assert lib.assertMsg (
+            fleetReach.direct == lib.sort builtins.lessThan (map (h: h.name) hubs)
+            && fleetReach.relayed == expectedRelayed
+          ) "xmsg-gateway: policy targets do not match lib.fleet.reachableFor.";
+          {
+            targets = map (h: "*@${h.name}") hubs ++ map (n: "*@${n}") (cfg.relayed or [ ]);
+            required_scope = scope;
+          };
         policy = {
           send = permission "xmsg:send";
           reply = permission "xmsg:reply";
