@@ -543,18 +543,19 @@ in
                     }
                   ];
 
-                  # ~2Gi resident under load with both local models in-process
-                  # (upstream's hardware table); the ceiling leaves room for a
-                  # large retain, whose in-flight extraction state is bounded by
-                  # HINDSIGHT_API_RETAIN_MEMORY_BUDGET_MB (default 128).
+                  # 1.4Gi resident idle with both local models in-process. 4Gi was
+                  # OOMKilled 253 times in 8 days (measured 2026-11-28): a streaming
+                  # retain's embedding batches plus a concurrent recall's rerank,
+                  # all in this one process, overran it. Each kill dropped every
+                  # MCP connection and in-flight recall.
                   resources = {
                     requests = {
                       cpu = "200m";
-                      memory = "1Gi";
+                      memory = "2Gi";
                     };
                     limits = {
                       cpu = "2000m";
-                      memory = "4Gi";
+                      memory = "8Gi";
                     };
                   };
                 };
