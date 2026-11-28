@@ -110,5 +110,24 @@
         email = "rabbit721@gmail.com"; # TODO: Confirm
       };
     };
+
+    # Media-only accounts: Jellyfin (and Seerr through it), none of the `users` grants.
+    lowsypunk = {
+      groups = [ "media.access" ];
+      classes = [ ];
+      identity = {
+        displayName = "Alec";
+        email = "dontforgetalec@gmail.com";
+      };
+    };
+
+    matildabutter = {
+      groups = [ "media.access" ];
+      classes = [ ];
+      identity = {
+        displayName = "Elle";
+        email = "lesliebritney@aol.com";
+      };
+    };
   };
 }
