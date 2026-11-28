@@ -334,6 +334,12 @@ in
                     # KNOWN name to release, which the init container does.
                     HINDSIGHT_API_WORKER_ID = "hindsight";
 
+                    # torch sizes its pool from the node's cores (16), not the cgroup
+                    # quota, so at a 2-CPU limit 90% of CFS periods were throttled and
+                    # recalls never finished (measured 2026-11-28). Pin it to the limit.
+                    OMP_NUM_THREADS = "8";
+                    MKL_NUM_THREADS = "8";
+
                     HINDSIGHT_API_DATABASE_URL.valueFrom.secretKeyRef = {
                       name = "hindsight-pg-dsn";
                       key = "url";
@@ -550,11 +556,11 @@ in
                   # MCP connection and in-flight recall.
                   resources = {
                     requests = {
-                      cpu = "200m";
+                      cpu = "1";
                       memory = "2Gi";
                     };
                     limits = {
-                      cpu = "2000m";
+                      cpu = "8";
                       memory = "8Gi";
                     };
                   };
